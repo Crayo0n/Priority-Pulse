@@ -29,7 +29,7 @@
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center text-center h-56 hover:shadow-md transition-shadow">
                 <h3 class="text-2xl font-black text-gray-900 mb-2">Entrada Manual</h3>
                 <p class="text-sm text-gray-500 mb-6 font-medium">Da click para agregar de forma manual</p>
-                <button class="w-full px-6 py-3 bg-primary text-white font-bold text-sm rounded-xl shadow-md hover:bg-primary-hover transition-all">
+                <button onclick="openModal('modal-add')" type="button" class="w-full px-6 py-3 bg-primary text-white font-bold text-sm rounded-xl shadow-md hover:bg-primary-hover transition-all">
                     Añadir Tarea
                 </button>
             </div>
@@ -77,7 +77,7 @@
                     <button class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors">
                         <span class="material-symbols-outlined text-[16px]">check</span>
                     </button>
-                    <button class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <button onclick="openModal('modal-edit')" type="button" class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
                         <span class="material-symbols-outlined text-[14px]">edit</span>
                     </button>
                 </div>
@@ -100,7 +100,7 @@
                     <button class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors">
                         <span class="material-symbols-outlined text-[16px]">check</span>
                     </button>
-                    <button class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <button onclick="openModal('modal-edit')" type="button" class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
                         <span class="material-symbols-outlined text-[14px]">edit</span>
                     </button>
                 </div>
@@ -123,7 +123,7 @@
                     <button class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors">
                         <span class="material-symbols-outlined text-[16px]">check</span>
                     </button>
-                    <button class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <button onclick="openModal('modal-edit')" type="button" class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
                         <span class="material-symbols-outlined text-[14px]">edit</span>
                     </button>
                 </div>
@@ -146,7 +146,7 @@
                     <button class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors">
                         <span class="material-symbols-outlined text-[16px]">check</span>
                     </button>
-                    <button class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <button onclick="openModal('modal-edit')" type="button" class="w-8 h-8 rounded-full bg-gray-50 text-yellow-500 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
                         <span class="material-symbols-outlined text-[14px]">edit</span>
                     </button>
                 </div>
@@ -158,9 +158,9 @@
 </div>
 
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+<div id="modal-add" class="fixed inset-0 z-50 items-center justify-center p-4 sm:p-6 hidden">
         
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-add')"></div>
 
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
             
@@ -244,7 +244,7 @@
             </div>
 
             <div class="flex justify-between items-center p-6 bg-gray-50/50 border-t border-gray-100 rounded-b-3xl">
-                <button class="text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors">
+                <button onclick="closeModal('modal-add')" type="button" class="text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors">
                     Cancelar
                 </button>
                 <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-hover shadow-md transition-all">
@@ -256,9 +256,9 @@
     </div>
 
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+<div id="modal-edit" class="fixed inset-0 z-50 items-center justify-center p-4 sm:p-6 hidden">
         
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-edit')"></div>
 
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
             
@@ -342,13 +342,13 @@
             </div>
 
             <div class="flex justify-between items-center p-6 bg-gray-50/50 border-t border-gray-100 rounded-b-3xl">
-                <button class="flex items-center gap-1 text-sm font-bold text-red-500 hover:text-red-700 transition-colors">
+                <button onclick="closeModal('modal-edit'); openModal('modal-eliminar')" type="button" class="flex items-center gap-1 text-sm font-bold text-red-500 hover:text-red-700 transition-colors">
                     <span class="material-symbols-outlined text-[18px]">delete</span>
                     Eliminar Tarea
                 </button>
                 
                 <div class="flex gap-3">
-                    <button class="text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors px-4">
+                    <button onclick="closeModal('modal-edit')" type="button" class="text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors px-4">
                         Cancelar
                     </button>
                     <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-hover shadow-md transition-all">
@@ -361,13 +361,13 @@
     </div>
 
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden" id="modal-eliminar">
+<div id="modal-eliminar" class="fixed inset-0 z-50 items-center justify-center p-4 sm:p-6 hidden">
         
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-eliminar')"></div>
 
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 flex flex-col gap-6 animate-fade-in-up">
             
-            <button class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors">
+            <button onclick="closeModal('modal-eliminar')" type="button" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
 
@@ -397,7 +397,7 @@
             </div>
 
             <div class="flex justify-end items-center gap-3 pt-2">
-                <button class="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors">
+                <button onclick="closeModal('modal-eliminar')" type="button" class="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors">
                     Cancelar
                 </button>
                 <button class="px-6 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 shadow-md shadow-red-500/20 transition-all">
@@ -407,4 +407,23 @@
             
         </div>
     </div>
+
+    <!-- Script de Modales -->
+    <script>
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+    </script>
 {% endblock %}

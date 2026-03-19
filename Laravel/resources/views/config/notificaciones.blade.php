@@ -34,7 +34,7 @@
                         <span class="material-symbols-outlined text-[20px]">security</span>
                         Seguridad
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-gray-200 shadow-sm text-[#6e00ff] font-bold text-sm" href="/notificaciones">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-gray-200 shadow-sm text-[#6e00ff] font-bold text-sm" href="#">
                         <span class="material-symbols-outlined text-[20px]">notifications</span>
                         Notificaciones Globales
                     </a>

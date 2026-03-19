@@ -139,7 +139,7 @@
                             </div>
                         </div>
 
-                        <button class="w-full py-4 mt-2 border-2 border-dashed border-[#d9baff] rounded-xl text-[#6e00ff] font-bold text-sm hover:bg-[#f3ebff] transition flex items-center justify-center gap-2">
+                        <button type="button" onclick="openModal('nivel-modal')" class="w-full py-4 mt-2 border-2 border-dashed border-[#d9baff] rounded-xl text-[#6e00ff] font-bold text-sm hover:bg-[#f3ebff] transition flex items-center justify-center gap-2">
                             <span class="material-symbols-outlined text-[18px]">add</span>
                             Añadir Nuevo Nivel
                         </button>
@@ -181,7 +181,7 @@
                                 <p class="text-sm text-gray-500">Define los detonadores para desbloquear nuevas insignias.</p>
                             </div>
                         </div>
-                        <button class="px-3 py-1.5 border border-[#d9baff] text-[#6e00ff] rounded-lg text-xs font-bold hover:bg-[#f3ebff] transition">
+                        <button type="button" onclick="openModal('insignia-modal')" class="px-3 py-1.5 border border-[#d9baff] text-[#6e00ff] rounded-lg text-xs font-bold hover:bg-[#f3ebff] transition">
                             + Nueva Regla
                         </button>
                     </div>
@@ -237,9 +237,9 @@
 </div>
 
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+<div id="insignia-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden">
         
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeModal('insignia-modal')"></div>
 
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col overflow-hidden animate-fade-in-up">
             
@@ -253,7 +253,7 @@
                         <p class="text-xs text-gray-500 mt-0.5">Configura los detalles y previsualiza cómo se verá en el perfil.</p>
                     </div>
                 </div>
-                <button class="text-gray-400 hover:text-gray-600 transition">
+                <button type="button" onclick="closeModal('insignia-modal')" class="text-gray-400 hover:text-gray-600 transition">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
@@ -369,7 +369,7 @@
             </div>
 
             <div class="flex justify-end items-center gap-3 p-6 border-t border-gray-100 bg-white">
-                <button class="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition">
+                <button type="button" onclick="closeModal('insignia-modal')" class="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition">
                     Cancelar
                 </button>
                 <button class="flex items-center gap-2 px-5 py-2.5 bg-[#6e00ff] text-white rounded-lg text-sm font-bold hover:bg-[#5a00d1] shadow-md transition-all">
@@ -382,9 +382,9 @@
 
 
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+<div id="nivel-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden">
         
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeModal('nivel-modal')"></div>
 
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col overflow-hidden animate-fade-in-up">
             
@@ -398,7 +398,7 @@
                         <p class="text-xs text-gray-500 mt-0.5">Define los requisitos y recompensas para el siguiente hito.</p>
                     </div>
                 </div>
-                <button class="text-gray-400 hover:text-gray-600">
+                <button type="button" onclick="closeModal('nivel-modal')" class="text-gray-400 hover:text-gray-600">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
@@ -503,7 +503,7 @@
             </div>
 
             <div class="flex justify-end items-center gap-3 p-6 border-t border-gray-100 bg-white">
-                <button class="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition">
+                <button type="button" onclick="closeModal('nivel-modal')" class="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition">
                     Cancelar
                 </button>
                 <button class="flex items-center gap-2 px-6 py-2.5 bg-[#6e00ff] text-white rounded-lg text-sm font-bold hover:bg-[#5a00d1] shadow-md transition-all">
@@ -513,4 +513,19 @@
         </div>
     </div>
 
+<script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+</script>
 @endsection

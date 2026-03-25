@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import date
+from app.schemas.tarea import TareaResponse
 
 # --- RegistroRutina Schemas ---
 class RegistroRutinaBase(BaseModel):
@@ -33,6 +34,7 @@ class RutinaResponse(RutinaBase):
     usuario_id: int
     # Permite incluir los registros hijos al pedir la rutina
     registros: List[RegistroRutinaResponse] = []
+    tareas: List[TareaResponse] = []
 
     class Config:
         from_attributes = True

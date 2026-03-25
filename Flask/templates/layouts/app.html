@@ -31,9 +31,9 @@
         </div>
 
         <nav class="hidden md:flex items-center bg-white rounded-full p-1 shadow-sm border border-gray-200">
-            <a href="/inicio" class="px-5 py-1.5 bg-gray-100 rounded-full text-sm font-bold text-gray-900 transition-colors">Inicio</a>
-            <a href="#" class="px-5 py-1.5 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">Rutinas</a>
-            <a href="#" class="px-5 py-1.5 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">Clasificación</a>
+            <a href="{{ url_for('inicio') }}" class="px-5 py-1.5 {% if request.endpoint == 'inicio' %}bg-gray-100 rounded-full text-gray-900{% else %}text-gray-500 hover:text-gray-900{% endif %} text-sm font-bold transition-colors">Inicio</a>
+            <a href="{{ url_for('rutinas') }}" class="px-5 py-1.5 {% if request.endpoint == 'rutinas' %}bg-gray-100 rounded-full text-gray-900{% else %}text-gray-500 hover:text-gray-900{% endif %} text-sm font-bold transition-colors">Rutinas</a>
+            <a href="{{ url_for('clasificacion') }}" class="px-5 py-1.5 {% if request.endpoint == 'clasificacion' %}bg-gray-100 rounded-full text-gray-900{% else %}text-gray-500 hover:text-gray-900{% endif %} text-sm font-bold transition-colors">Clasificación</a>
         </nav>
 
         <div class="flex items-center gap-6">
@@ -52,13 +52,41 @@
                 </div>
             </div>
 
-            <button class="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            <a href="{{ url_for('perfil') }}" class="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex-shrink-0">
                 <img src="https://i.pravatar.cc/150?img=5" alt="Perfil" class="w-full h-full object-cover">
-            </button>
+            </a>
         </div>
     </header>
 
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
+        <!-- Flash Messages (Toast Notifications) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="toast-container" class="fixed top-24 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
+                    {% for category, message in messages %}
+                        {% set bg_col = "bg-green-500" if category == 'success' else ("bg-red-500" if category == 'error' else "bg-primary") %}
+                        {% set icon = "check_circle" if category == 'success' else ("error" if category == 'error' else "info") %}
+                        
+                        <div class="toast-message flex items-center gap-3 px-5 py-3.5 rounded-2xl {{ bg_col }} text-white shadow-xl animate-fade-in-up transform transition-all cursor-pointer pointer-events-auto border border-white/20 backdrop-blur-sm" onclick="this.remove()">
+                            <span class="material-symbols-outlined text-[20px]">{{ icon }}</span>
+                            <p class="text-sm font-bold tracking-wide">{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <script>
+                    setTimeout(() => {
+                        const toasts = document.querySelectorAll('.toast-message');
+                        toasts.forEach(toast => {
+                            toast.style.opacity = '0';
+                            toast.style.transform = 'translateY(-10px)';
+                            setTimeout(() => toast.remove(), 300);
+                        });
+                    }, 4000);
+                </script>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
 
@@ -169,10 +197,10 @@
             </div>
 
             <div class="p-4 border-t border-gray-100 bg-gray-50/50 mt-auto">
-                <button class="w-full flex items-center justify-center gap-2 text-[0.75rem] font-bold text-gray-500 hover:text-gray-800 transition-colors py-2">
+                <a href="{{ url_for('ajustes_notificaciones') }}" class="w-full flex items-center justify-center gap-2 text-[0.75rem] font-bold text-gray-500 hover:text-gray-800 transition-colors py-2">
                     <span class="material-symbols-outlined text-[16px]">settings</span>
                     Ajustes de notificaciones
-                </button>
+                </a>
             </div>
 
         </div>

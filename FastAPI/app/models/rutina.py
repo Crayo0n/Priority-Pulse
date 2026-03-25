@@ -14,6 +14,7 @@ class Rutina(Base):
 
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="rutinas")
     registros: Mapped[List["RegistroRutina"]] = relationship("RegistroRutina", back_populates="rutina")
+    tareas: Mapped[List["Tarea"]] = relationship("Tarea", back_populates="rutina")
 
 class RegistroRutina(Base):
     __tablename__ = "registro_rutinas"

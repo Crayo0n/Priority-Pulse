@@ -15,5 +15,8 @@ class Tarea(Base):
     fecha_limite: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     es_critica: Mapped[bool] = mapped_column(Boolean, default=False)
     xp_recompensa: Mapped[int] = mapped_column(Integer, default=0)
+    tags: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    rutina_id: Mapped[Optional[int]] = mapped_column(ForeignKey("rutinas.id"), nullable=True)
 
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="tareas")
+    rutina: Mapped[Optional["Rutina"]] = relationship("Rutina", back_populates="tareas")

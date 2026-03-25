@@ -9,6 +9,8 @@ class TareaBase(BaseModel):
     fecha_limite: Optional[datetime] = None
     es_critica: Optional[bool] = False
     xp_recompensa: Optional[int] = 0
+    tags: Optional[str] = None
+    rutina_id: Optional[int] = None
 
 class TareaCreate(TareaBase):
     usuario_id: int
@@ -20,6 +22,7 @@ class TareaUpdate(BaseModel):
     fecha_limite: Optional[datetime] = None
     es_critica: Optional[bool] = None
     xp_recompensa: Optional[int] = None
+    tags: Optional[str] = None
 
 class TareaResponse(TareaBase):
     id: int

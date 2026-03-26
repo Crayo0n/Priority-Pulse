@@ -28,19 +28,20 @@
             <div class="w-full lg:w-64 flex-shrink-0">
                 <nav class="flex flex-col gap-1 sticky top-0">
                     <h3 class="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Categorías</h3>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-gray-200 shadow-sm text-[#6e00ff] font-bold text-sm" href="#">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-gray-200 shadow-sm text-[#6e00ff] font-bold text-sm"href="/configuracion">
+                        <span class="material-symbols-outlined text-[20px]">tune</span>
                         General
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:bg-white hover:text-[#6e00ff] font-medium text-sm transition-colors" href="#">
-                        Perfil
-                    </a>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:bg-white hover:text-[#6e00ff] font-medium text-sm transition-colors" href="#">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:bg-white hover:text-[#6e00ff] font-medium text-sm transition-colors" href="/seguridad">
+                        <span class="material-symbols-outlined text-[20px]">security</span>
                         Seguridad
                     </a>
                     <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:bg-white hover:text-[#6e00ff] font-medium text-sm transition-colors" href="#">
+                        <span class="material-symbols-outlined text-[20px]">notifications</span>
                         Notificaciones Globales
                     </a>
                     <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-500 hover:bg-white hover:text-[#6e00ff] font-medium text-sm transition-colors" href="#">
+                        <span class="material-symbols-outlined text-[20px]">stadia_controller</span>
                         Parámetros de Gamificación
                     </a>
                 </nav>

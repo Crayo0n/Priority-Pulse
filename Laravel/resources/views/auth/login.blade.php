@@ -10,11 +10,8 @@
     <div class="split-layout">
         
         <div class="left-panel">
-            <div class="logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-                Priority Pulse
+            <div class="logo flex items-center gap-2">
+                <img src="{{ asset('images/Logo.png') }}" alt="Logo Priority Pulse" class="h-8 w-auto">
             </div>
             
             <div class="left-content">

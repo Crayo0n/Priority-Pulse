@@ -16,9 +16,8 @@
 <body>
 
     <aside class="sidebar">
-        <div class="brand">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            Priority Pulse
+        <div class="brand flex items-center gap-2">
+            <img src="{{ asset('images/Logo.png') }}" alt="Logo Priority Pulse" class="h-9 w-auto">
         </div>
 
         <ul class="nav-menu">

@@ -24,9 +24,6 @@ def get_usuarios_by_xp(db: Session, limit: int = 100):
     return db.query(Usuario).order_by(Usuario.xp_total.desc()).limit(limit).all()
 
 def crear_usuario(db: Session, usuario: UsuarioCreate):
-    # Nota de seguridad: aquí debes usar una librería como passlib para hacer hash real
-    fake_hashed_password = usuario.password + "notreallyhashed"
-    
     db_usuario = Usuario(
         correo=usuario.correo, 
         nombre_usuario=usuario.nombre_usuario,

@@ -1,13 +1,14 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
-# Propiedades compartidas
-class UsuarioBase(BaseModel):
-    nombre_usuario: Optional[str] = None
-    correo: EmailStr
-    # is_active: Optional[bool] = True
 
-# Propiedades al crear usuario (input)
+class UsuarioBase(BaseModel):
+    nombre_usuario: str
+    correo: EmailStr
+    rol: Optional[str] = "user"
+    zona_horaria: Optional[str] = "UTC"
+
+
 class UsuarioCreate(UsuarioBase):
     password: str
 
@@ -28,3 +29,18 @@ class UsuarioResponse(UsuarioBase):
 
     class Config:
         from_attributes = True
+
+
+# Schema de entrada para el login
+class LoginRequest(BaseModel):
+    correo: EmailStr
+    password: str
+
+
+# Schema de respuesta del login (solo lo que Laravel necesita en sesión)
+class LoginResponse(BaseModel):
+    id: int
+    nombre_usuario: str
+    correo: str
+    rol: str
+    xp_total: int

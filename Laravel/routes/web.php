@@ -7,6 +7,9 @@ use App\Http\Controllers\NivelController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GamificacionController;
 
+// ─── Raíz → redirige al dashboard
+Route::get('/', fn() => redirect('/dashboard'));
+
 // ─── Rutas Públicas
 Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
@@ -40,6 +43,30 @@ Route::middleware('admin.auth')->group(function () {
 
     // Proxy JSON: eliminar medalla
     Route::delete('/api/gamificacion/medalla/{id}', [GamificacionController::class, 'destroyMedalla'])->name('gamificacion.medalla.destroy');
+
+    // Proxy JSON: stats para sidebar de configuración
+    Route::get('/api/config/stats', function () {
+        $res = \App\Services\ApiService::get('/analitica/dashboard');
+        return $res->successful()
+            ? response()->json($res->json())
+            : response()->json([], 503);
+    })->name('config.stats');
+
+    // Proxy JSON: logs (últimas notificaciones)
+    Route::get('/api/config/logs', function () {
+        $res = \App\Services\ApiService::get('/notificaciones/', ['limit' => 20]);
+        return $res->successful()
+            ? response()->json($res->json())
+            : response()->json([], 503);
+    })->name('config.logs');
+
+    // Proxy JSON: usuarios recientes para seguridad
+    Route::get('/api/config/usuarios-recientes', function () {
+        $res = \App\Services\ApiService::get('/usuarios/');
+        return $res->successful()
+            ? response()->json($res->json())
+            : response()->json([], 503);
+    })->name('config.usuarios');
 
     // Proxy: enviar alerta del sistema a FastAPI
     Route::post('/api/alerta', function (\Illuminate\Http\Request $request) {

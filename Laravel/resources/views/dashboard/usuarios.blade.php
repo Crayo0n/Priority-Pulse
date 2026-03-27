@@ -46,57 +46,39 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
+                    @forelse($usuarios as $usuario)
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <img src="https://i.pravatar.cc/150?img=5" class="w-10 h-10 rounded-full object-cover border border-gray-200" alt="Sofia">
+                                <div class="w-10 h-10 rounded-full bg-[#f3ebff] text-[#6e00ff] flex items-center justify-center font-bold border border-purple-200 text-lg">
+                                    {{ strtoupper(substr($usuario['nombre_usuario'], 0, 1)) }}
+                                </div>
                                 <div>
-                                    <div class="font-bold text-gray-900">Sofia Martinez</div>
-                                    <div class="text-xs text-gray-500">ID: 8492 • @sofiam_99</div>
+                                    <div class="font-bold text-gray-900">{{ $usuario['nombre_usuario'] }}</div>
+                                    <div class="text-xs text-gray-500">ID: {{ $usuario['id'] }} • {{ $usuario['correo'] }}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="font-extrabold text-[#6e00ff]">Lvl 4</div>
-                            <div class="text-xs font-bold text-[#6e00ff] bg-[#f3ebff] px-2 py-0.5 rounded-full inline-block mt-1">500 XP</div>
+                            <div class="font-extrabold text-[#6e00ff]">Lvl {{ $usuario['nivel_id'] ?? '1' }}</div>
+                            <div class="text-xs font-bold text-[#6e00ff] bg-[#f3ebff] px-2 py-0.5 rounded-full inline-block mt-1">{{ number_format($usuario['xp_total']) }} XP</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1 rounded-lg text-sm font-bold w-max border border-orange-100">
-                                <span>🔥</span> 12 Días
+                                <span>🔥</span> {{ $usuario['racha_actual'] }} Días
                             </div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2 text-sm font-medium text-gray-700">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> En línea
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> {{ ucfirst($usuario['rol']) }}
                             </div>
                         </td>
                     </tr>
-                    
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <img src="https://i.pravatar.cc/150?img=11" class="w-10 h-10 rounded-full object-cover border border-gray-200" alt="Carlos">
-                                <div>
-                                    <div class="font-bold text-gray-900">Carlos Ruiz</div>
-                                    <div class="text-xs text-gray-500">ID: 1120 • @carlos_dev</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="font-extrabold text-gray-600">Lvl 1</div>
-                            <div class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">200 XP</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-2 bg-gray-50 text-gray-500 px-3 py-1 rounded-lg text-sm font-bold w-max border border-gray-200">
-                                <span>⏱</span> 0 Días
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                <span class="w-2 h-2 rounded-full bg-gray-300"></span> Ausente
-                            </div>
-                        </td>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500 font-medium">No se encontraron usuarios desde la API.</td>
                     </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

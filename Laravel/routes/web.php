@@ -1,15 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\NivelController;
+use App\Http\Controllers\DashboardController;
 
+// ─── Rutas Públicas (sin autenticación) ─────────────────────────────────────
+Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::get('/login', function () {
-    return view('auth.login');
-});
-
-Route::get('/usuarios', function () {
-    return view('dashboard.usuarios');
-});
+// ─── Rutas Protegidas (requieren sesión Admin) ───────────────────────────────
+Route::middleware('admin.auth')->group(function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard.index');

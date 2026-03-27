@@ -1,27 +1,45 @@
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate
+import hashlib
+
+
+def _hash_password(password: str) -> str:
+    """Hash simple SHA-256. En producción usa bcrypt/passlib."""
+    return hashlib.sha256(password.encode()).hexdigest()
+
 
 def get_usuario(db: Session, usuario_id: int):
     return db.query(Usuario).filter(Usuario.id == usuario_id).first()
 
-def get_usuario_by_email(db: Session, email: str):
-    return db.query(Usuario).filter(Usuario.email == email).first()
+
+def get_usuario_by_correo(db: Session, correo: str):
+    return db.query(Usuario).filter(Usuario.correo == correo).first()
+
 
 def get_usuarios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Usuario).offset(skip).limit(limit).all()
 
+
 def crear_usuario(db: Session, usuario: UsuarioCreate):
-    # Nota de seguridad: aquí debes usar una librería como passlib para hacer hash real
-    fake_hashed_password = usuario.password + "notreallyhashed"
-    
     db_usuario = Usuario(
-        email=usuario.email, 
-        nombre=usuario.nombre,
-        password_hash=fake_hashed_password,
-        is_active=usuario.is_active
+        nombre_usuario=usuario.nombre_usuario,
+        correo=usuario.correo,
+        password_hash=_hash_password(usuario.password),
+        rol=usuario.rol,
+        zona_horaria=usuario.zona_horaria,
     )
     db.add(db_usuario)
     db.commit()
     db.refresh(db_usuario)
     return db_usuario
+
+
+def verificar_credenciales(db: Session, correo: str, password: str):
+    """Busca el usuario por correo y verifica el password. Retorna el usuario o None."""
+    usuario = get_usuario_by_correo(db, correo)
+    if not usuario:
+        return None
+    if usuario.password_hash != _hash_password(password):
+        return None
+    return usuario

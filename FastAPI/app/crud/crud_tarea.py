@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from app.models.tarea import Tarea
 from app.schemas.tarea import TareaCreate, TareaUpdate
 from app.models.nivel import Nivel 
+from app.crud.crud_notificacion import crear_notificacion
+from app.schemas.notificacion import NotificacionCreate
 
 def get_tarea(db: Session, tarea_id: int):
     return db.query(Tarea).filter(Tarea.id == tarea_id).first()
@@ -33,9 +35,19 @@ def actualizar_tarea(db: Session, db_tarea: Tarea, tarea_update: TareaUpdate):
                 nivel_alcanzado = db.query(Nivel).filter(
                     Nivel.xp_requerida <= db_tarea.usuario.xp_total
                 ).order_by(Nivel.xp_requerida.desc()).first()
-                
                 if nivel_alcanzado:
+                    nivel_anterior = db_tarea.usuario.nivel_id
                     db_tarea.usuario.nivel_id = nivel_alcanzado.id
+                    
+                    if nivel_anterior is not None and nivel_anterior != nivel_alcanzado.id:
+                        nivel_info = db.query(Nivel).filter(Nivel.id == nivel_alcanzado.id).first()
+                        if nivel_info:
+                            notif = NotificacionCreate(
+                                usuario_id=db_tarea.usuario.id,
+                                titulo="¡Nuevo logro!",
+                                mensaje=f"Has alcanzado el Nivel {nivel_info.numero_nivel}. ¡Sigue así!"
+                            )
+                            crear_notificacion(db, notif)
         
         elif nuevo_estado == "pendiente" and estado_anterior == "completada":
             if db_tarea.usuario:

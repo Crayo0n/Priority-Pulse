@@ -56,10 +56,13 @@ def inject_user_stats():
             if res_user.status_code == 200:
                 data = res_user.json()
                 nav_user = {
+                    'nombre': data.get('nombre_usuario', session.get('nombre_usuario', 'Puruhára')),
                     'racha': data.get('racha_actual', 0),
                     'xp': data.get('xp_total', 0),
+                    'xp_total': data.get('xp_total', 0), # Agregamos esto para el HTML
                     'nivel': data.get('nivel', {}).get('numero_nivel', 1) if data.get('nivel') else 1,
-                    'xp_requerida': data.get('nivel', {}).get('xp_requerida', 100) if data.get('nivel') else 100
+                    'xp_requerida': data.get('nivel', {}).get('xp_requerida', 100) if data.get('nivel') else 100,
+                    'xp_siguiente': data.get('nivel', {}).get('xp_requerida', 100) if data.get('nivel') else 100 # ¡ESTA ES LA QUE FALTABA!
                 }
             
             # Obtener notificaciones
@@ -179,6 +182,40 @@ def inicio():
         print(f"Jejavy FastAPI guive: {e}")
         
     return render_template('/inicio/inicio.html', tareas=tareas, rutinas=rutinas, usuario=usuario_data)
+
+@app.route('/perfil')
+@login_required
+def perfil():
+    usuario_id = session['usuario_id']
+    stats = {
+        "total_tareas": 0,
+        "miembro_desde": "Recientemente"
+    }
+    
+    try:
+        response_user = requests.get(f'{API_URL}/usuarios/{usuario_id}')
+        if response_user.status_code == 200:
+            u_data = response_user.json()
+            if u_data.get('fecha_creacion'):
+                from datetime import datetime
+                # Asumimos formato ISO
+                try:
+                    fecha = datetime.fromisoformat(u_data['fecha_creacion'].replace("Z", "+00:00"))
+                    meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+                    stats['miembro_desde'] = f"{meses[fecha.month - 1]} {fecha.year}"
+                except:
+                    pass
+
+        response_tareas = requests.get(f'{API_URL}/tareas/usuario/{usuario_id}')
+        if response_tareas.status_code == 200:
+            todas_las_tareas = response_tareas.json()
+            stats['total_tareas'] = len(todas_las_tareas)
+            
+    except Exception as e:
+        print(f"Error cargando perfil: {e}")
+
+    return render_template('/perfil/perfil.html', stats=stats)
+
 
 @app.route('/crear-tarea', methods=['POST'])
 @login_required
@@ -423,18 +460,6 @@ def clasificacion():
     except Exception as e:
         print(f"Error conectando a FastAPI: {e}")
     return render_template('/inicio/clasificacion.html', usuarios=usuarios)
-
-@app.route('/perfil')
-@login_required
-def perfil():
-    usuario = {}
-    try:
-        res = requests.get(f'{API_URL}/usuarios/{session["usuario_id"]}')
-        if res.status_code == 200:
-            usuario = res.json()
-    except Exception as e:
-        print(f"Error conectando a FastAPI: {e}")
-    return render_template('/perfil/perfil.html', usuario=usuario)
 
 @app.route('/editar-perfil', methods=['GET', 'POST'])
 @login_required

@@ -7,14 +7,24 @@ import app.models
 
 Base.metadata.create_all(bind=engine)
 
+from app.core.scheduler import start_scheduler, stop_scheduler
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url="/api/v1/openapi.json"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    start_scheduler()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    stop_scheduler()
 
 # Incluyendo los routers
 app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 def root():
-    return {"message": "Bienvenido a la API de PI-2026"}
+    return {"message": "Bienvenido a la API de PI-2026"}

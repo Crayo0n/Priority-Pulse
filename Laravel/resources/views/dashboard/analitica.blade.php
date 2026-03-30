@@ -33,7 +33,6 @@
                     <span class="text-5xl font-black">{{ $stats ? $stats['racha_promedio'] : '—' }}</span>
                     <span class="text-lg text-purple-200">días</span>
                 </div>
-                <p class="text-xs text-purple-200 mt-2">Un aumento del <span class="font-bold text-white">+12%</span> respecto al mes anterior.</p>
             </div>
             
             <div class="flex items-end gap-1.5 mt-6 h-10">
@@ -71,12 +70,7 @@
                 <h3 class="text-sm font-semibold text-gray-500 mb-2">Medallas Desbloqueadas</h3>
                 <span class="text-4xl font-black text-gray-900">{{ $stats ? number_format($stats['medallas_desbloqueadas']) : '—' }}</span>
             </div>
-            <div class="mt-6">
-                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center w-max gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    +5.3% esta semana
-                </span>
-            </div>
+            
         </div>
 
     </div>

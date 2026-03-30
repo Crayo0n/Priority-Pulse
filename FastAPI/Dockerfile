@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Evitar que Python escriba archivos .pyc e impresiones en buffers
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Exponemos el puerto 8000 (el por defecto de FastAPI)
+# Exponemos el puerto 8000 
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

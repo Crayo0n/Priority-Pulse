@@ -6,7 +6,8 @@ import {
   SafeAreaView,
   FlatList,
   StatusBar,
-  ScrollView
+  ScrollView,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -148,6 +149,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fcfaff',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
     paddingHorizontal: 20,

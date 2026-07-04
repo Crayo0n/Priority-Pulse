@@ -9,12 +9,13 @@ import {
   TextInput,
   Modal,
   StatusBar,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../navigation/AppNavigator';
 
-export default function PerfilScreen() {
+export default function PerfilScreen({ navigation }) {
   const { logout } = useContext(AuthContext);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -150,6 +151,41 @@ export default function PerfilScreen() {
           ))}
         </View>
 
+        {/* Ajustes y Soporte Section */}
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>Ajustes y Legal</Text>
+          
+          <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('AjustesNotificaciones')}>
+            <View style={styles.settingRowLeft}>
+              <View style={[styles.settingIconBox, { backgroundColor: '#f3ebff' }]}>
+                <Ionicons name="notifications" size={18} color="#6e00ff" />
+              </View>
+              <Text style={styles.settingRowLabel}>Ajustes de Notificaciones</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Terminos')}>
+            <View style={styles.settingRowLeft}>
+              <View style={[styles.settingIconBox, { backgroundColor: '#eff6ff' }]}>
+                <Ionicons name="document-text" size={18} color="#3b82f6" />
+              </View>
+              <Text style={styles.settingRowLabel}>Términos de Servicio</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Privacidad')}>
+            <View style={styles.settingRowLeft}>
+              <View style={[styles.settingIconBox, { backgroundColor: '#ecfdf5' }]}>
+                <Ionicons name="shield-checkmark" size={18} color="#10b981" />
+              </View>
+              <Text style={styles.settingRowLabel}>Política de Privacidad</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
 
       {/* Edit Profile Modal Dialog */}
@@ -207,6 +243,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fcfaff',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   scrollContent: {
     flexGrow: 1,
@@ -501,5 +538,38 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '800',
+  },
+  settingsSection: {
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  settingRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  settingRowLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1f2937',
   },
 });

@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 
 // Screens (we will create these next)
 import LoginScreen from '../screens/LoginScreen';
@@ -10,6 +11,10 @@ import RegistroScreen from '../screens/RegistroScreen';
 import InicioScreen from '../screens/InicioScreen';
 import ClasificacionScreen from '../screens/ClasificacionScreen';
 import PerfilScreen from '../screens/PerfilScreen';
+import AjustesNotificacionesScreen from '../screens/AjustesNotificacionesScreen';
+import TerminosScreen from '../screens/TerminosScreen';
+import PrivacidadScreen from '../screens/PrivacidadScreen';
+import OnboardingScreen from '../screens/OnboardingScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -40,8 +45,20 @@ function AppTabs() {
           backgroundColor: '#ffffff',
           borderTopWidth: 1,
           borderTopColor: '#f3f4f6',
-          height: 60,
-          paddingBottom: 8,
+          ...Platform.select({
+            ios: {
+              height: 88,
+              paddingBottom: 28,
+            },
+            android: {
+              height: 68,
+              paddingBottom: 12,
+            },
+            default: {
+              height: 60,
+              paddingBottom: 8,
+            }
+          }),
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -71,12 +88,20 @@ export default function AppNavigator() {
           {!isAuthenticated ? (
             // Auth Screens
             <>
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Registro" component={RegistroScreen} />
+              <Stack.Screen name="Terminos" component={TerminosScreen} />
+              <Stack.Screen name="Privacidad" component={PrivacidadScreen} />
             </>
           ) : (
             // Main App Tab Navigator
-            <Stack.Screen name="MainApp" component={AppTabs} />
+            <>
+              <Stack.Screen name="MainApp" component={AppTabs} />
+              <Stack.Screen name="AjustesNotificaciones" component={AjustesNotificacionesScreen} />
+              <Stack.Screen name="Terminos" component={TerminosScreen} />
+              <Stack.Screen name="Privacidad" component={PrivacidadScreen} />
+            </>
           )}
         </Stack.Navigator>
       </NavigationContainer>

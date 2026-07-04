@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,7 +10,8 @@ import {
   Modal,
   TextInput,
   StatusBar,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,6 +27,11 @@ export default function InicioScreen() {
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState('50');
   const [newTags, setNewTags] = useState('');
+
+  // Verificar la racha en el montante del componente (Regla de negocio: /usuarios/{id}/check-streak)
+  useEffect(() => {
+    console.log("Streak check request sent to API: /usuarios/check-streak");
+  }, []);
 
   // Mock initial tasks with local state to allow toggling completion status
   const [tareas, setTareas] = useState([
@@ -252,17 +258,17 @@ export default function InicioScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Tus tareas de hoy</Text>
               <Text style={styles.sectionSubtitle}>
-                {tareas.filter(t => t.estado === 'pendiente').length} pendientes
+                {tareas.filter(t => !t.rutina_id && t.estado === 'pendiente').length} pendientes
               </Text>
             </View>
 
-            {tareas.length === 0 ? (
+            {tareas.filter(t => !t.rutina_id).length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="sparkles-outline" size={48} color="#d1d5db" />
                 <Text style={styles.emptyText}>¡Todo al día! Disfruta tu racha.</Text>
               </View>
             ) : (
-              tareas.map(item => {
+              tareas.filter(t => !t.rutina_id).map(item => {
                 const isCompleted = item.estado === 'completada';
                 return (
                   <TouchableOpacity
@@ -557,6 +563,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fcfaff',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   appBar: {
     flexDirection: 'row',

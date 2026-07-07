@@ -41,7 +41,6 @@ export default function RegistroScreen({ navigation }) {
               style={styles.logoImage}
               resizeMode="contain"
             />
-            <Text style={styles.logoText}>Priority Pulse</Text>
             <Text style={styles.tagline}>Únete al juego de la productividad</Text>
           </View>
 
@@ -58,7 +57,7 @@ export default function RegistroScreen({ navigation }) {
               <Ionicons name="person-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Juan Pérez"
+                placeholder="Tu nombre completo"
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="words"
                 value={fullname}
@@ -91,7 +90,7 @@ export default function RegistroScreen({ navigation }) {
               <Ionicons name="at-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="juanp123"
+                placeholder="Usuario123"
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="none"
                 value={username}
@@ -193,20 +192,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   logoImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 12,
-  },
-  logoText: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -0.5,
+    width: 200,
+    height: 200,
+    marginBottom: 0,
   },
   tagline: {
     fontSize: 13,
     color: '#6b7280',
-    marginTop: 4,
+    marginTop: 0,
     fontWeight: '600',
   },
   card: {

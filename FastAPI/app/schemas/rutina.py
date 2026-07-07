@@ -31,7 +31,7 @@ class RutinaUpdate(BaseModel):
 
 class RutinaResponse(RutinaBase):
     id: int
-    usuario_id: int
+    usuario_id: Optional[int]
     # Permite incluir los registros hijos al pedir la rutina
     registros: List[RegistroRutinaResponse] = []
     tareas: List[TareaResponse] = []

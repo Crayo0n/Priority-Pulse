@@ -73,7 +73,6 @@ export default function OnboardingScreen({ navigation }) {
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
-                <Text style={styles.logoText}>Priority Pulse</Text>
               </View>
             ) : (
               <View style={styles.iconContainer}>
@@ -145,19 +144,12 @@ const styles = StyleSheet.create({
   imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: height * 0.25,
-    marginBottom: 40,
+    height: height * 0.34,
+    marginBottom: 20,
   },
   logoImage: {
-    width: 130,
-    height: 130,
-    marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -0.5,
+    width: 240,
+    height: 240,
   },
   iconContainer: {
     alignItems: 'center',

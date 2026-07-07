@@ -39,7 +39,6 @@ export default function LoginScreen({ navigation }) {
               style={styles.logoImage}
               resizeMode="contain"
             />
-            <Text style={styles.logoText}>Priority Pulse</Text>
             <Text style={styles.tagline}>Organiza. Juega. Gana.</Text>
           </View>
 
@@ -146,23 +145,17 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   logoImage: {
-    width: 85,
-    height: 85,
-    marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -0.5,
+    width: 200,
+    height: 200,
+    marginBottom: 0,
   },
   tagline: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 4,
+    marginTop: 0,
     fontWeight: '600',
   },
   card: {

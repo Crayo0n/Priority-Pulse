@@ -9,6 +9,9 @@ def get_usuario(db: Session, usuario_id: int):
 def get_usuario_by_email(db: Session, correo: str):
     return db.query(Usuario).filter(Usuario.correo == correo).first()
 
+def get_usuario_by_correo(db: Session, correo: str):
+    return get_usuario_by_email(db, correo)
+
 def autenticar_usuario(db: Session, correo: str, password: str):
     usuario = get_usuario_by_email(db, correo=correo)
     if not usuario:
@@ -16,6 +19,9 @@ def autenticar_usuario(db: Session, correo: str, password: str):
     if usuario.password_hash == password + "notreallyhashed":
         return usuario
     return None
+
+def verificar_credenciales(db: Session, correo: str, password: str):
+    return autenticar_usuario(db, correo=correo, password=password)
 
 def get_usuarios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Usuario).offset(skip).limit(limit).all()
@@ -27,12 +33,11 @@ def crear_usuario(db: Session, usuario: UsuarioCreate):
     db_usuario = Usuario(
         correo=usuario.correo, 
         nombre_usuario=usuario.nombre_usuario,
-        password_hash=fake_hashed_password,
+        password_hash=usuario.password + "notreallyhashed",
         # is_active=usuario.is_active # No existe en el modelo, lo omitimos o agregamos
     )
     db.add(db_usuario)
     db.commit()
-    db.refresh(db_usuario)
     db.refresh(db_usuario)
     return db_usuario
 

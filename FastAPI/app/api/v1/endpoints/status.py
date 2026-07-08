@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 @router.get("/")
-def get_status():
+@limiter.limit("60/minute")
+def get_status(request: Request):
     """
     Endpoint de prueba para verificar que el API está activa.
     """

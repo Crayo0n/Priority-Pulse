@@ -1,38 +1,34 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 from app.api.v1.api import api_router
 from app.core.config import settings
-from app.db.database import engine, Base, sesionLocal
-from app.models.usuario import Usuario
+from app.core.limiter import limiter
+from app.db.database import engine, Base
 import app.models
 
 Base.metadata.create_all(bind=engine)
-
-def seed_default_user():
-    db = sesionLocal()
-    try:
-        # Check if user with ID 1 exists
-        user = db.query(Usuario).filter(Usuario.id == 1).first()
-        if not user:
-            new_user = Usuario(
-                id=1,
-                nombre_usuario="MVP Demo User",
-                correo="demo@prioritypulse.com",
-                password_hash="fakehash_mvp_only"
-            )
-            db.add(new_user)
-            db.commit()
-    except Exception as e:
-        print(f"Error seeding default user: {e}")
-    finally:
-        db.close()
-
-seed_default_user()
-
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url="/api/v1/openapi.json"
 )
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": "Demasiadas solicitudes",
+            "mensaje": "Has excedido el limite permitido. Intenta mas tarde.",
+            "detalle": str(exc.detail)
+        }
+    )
 
 # Incluyendo los routers
 app.include_router(api_router, prefix="/api/v1")
@@ -40,3 +36,4 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 def root():
     return {"message": "Bienvenido a la API de PI-2026"}
+

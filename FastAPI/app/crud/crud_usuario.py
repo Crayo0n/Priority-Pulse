@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate, UsuarioUpdate
 from datetime import datetime, timedelta, timezone
+from app.core.security import verificar_password, obtener_password_hash
 
 def get_usuario(db: Session, usuario_id: int):
     return db.query(Usuario).filter(Usuario.id == usuario_id).first()
@@ -13,9 +14,17 @@ def autenticar_usuario(db: Session, correo: str, password: str):
     usuario = get_usuario_by_email(db, correo=correo)
     if not usuario:
         return None
-    if usuario.password_hash == password + "notreallyhashed":
+    try:
+        is_valid = verificar_password(password, usuario.password_hash)
+    except Exception:
+        is_valid = False
+            
+    if is_valid:
         return usuario
     return None
+
+def verificar_credenciales(db: Session, correo: str, password: str):
+    return autenticar_usuario(db, correo=correo, password=password)
 
 def get_usuarios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Usuario).offset(skip).limit(limit).all()
@@ -24,15 +33,15 @@ def get_usuarios_by_xp(db: Session, limit: int = 100):
     return db.query(Usuario).order_by(Usuario.xp_total.desc()).limit(limit).all()
 
 def crear_usuario(db: Session, usuario: UsuarioCreate):
+    hashed_pwd = obtener_password_hash(usuario.password)
     db_usuario = Usuario(
         correo=usuario.correo, 
         nombre_usuario=usuario.nombre_usuario,
-        password_hash=fake_hashed_password,
-        # is_active=usuario.is_active # No existe en el modelo, lo omitimos o agregamos
+        password_hash=hashed_pwd,
+        rol=usuario.rol or "user"
     )
     db.add(db_usuario)
     db.commit()
-    db.refresh(db_usuario)
     db.refresh(db_usuario)
     return db_usuario
 

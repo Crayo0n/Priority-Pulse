@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, Date
 from datetime import date
@@ -8,12 +8,20 @@ from app.models.usuario import Usuario
 from app.models.tarea import Tarea
 from app.models.medalla import Medalla, UsuarioMedalla
 from app.schemas.analitica import DashboardStats, NivelFunnel
+from app.core.limiter import limiter
+from app.api.deps import validar_api_key, requiere_rol
 
 router = APIRouter()
 
 
 @router.get("/dashboard", response_model=DashboardStats, summary="KPIs globales para el Panel Admin")
-def get_dashboard_stats(db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def get_dashboard_stats(
+    request: Request,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(requiere_rol("admin")),
+    db: Session = Depends(get_db)
+):
 
     # --- KPIs de Usuarios ---
     total_usuarios: int = db.query(func.count(Usuario.id)).scalar() or 0

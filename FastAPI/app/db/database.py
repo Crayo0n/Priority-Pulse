@@ -4,10 +4,8 @@ from app.core.config import settings
 import os
 
 # 1. Definiendo la URL de conexion
-DATABASE_URL = getattr(settings, "DATABASE_URL", os.getenv(
-    "DATABASE_URL", 
-    "postgresql://admin:123456@postgres:5432/DB_Priority_Pulse"
-))
+DATABASE_URL = settings.DATABASE_URL
+
 
 # 2. Creamos el motor de conexion
 engine = create_engine(DATABASE_URL)

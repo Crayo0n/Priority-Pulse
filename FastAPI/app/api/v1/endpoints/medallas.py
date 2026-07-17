@@ -1,38 +1,85 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
 from app.schemas.medalla import MedallaCreate, MedallaResponse, MedallaUpdate, UsuarioMedallaCreate, UsuarioMedallaResponse
 from app.crud import crud_medalla
+from app.core.limiter import limiter
+from app.api.deps import validar_api_key, obtener_usuario_actual, requiere_rol
+from app.models.usuario import Usuario
 
 router = APIRouter()
 
 # --- Endpoints del Catálogo de Medallas ---
 @router.post("/", response_model=MedallaResponse, status_code=status.HTTP_201_CREATED)
-def create_medalla(medalla: MedallaCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def create_medalla(
+    request: Request,
+    medalla: MedallaCreate,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(requiere_rol("admin")),
+    db: Session = Depends(get_db)
+):
+    # RBAC: Only admin can create medals
     return crud_medalla.crear_medalla(db=db, medalla=medalla)
 
+
 @router.get("/", response_model=List[MedallaResponse])
-def read_medallas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def read_medallas(
+    request: Request,
+    skip: int = 0,
+    limit: int = 100,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
     return crud_medalla.get_medallas(db, skip=skip, limit=limit)
 
+
 @router.get("/{medalla_id}", response_model=MedallaResponse)
-def read_medalla(medalla_id: int, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def read_medalla(
+    request: Request,
+    medalla_id: int,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
     db_medalla = crud_medalla.get_medalla(db, medalla_id=medalla_id)
     if db_medalla is None:
         raise HTTPException(status_code=404, detail="Medalla no encontrada")
     return db_medalla
 
+
 @router.put("/{medalla_id}", response_model=MedallaResponse)
-def update_medalla(medalla_id: int, medalla_in: MedallaUpdate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def update_medalla(
+    request: Request,
+    medalla_id: int,
+    medalla_in: MedallaUpdate,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(requiere_rol("admin")),
+    db: Session = Depends(get_db)
+):
+    # RBAC: Only admin can update medals
     db_medalla = crud_medalla.get_medalla(db, medalla_id=medalla_id)
     if db_medalla is None:
         raise HTTPException(status_code=404, detail="Medalla no encontrada")
     return crud_medalla.actualizar_medalla(db=db, db_medalla=db_medalla, medalla_update=medalla_in)
 
+
 @router.delete("/{medalla_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_medalla(medalla_id: int, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def delete_medalla(
+    request: Request,
+    medalla_id: int,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(requiere_rol("admin")),
+    db: Session = Depends(get_db)
+):
+    # RBAC: Only admin can delete medals
     db_medalla = crud_medalla.get_medalla(db, medalla_id=medalla_id)
     if db_medalla is None:
         raise HTTPException(status_code=404, detail="Medalla no encontrada")
@@ -41,12 +88,32 @@ def delete_medalla(medalla_id: int, db: Session = Depends(get_db)):
 
 # --- Endpoints de Asignación (Logros Desbloqueados) ---
 @router.post("/otorgar", response_model=UsuarioMedallaResponse, status_code=status.HTTP_201_CREATED)
-def otorgar_medalla_a_usuario(otorgar_data: UsuarioMedallaCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def otorgar_medalla_a_usuario(
+    request: Request,
+    otorgar_data: UsuarioMedallaCreate,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(requiere_rol("admin")),
+    db: Session = Depends(get_db)
+):
+    # RBAC: Only admin can grant/award medals
     db_medalla = crud_medalla.get_medalla(db, medalla_id=otorgar_data.medalla_id)
     if db_medalla is None:
         raise HTTPException(status_code=404, detail="La medalla asignada no existe en el catálogo")
     return crud_medalla.otorgar_medalla(db=db, usuario_medalla=otorgar_data)
 
+
 @router.get("/usuario/{usuario_id}", response_model=List[UsuarioMedallaResponse])
-def read_medallas_de_usuario(usuario_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def read_medallas_de_usuario(
+    request: Request,
+    usuario_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
+    # IDOR/BOLA Protection: A user can only view their own medals unless they are admin (or let users view anyone's public badges)
+    # Since profile medals are typically public to promote gamified sharing, let's allow all authenticated users to read.
     return crud_medalla.get_medallas_by_usuario(db, usuario_id=usuario_id, skip=skip, limit=limit)

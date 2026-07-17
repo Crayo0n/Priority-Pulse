@@ -5,3 +5,4 @@ __pycache__/
 venv/
 env/
 .env
+/Flask/__pycache__

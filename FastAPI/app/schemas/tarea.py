@@ -26,7 +26,7 @@ class TareaUpdate(BaseModel):
 
 class TareaResponse(TareaBase):
     id: int
-    usuario_id: int
+    usuario_id: Optional[int]
 
     class Config:
         from_attributes = True

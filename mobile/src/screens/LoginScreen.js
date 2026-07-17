@@ -9,7 +9,8 @@ import {
   Platform,
   ScrollView,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../navigation/AppNavigator';
@@ -33,10 +34,11 @@ export default function LoginScreen({ navigation }) {
 
           {/* Logo & Header */}
           <View style={styles.headerContainer}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="flash" size={32} color="#ffffff" />
-            </View>
-            <Text style={styles.logoText}>Priority Pulse</Text>
+            <Image
+              source={require('../../assets/Logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.tagline}>Organiza. Juega. Gana.</Text>
           </View>
 
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fcfaff',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   keyboardView: {
     flex: 1,
@@ -142,32 +145,17 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
-  logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#6e00ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#6e00ff',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
-    marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -0.5,
+  logoImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 0,
   },
   tagline: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 4,
+    marginTop: 0,
     fontWeight: '600',
   },
   card: {

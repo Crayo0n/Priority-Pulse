@@ -10,6 +10,9 @@ def get_usuario(db: Session, usuario_id: int):
 def get_usuario_by_email(db: Session, correo: str):
     return db.query(Usuario).filter(Usuario.correo == correo).first()
 
+def get_usuario_by_correo(db: Session, correo: str):
+    return get_usuario_by_email(db, correo)
+
 def autenticar_usuario(db: Session, correo: str, password: str):
     usuario = get_usuario_by_email(db, correo=correo)
     if not usuario:

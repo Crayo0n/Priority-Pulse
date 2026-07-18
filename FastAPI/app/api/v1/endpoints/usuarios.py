@@ -9,7 +9,7 @@ from app.crud import crud_usuario
 router = APIRouter()
 
 
-@router.post("/login", response_model=LoginResponse, summary="Autenticación de administrador")
+@router.post("/login/admin", response_model=LoginResponse, summary="Autenticación de administrador")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     usuario = crud_usuario.verificar_credenciales(db, correo=payload.correo, password=payload.password)
     if not usuario:

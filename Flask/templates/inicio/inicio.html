@@ -8,64 +8,63 @@
     <section>
         <!-- Daily Command Center Hero -->
         <div
-            class="bg-gradient-to-br from-purple-700 via-purple-100 to-white rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between mb-8 border border-gray-700">
+            class="bg-gradient-to-br from-[#1e0a3d] via-[#11052c] to-[#09021a] rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between mb-8 border border-purple-500/20">
             <!-- Cool glowing orb background effects -->
             <div
-                class="absolute -right-32 -top-32 w-96 h-96 bg-primary opacity-20 rounded-full blur-[100px] pointer-events-none">
+                class="absolute -right-32 -top-32 w-96 h-96 bg-primary opacity-30 rounded-full blur-[100px] pointer-events-none">
             </div>
             <div
-                class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-500 opacity-20 rounded-full blur-[80px] pointer-events-none">
+                class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-500 opacity-30 rounded-full blur-[80px] pointer-events-none">
             </div>
 
             <div class="flex-1 w-full relative z-10 mb-8 md:mb-0">
                 <div class="flex items-center gap-3 mb-2">
                     <span
-                        class="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-bold tracking-widest uppercase flex items-center gap-1 backdrop-blur-md">
+                        class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-bold tracking-widest uppercase flex items-center gap-1 backdrop-blur-md">
                         <span class="material-symbols-outlined text-[14px] text-green-400">check_circle</span>
                         Tareas Activas
                     </span>
-                    <span class="text-xs font-bold text-black-400 uppercase tracking-widest">Panel de Control</span>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Panel de Control</span>
                 </div>
 
                 <h1 class="text-4xl md:text-5xl font-black mb-3 leading-tight">
-                    Conquista tu Día<span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400"></span>
+                    Conquista tu Día <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#b87cff] to-blue-400">Productivo</span>
                 </h1>
 
-                <p class="text-black-600 font-medium max-w-lg text-sm mb-6 leading-relaxed">
-                    Tienes <strong class="text-white">{{ tareas|length }} tareas</strong> esperándote. Mantén tu racha
+                <p class="text-gray-300 font-medium max-w-lg text-sm mb-6 leading-relaxed">
+                    Tienes <strong class="text-white font-black">{{ tareas|length }} tareas</strong> esperándote. Mantén tu racha
                     activa y acelera hacia tu próxima meta.
                 </p>
 
                 <!-- Gamified Stats Minibar -->
                 <div class="flex flex-wrap items-center gap-4">
                     <div
-                        class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl backdrop-blur-md">
+                        class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-colors">
                         <div
                             class="w-10 h-10 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center">
                             <span class="material-symbols-outlined">local_fire_department</span>
                         </div>
                         <div>
                             <p
-                                class="text-[0.6rem] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">
+                                class="text-[0.6rem] font-bold text-purple-300 uppercase tracking-widest leading-none mb-1">
                                 Racha Activa</p>
-                            <p class="text-lg font-black text-black leading-none">{{ usuario.racha }} Días</p>
+                            <p class="text-lg font-black text-white leading-none">{{ usuario.racha }} Días</p>
                         </div>
                     </div>
 
                     <div
-                        class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-2xl backdrop-blur-md">
+                        class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-colors">
                         <div
                             class="w-10 h-10 rounded-full bg-yellow-400/20 text-yellow-300 flex items-center justify-center">
                             <span class="material-symbols-outlined">star</span>
                         </div>
                         <div>
                             <p
-                                class="text-[0.6rem] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">
+                                class="text-[0.6rem] font-bold text-purple-300 uppercase tracking-widest leading-none mb-1">
                                 Progreso NVL {{ usuario.nivel }}</p>
                             <p class="text-sm font-black text-white leading-none">
                                 <span class="text-yellow-400">{{ usuario.xp }}</span> <span
-                                    class="text-gray-500 text-xs">/ {{"%d" % usuario.xp_siguiente}} XP</span>
+                                    class="text-gray-400 text-xs">/ {{"%d" % usuario.xp_siguiente}} XP</span>
                             </p>
                         </div>
                     </div>
@@ -122,66 +121,66 @@
             {% if rutinas %}
             {% for rutina in rutinas %}
             <div
-                class="bg-gradient-to-b from-purple-200 to-Azure-800 p-6 rounded-3xl shadow-xl border border-white-700 relative overflow-hidden group">
+                class="bg-gradient-to-b from-[#fbf9ff] to-[#f3ebff] p-6 rounded-3xl shadow-md border border-purple-100 relative overflow-hidden group hover:shadow-lg transition-all animate-fade-in-up">
                 <div
-                    class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500 opacity-20 rounded-full blur-[40px] pointer-events-none">
+                    class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500 opacity-10 rounded-full blur-[40px] pointer-events-none">
                 </div>
 
                 <div class="relative z-10 flex justify-between items-start mb-4">
                     <div>
                         <span
-                            class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[0.6rem] font-black rounded-lg uppercase tracking-widest border border-blue-500/30">Rutina</span>
-                        <h3 class="text-blacks text-lg font-black mt-2">{{ rutina.nombre }}</h3>
+                            class="px-2 py-0.5 bg-purple-100 text-primary text-[0.6rem] font-bold rounded-lg uppercase tracking-widest border border-purple-200">Rutina</span>
+                        <h3 class="text-gray-900 text-lg font-black mt-2">{{ rutina.nombre }}</h3>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="openDeleteRoutineModal('{{ rutina.id }}', '{{ rutina.nombre }}')" type="button"
-                            class="w-8 h-8 rounded-full bg-purple-300 hover:bg-red-500/20 text-white/50 hover:text-red-400 flex items-center justify-center transition-colors backdrop-blur-md border border-transparent hover:border-red-500/30 shrink-0">
+                            class="w-8 h-8 rounded-full bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors shadow-sm shrink-0 border border-gray-100 hover:border-red-200">
                             <span class="material-symbols-outlined text-[16px]">delete</span>
                         </button>
                         <div
-                            class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white backdrop-blur-md shadow-inner shrink-0">
-                            <span class="material-symbols-outlined text-[20px]">sync</span>
+                            class="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center text-primary shadow-sm shrink-0 border border-purple-100">
+                            <span class="material-symbols-outlined text-[18px]">sync</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-black/5 rounded-2xl p-4 mb-4 border border-black/10">
-                    <h4 class="text-xs font-bold text-black-400 uppercase tracking-wider mb-3">Progreso de Tareas</h4>
+                <div class="bg-white/70 rounded-2xl p-4 mb-4 border border-purple-100/50 shadow-sm">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Progreso de Tareas</h4>
                     {% if rutina.tareas %}
                     <div class="space-y-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
                         {% for sub in rutina.tareas | sort(attribute='id') %}
                         <div
-                            class="flex items-center justify-between gap-1 p-1 rounded-lg hover:bg-white/5 transition-colors group/task">
+                            class="flex items-center justify-between gap-1 p-1 rounded-lg hover:bg-purple-50/50 transition-colors group/task">
                             <div class="flex items-center gap-2 truncate">
                                 <form action="{{ url_for('toggle_tarea', tarea_id=sub.id) }}" method="POST"
                                     class="m-0 p-0 flex shrink-0">
                                     <button type="submit"
                                         class="w-4 h-4 rounded border flex items-center justify-center transition-all hover:scale-110 
                                                 {% if sub.estado == 'completada' %}bg-green-500 border-green-500 text-white
-                                                {% else %}bg-transparent border-gray-500 hover:border-gray-300{% endif %}">
+                                                {% else %}bg-white border-gray-300 hover:border-primary{% endif %}">
                                         {% if sub.estado == 'completada' %}
                                         <span class="material-symbols-outlined text-[10px] font-black">check</span>
                                         {% endif %}
                                     </button>
                                 </form>
                                 <span
-                                    class="text-xs font-medium {% if sub.estado == 'completada' %}text-gray-500 line-through{% else %}text-black-300{% endif %} truncate">{{
+                                    class="text-xs font-medium {% if sub.estado == 'completada' %}text-gray-400 line-through{% else %}text-gray-700{% endif %} truncate">{{
                                     sub.titulo }}</span>
                             </div>
                             <span
-                                class="text-[10px] text-gray-500 font-bold bg-white/10 px-1.5 py-0.5 rounded shadow-sm shrink-0">+{{
+                                class="text-[10px] text-primary font-bold bg-purple-50 px-1.5 py-0.5 rounded shadow-sm shrink-0">+{{
                                 sub.xp_recompensa }} XP</span>
                         </div>
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-[0.65rem] font-medium text-gray-500 text-center py-4">No hay tareas en esta rutina.
+                    <p class="text-[0.65rem] font-medium text-gray-400 text-center py-4">No hay tareas en esta rutina.
                         ¡Añade la primera!</p>
                     {% endif %}
                 </div>
 
                 <button onclick="openAddTaskToRoutine('{{ rutina.id }}')"
-                    class="relative z-10 w-full py-2.5 bg-purple-100 hover:bg-purple/200 text-black-300 rounded-xl text-xs font-bold transition-colors border border-purple/10 flex items-center justify-center gap-2 group-hover:bg-purple-600/20 group-hover:border-purple-500/30">
+                    class="relative z-10 w-full py-2.5 bg-white hover:bg-purple-50 text-primary rounded-xl text-xs font-bold transition-all border border-purple-200 hover:border-purple-300 flex items-center justify-center gap-2 shadow-sm">
                     <span class="material-symbols-outlined text-[16px]">add</span>
                     Añadir Tarea a Rutina
                 </button>
@@ -337,17 +336,6 @@
                 <span class="material-symbols-outlined text-primary font-bold text-[24px]">add</span>
                 <h2 class="text-xl font-black">Añadir Tarea</h2>
             </div>
-
-            <div class="flex items-center gap-3 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
-                <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-wider">Utilizar IA</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer">
-                    <div
-                        class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary">
-                    </div>
-                </label>
-                <span class="material-symbols-outlined text-gray-400 text-[18px]">smart_toy</span>
-            </div>
         </div>
 
         <div class="p-6 sm:p-8 space-y-6 overflow-y-auto">
@@ -375,18 +363,26 @@
                 </div>
 
                 <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Prioridad</label>
-                        <span class="text-[0.65rem] font-bold text-primary">Bajo - Alto</span>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Prioridad / XP</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="add-priority-btn-20" onclick="setPriority('add', 20, this)" class="priority-btn-add flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Baja</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+20 XP</span>
+                        </button>
+                        <button type="button" id="add-priority-btn-50" onclick="setPriority('add', 50, this)" class="priority-btn-add flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Media</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+50 XP</span>
+                        </button>
+                        <button type="button" id="add-priority-btn-80" onclick="setPriority('add', 80, this)" class="priority-btn-add flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Alta</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+80 XP</span>
+                        </button>
+                        <button type="button" id="add-priority-btn-100" onclick="setPriority('add', 100, this)" class="priority-btn-add flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Crítica</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+100 XP</span>
+                        </button>
                     </div>
-                    <div class="px-2 mt-6 relative">
-                        <input name="prioridad" type="range" min="1" max="100" value="70"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary relative z-10">
-                        <div class="flex justify-between mt-2 px-1">
-                            <span class="text-[0.6rem] font-bold text-gray-400 uppercase">Bajo</span>
-                            <span class="text-[0.6rem] font-bold text-primary uppercase">Alto</span>
-                        </div>
-                    </div>
+                    <input type="hidden" name="prioridad" id="add-prioridad-input" value="50">
                 </div>
             </div>
 
@@ -435,17 +431,6 @@
                 <span class="material-symbols-outlined text-primary font-bold text-[24px]">edit_square</span>
                 <h2 class="text-xl font-black">Actualizar Tarea</h2>
             </div>
-
-            <div class="flex items-center gap-3 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
-                <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-wider">Utilizar IA</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="sr-only peer" checked>
-                    <div
-                        class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary">
-                    </div>
-                </label>
-                <span class="material-symbols-outlined text-primary text-[18px]">smart_toy</span>
-            </div>
         </div>
 
         <div class="p-6 sm:p-8 space-y-6 overflow-y-auto">
@@ -473,18 +458,26 @@
                 </div>
 
                 <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Prioridad</label>
-                        <span class="text-[0.65rem] font-bold text-red-500">Alta</span>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Prioridad / XP</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="edit-priority-btn-20" onclick="setPriority('edit', 20, this)" class="priority-btn-edit flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Baja</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+20 XP</span>
+                        </button>
+                        <button type="button" id="edit-priority-btn-50" onclick="setPriority('edit', 50, this)" class="priority-btn-edit flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Media</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+50 XP</span>
+                        </button>
+                        <button type="button" id="edit-priority-btn-80" onclick="setPriority('edit', 80, this)" class="priority-btn-edit flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Alta</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+80 XP</span>
+                        </button>
+                        <button type="button" id="edit-priority-btn-100" onclick="setPriority('edit', 100, this)" class="priority-btn-edit flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                            <span class="text-xs font-bold text-gray-500">Crítica</span>
+                            <span class="text-[0.65rem] font-bold text-gray-400 mt-0.5">+100 XP</span>
+                        </button>
                     </div>
-                    <div class="px-2 mt-6 relative">
-                        <input id="edit-prioridad" name="prioridad" type="range" min="1" max="100"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500 relative z-10">
-                        <div class="flex justify-between mt-2 px-1">
-                            <span class="text-[0.6rem] font-bold text-gray-400 uppercase">Bajo</span>
-                            <span class="text-[0.6rem] font-bold text-red-500 uppercase">Alto</span>
-                        </div>
-                    </div>
+                    <input type="hidden" name="prioridad" id="edit-prioridad-input" value="50">
                 </div>
             </div>
 
@@ -680,7 +673,9 @@
             document.getElementById('edit-fecha').value = '';
         }
         if (xp) {
-            document.getElementById('edit-prioridad').value = xp;
+            selectPriorityButton('edit', parseInt(xp));
+        } else {
+            selectPriorityButton('edit', 50);
         }
         openModal('modal-edit');
     }
@@ -757,11 +752,13 @@
     // Nueva lógica para Rutinas
     function openModalAdd() {
         document.getElementById('hidden-add-rutina-id').value = '';
+        selectPriorityButton('add', 50);
         openModal('modal-add');
     }
 
     function openAddTaskToRoutine(rutinaId) {
         document.getElementById('hidden-add-rutina-id').value = rutinaId;
+        selectPriorityButton('add', 50);
         openModal('modal-add');
     }
 
@@ -802,5 +799,69 @@
             }
         });
     }
+
+    function setPriority(prefix, value, element) {
+        // Update hidden input
+        const input = document.getElementById(prefix + '-prioridad-input');
+        if (input) {
+            input.value = value;
+        }
+        
+        // Reset all buttons of this prefix
+        const buttons = document.querySelectorAll('.priority-btn-' + prefix);
+        buttons.forEach(btn => {
+            btn.className = 'priority-btn-' + prefix + ' flex flex-col items-center justify-center p-2.5 rounded-xl border border-gray-150 bg-gray-50 hover:bg-gray-100 transition-all text-center';
+            const titleSpan = btn.children[0];
+            const xpSpan = btn.children[1];
+            if (titleSpan) titleSpan.className = 'text-xs font-bold text-gray-500';
+            if (xpSpan) xpSpan.className = 'text-[0.65rem] font-bold text-gray-400 mt-0.5';
+        });
+        
+        // Set active styles based on value
+        let activeBorder = 'border-primary/20 bg-primary/5';
+        let textStyle = 'text-primary font-extrabold';
+        let xpStyle = 'text-primary/70 font-bold mt-0.5';
+        
+        if (value === 20) {
+            activeBorder = 'border-emerald-500/20 bg-emerald-500/5';
+            textStyle = 'text-emerald-600 font-extrabold';
+            xpStyle = 'text-emerald-500/70 font-bold mt-0.5';
+        } else if (value === 50) {
+            activeBorder = 'border-blue-500/20 bg-blue-500/5';
+            textStyle = 'text-blue-600 font-extrabold';
+            xpStyle = 'text-blue-500/70 font-bold mt-0.5';
+        } else if (value === 80) {
+            activeBorder = 'border-orange-500/20 bg-orange-500/5';
+            textStyle = 'text-orange-600 font-extrabold';
+            xpStyle = 'text-orange-500/70 font-bold mt-0.5';
+        } else if (value === 100) {
+            activeBorder = 'border-red-500/20 bg-red-500/5';
+            textStyle = 'text-red-600 font-extrabold';
+            xpStyle = 'text-red-500/70 font-bold mt-0.5';
+        }
+        
+        if (element) {
+            element.className = 'priority-btn-' + prefix + ' flex flex-col items-center justify-center p-2.5 rounded-xl border-2 ' + activeBorder + ' transition-all text-center transform scale-105 shadow-sm';
+            if (element.children[0]) element.children[0].className = 'text-xs ' + textStyle;
+            if (element.children[1]) element.children[1].className = 'text-[0.65rem] ' + xpStyle;
+        }
+    }
+
+    function selectPriorityButton(prefix, value) {
+        let targetVal = 50;
+        if (value <= 35) targetVal = 20;
+        else if (value > 35 && value <= 65) targetVal = 50;
+        else if (value > 65 && value <= 90) targetVal = 80;
+        else if (value > 90) targetVal = 100;
+        
+        const button = document.getElementById(prefix + '-priority-btn-' + targetVal);
+        if (button) {
+            setPriority(prefix, targetVal, button);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        selectPriorityButton('add', 50);
+    });
 </script>
 {% endblock %}

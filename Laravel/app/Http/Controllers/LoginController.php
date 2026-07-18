@@ -24,7 +24,7 @@ class LoginController extends Controller
         ]);
 
         // Llamar al endpoint de login en FastAPI
-        $response = ApiService::post('/usuarios/login', [
+        $response = ApiService::post('/usuarios/login/admin', [
             'correo'   => $request->correo,
             'password' => $request->password,
         ]);

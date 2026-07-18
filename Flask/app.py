@@ -1,11 +1,29 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session
 import requests
 import functools
+import os
 
 API_URL = "http://api:8000/api/v1"
+API_KEY = os.getenv("API_KEY", "ABC123")
 
 app = Flask(__name__)
 app.secret_key = 'priority_pulse_mvp_secure_key'
+
+def api_request(method, path, **kwargs):
+    """
+    Wrapper for requests to inject API Key and JWT Bearer token headers.
+    """
+    headers = kwargs.get('headers', {})
+    headers['x-api-key'] = API_KEY
+
+    
+    if 'access_token' in session:
+        headers['Authorization'] = f"Bearer {session['access_token']}"
+        
+    kwargs['headers'] = headers
+    
+    url = f"{API_URL}{path}"
+    return requests.request(method, url, **kwargs)
 
 def login_required(f):
     @functools.wraps(f)
@@ -30,11 +48,13 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         try:
-            response = requests.post(f'{API_URL}/usuarios/login', json={"correo": email, "password": password})
+            # Login now returns flat structure including access_token
+            response = api_request('POST', '/usuarios/login', json={"correo": email, "password": password})
             if response.status_code == 200:
                 user = response.json()
                 session['usuario_id'] = user['id']
                 session['nombre_usuario'] = user['nombre_usuario']
+                session['access_token'] = user['access_token']
                 return redirect(url_for('inicio'))
             else:
                 flash('Credenciales incorrectas.', 'error')
@@ -54,12 +74,18 @@ def registro():
         password = request.form.get('password')
         try:
             payload = {"correo": email, "nombre_usuario": fullname, "password": password}
-            response = requests.post(f'{API_URL}/usuarios/', json=payload)
+            response = api_request('POST', '/usuarios/', json=payload)
             if response.status_code in [200, 201]:
-                user = response.json()
-                session['usuario_id'] = user['id']
-                session['nombre_usuario'] = user['nombre_usuario']
-                return redirect(url_for('inicio'))
+                # Automatically log in the user after registration to obtain the JWT token
+                login_resp = api_request('POST', '/usuarios/login', json={"correo": email, "password": password})
+                if login_resp.status_code == 200:
+                    user = login_resp.json()
+                    session['usuario_id'] = user['id']
+                    session['nombre_usuario'] = user['nombre_usuario']
+                    session['access_token'] = user['access_token']
+                    return redirect(url_for('inicio'))
+                else:
+                    return redirect(url_for('login'))
             else:
                 flash('Error al crear cuenta. ' + response.text, 'error')
         except Exception as e:
@@ -96,19 +122,20 @@ def inicio():
     
     try:
         # Verificar y resetear racha si han pasado mas de 24h
-        requests.post(f'{API_URL}/usuarios/{usuario_id}/check-streak')
+        api_request('POST', f'/usuarios/{usuario_id}/check-streak')
 
         # Fetch tasks and routines for specific user
-        response_tareas = requests.get(f'{API_URL}/tareas/')
+        # Note: /tareas/ endpoint is restricted to admins only, so we fetch /tareas/usuario/{usuario_id}
+        # to prevent unauthorized access errors and enforce BOLA/IDOR compliance
+        response_tareas = api_request('GET', f'/tareas/usuario/{usuario_id}')
         if response_tareas.status_code == 200:
-            todas_las_tareas = response_tareas.json()
-            tareas = [t for t in todas_las_tareas if not t.get('rutina_id') and t.get('usuario_id') == usuario_id]
+            tareas = response_tareas.json()
             
-        response_rutinas = requests.get(f'{API_URL}/rutinas/usuario/{usuario_id}')
+        response_rutinas = api_request('GET', f'/rutinas/usuario/{usuario_id}')
         if response_rutinas.status_code == 200:
             rutinas = response_rutinas.json()
 
-        response_user = requests.get(f'{API_URL}/usuarios/{usuario_id}')
+        response_user = api_request('GET', f'/usuarios/{usuario_id}')
         if response_user.status_code == 200:
             u_data = response_user.json()
             usuario_info['xp'] = u_data.get('xp_total', 0)
@@ -155,7 +182,7 @@ def crear_tarea():
         payload["rutina_id"] = int(rutina_id)
     
     try:
-        response = requests.post(f'{API_URL}/tareas/', json=payload)
+        response = api_request('POST', '/tareas/', json=payload)
         if response.status_code == 201:
             flash('¡Tarea creada exitosamente!', 'success')
         else:
@@ -197,7 +224,7 @@ def editar_tarea(tarea_id):
         payload["tags"] = tags
         
     try:
-        response = requests.put(f'{API_URL}/tareas/{tarea_id}', json=payload)
+        response = api_request('PUT', f'/tareas/{tarea_id}', json=payload)
         if response.status_code == 200:
             flash('Tarea actualizada correctamente.', 'success')
         else:
@@ -212,7 +239,7 @@ def editar_tarea(tarea_id):
 @login_required
 def eliminar_tarea(tarea_id):
     try:
-        response = requests.delete(f'{API_URL}/tareas/{tarea_id}')
+        response = api_request('DELETE', f'/tareas/{tarea_id}')
         if response.status_code == 204:
             flash('La tarea fue eliminada.', 'success')
         else:
@@ -235,7 +262,7 @@ def crear_rutina():
     }
     
     try:
-        response = requests.post(f'{API_URL}/rutinas/', json=payload)
+        response = api_request('POST', '/rutinas/', json=payload)
         if response.status_code == 201:
             flash('¡Rutina creada exitosamente!', 'success')
         else:
@@ -259,7 +286,7 @@ def agregar_rutina_molde():
         }
         
         try:
-            res_rut = requests.post(f'{API_URL}/rutinas/', json=rutina_payload)
+            res_rut = api_request('POST', '/rutinas/', json=rutina_payload)
             if res_rut.status_code == 201:
                 rutina_id = res_rut.json().get('id')
                 
@@ -282,7 +309,7 @@ def agregar_rutina_molde():
                         "rutina_id": rutina_id,
                         "tags": "Hábito,Mañana"
                     }
-                    requests.post(f'{API_URL}/tareas/', json=t_payload)
+                    api_request('POST', '/tareas/', json=t_payload)
                     
                 flash('¡Rutina "Mañana Maestra" añadida a tu día!', 'success')
             else:
@@ -297,7 +324,7 @@ def agregar_rutina_molde():
 @login_required
 def eliminar_rutina(rutina_id):
     try:
-        response = requests.delete(f'{API_URL}/rutinas/{rutina_id}')
+        response = api_request('DELETE', f'/rutinas/{rutina_id}')
         if response.status_code == 204:
             flash('La rutina fue eliminada.', 'success')
         else:
@@ -312,7 +339,7 @@ def eliminar_rutina(rutina_id):
 @login_required
 def toggle_tarea(tarea_id):
     try:
-        res = requests.get(f'{API_URL}/tareas/{tarea_id}')
+        res = api_request('GET', f'/tareas/{tarea_id}')
         if res.status_code == 200:
             tarea = res.json()
             nuevo_estado = "completada" if tarea.get("estado") != "completada" else "pendiente"
@@ -320,7 +347,7 @@ def toggle_tarea(tarea_id):
             payload = {
                 "estado": nuevo_estado
             }
-            put_res = requests.put(f'{API_URL}/tareas/{tarea_id}', json=payload)
+            put_res = api_request('PUT', f'/tareas/{tarea_id}', json=payload)
             
             if put_res.status_code == 200:
                 if nuevo_estado == "completada":
@@ -344,7 +371,7 @@ def rutinas():
 def clasificacion():
     usuarios = []
     try:
-        response = requests.get(f'{API_URL}/usuarios/leaderboard?limit=50')
+        response = api_request('GET', '/usuarios/leaderboard?limit=50')
         if response.status_code == 200:
             usuarios = response.json()
     except Exception as e:
@@ -356,7 +383,7 @@ def clasificacion():
 def perfil():
     usuario = {}
     try:
-        res = requests.get(f'{API_URL}/usuarios/{session["usuario_id"]}')
+        res = api_request('GET', f'/usuarios/{session["usuario_id"]}')
         if res.status_code == 200:
             usuario = res.json()
     except Exception as e:
@@ -371,7 +398,7 @@ def editar_perfil():
         correo = request.form.get('correo')
         payload = {"nombre_usuario": nombre_usuario, "correo": correo}
         try:
-            res = requests.put(f'{API_URL}/usuarios/{session["usuario_id"]}', json=payload)
+            res = api_request('PUT', f'/usuarios/{session["usuario_id"]}', json=payload)
             if res.status_code == 200:
                 flash('Perfil actualizado con éxito.', 'success')
             else:
@@ -382,7 +409,7 @@ def editar_perfil():
     else:
         usuario = {}
         try:
-            res = requests.get(f'{API_URL}/usuarios/{session["usuario_id"]}')
+            res = api_request('GET', f'/usuarios/{session["usuario_id"]}')
             if res.status_code == 200:
                 usuario = res.json()
         except Exception as e:
@@ -395,4 +422,4 @@ def ajustes_notificaciones():
     return render_template('/notificaciones/ajuste.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

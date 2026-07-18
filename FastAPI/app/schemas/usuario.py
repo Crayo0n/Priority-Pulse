@@ -44,3 +44,6 @@ class LoginResponse(BaseModel):
     correo: str
     rol: str
     xp_total: int
+    access_token: str
+    token_type: str = "bearer"
+

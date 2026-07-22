@@ -1,8 +1,7 @@
+node_modules/
+vendor/
+venv/
+.env
+*.log
 __pycache__/
 *.py[cod]
-*$py.class
-
-venv/
-env/
-.env
-/Flask/__pycache__

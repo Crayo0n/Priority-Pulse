@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,10 +10,19 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
-  Image
+  Image,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 import { AuthContext } from '../navigation/AppNavigator';
+import { API_URL, API_KEY, GOOGLE_WEB_CLIENT_ID } from '../api/config';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function RegistroScreen({ navigation }) {
   const { login } = useContext(AuthContext);
@@ -22,6 +31,130 @@ export default function RegistroScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const redirectUri = makeRedirectUri({ useProxy: true });
+  console.log("GOOGLE OAUTH REDIRECT URI (RegistroScreen):", redirectUri);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_WEB_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    responseType: 'id_token',
+    redirectUri,
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const id_token = response.params?.id_token || response.authentication?.idToken;
+      if (id_token) {
+        handleBackendGoogleLogin(id_token);
+      } else {
+        Alert.alert('Error', 'No se obtuvo el token de Google');
+      }
+    } else if (response?.type === 'error') {
+      Alert.alert('Error de autenticación', 'Ocurrió un problema con Google.');
+    }
+  }, [response]);
+
+  const handleBackendGoogleLogin = async (idToken) => {
+    setGoogleLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/usuarios/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
+        body: JSON.stringify({ id_token: idToken })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        await AsyncStorage.setItem('userToken', data.access_token);
+        await AsyncStorage.setItem('userData', JSON.stringify(data));
+        login();
+      } else {
+        Alert.alert('Error', data.detail || 'No se pudo registrar/iniciar sesión con Google.');
+      }
+    } catch (error) {
+      Alert.alert('Error de red', 'No se pudo conectar con el servidor.');
+      console.error(error);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!fullname || !email || !username || !password) {
+      Alert.alert('Error', 'Por favor llena todos los campos.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // 1. Crear usuario
+      const createRes = await fetch(`${API_URL}/usuarios/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
+        body: JSON.stringify({
+          correo: email.trim(),
+          nombre_usuario: username.trim(),
+          password: password,
+          rol: "user"
+        })
+      });
+
+      const createData = await createRes.json();
+      
+      if (!createRes.ok) {
+        let errorMsg = 'No se pudo crear la cuenta';
+        if (typeof createData.detail === 'string') {
+          errorMsg = createData.detail;
+        } else if (Array.isArray(createData.detail)) {
+          errorMsg = createData.detail.map(e => e.msg).join('\n');
+        } else if (createData.detail && typeof createData.detail === 'object') {
+          errorMsg = JSON.stringify(createData.detail);
+        }
+        
+        Alert.alert('Error', errorMsg);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Iniciar sesión automáticamente
+      const loginRes = await fetch(`${API_URL}/usuarios/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
+        body: JSON.stringify({
+          correo: email.trim(),
+          password: password
+        })
+      });
+
+      const loginData = await loginRes.json();
+
+      if (loginRes.ok) {
+        await AsyncStorage.setItem('userToken', loginData.access_token);
+        await AsyncStorage.setItem('userData', JSON.stringify(loginData));
+        login(); // Actualiza context
+      } else {
+        Alert.alert('Error', 'Cuenta creada pero no se pudo iniciar sesión. Por favor inicia sesión manualmente.');
+        navigation.navigate('Login');
+      }
+    } catch (error) {
+      Alert.alert('Error de red', 'No se pudo conectar con el servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -48,6 +181,29 @@ export default function RegistroScreen({ navigation }) {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Crear Cuenta</Text>
             <Text style={styles.cardSubtitle}>Regístrate gratis y sube de nivel hoy</Text>
+
+            {/* Google Signup Button */}
+            <TouchableOpacity
+              style={[styles.googleButton, (googleLoading || !request) && { opacity: 0.7 }]}
+              onPress={() => promptAsync()}
+              disabled={googleLoading || !request}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color="#111827" />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={20} color="#ea4335" style={{ marginRight: 8 }} />
+                  <Text style={styles.googleButtonText}>Registrarme con Google</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>O REGÍSTRATE CON CORREO</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
             {/* Fullname Input */}
             <View style={styles.inputLabelContainer}>
@@ -141,11 +297,22 @@ export default function RegistroScreen({ navigation }) {
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity style={styles.primaryButton} onPress={login}>
-              <Text style={styles.primaryButtonText}>Registrarme y empezar</Text>
-              <Ionicons name="chevron-forward" size={18} color="#ffffff" style={{ marginLeft: 4 }} />
+            <TouchableOpacity 
+              style={[styles.primaryButton, loading && { opacity: 0.7 }]} 
+              onPress={handleRegister}
+              disabled={loading || googleLoading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.primaryButtonText}>Registrarme y empezar</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#ffffff" style={{ marginLeft: 4 }} />
+                </>
+              )}
             </TouchableOpacity>
           </View>
+
 
           {/* Footer Link */}
           <View style={styles.footer}>
@@ -276,6 +443,43 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '800',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    fontSize: 10,
+    color: '#9ca3af',
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  googleButton: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 14,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  googleButtonText: {
+    color: '#1f2937',
+    fontSize: 15,
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',

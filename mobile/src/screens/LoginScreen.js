@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,16 +10,120 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
-  Image
+  Image,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 import { AuthContext } from '../navigation/AppNavigator';
+import { API_URL, API_KEY, GOOGLE_WEB_CLIENT_ID } from '../api/config';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const redirectUri = makeRedirectUri({ useProxy: true });
+  console.log("GOOGLE OAUTH REDIRECT URI (LoginScreen):", redirectUri);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_WEB_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    responseType: 'id_token',
+    redirectUri,
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const id_token = response.params?.id_token || response.authentication?.idToken;
+      if (id_token) {
+        handleBackendGoogleLogin(id_token);
+      } else {
+        Alert.alert('Error', 'No se pudo extraer el id_token');
+      }
+    } else if (response?.type === 'error') {
+      Alert.alert('Error de autenticación', 'Ocurrió un problema con Google Login.');
+    }
+  }, [response]);
+
+  const handleBackendGoogleLogin = async (idToken) => {
+    setGoogleLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/usuarios/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
+        body: JSON.stringify({ id_token: idToken })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        await AsyncStorage.setItem('userToken', data.access_token);
+        await AsyncStorage.setItem('userData', JSON.stringify(data));
+        login();
+      } else {
+        Alert.alert('Error', data.detail || 'No se pudo iniciar sesión con Google.');
+      }
+    } catch (error) {
+      Alert.alert('Error de red', 'No se pudo conectar con el servidor.');
+      console.error(error);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Por favor ingresa tu correo y contraseña.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/usuarios/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
+        body: JSON.stringify({ correo: email.trim(), password: password })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        await AsyncStorage.setItem('userToken', data.access_token);
+        await AsyncStorage.setItem('userData', JSON.stringify(data));
+        login(); // Actualiza el context para ir a MainApp
+      } else {
+        let errorMsg = 'Credenciales inválidas';
+        if (typeof data.detail === 'string') {
+          errorMsg = data.detail;
+        } else if (Array.isArray(data.detail)) {
+          errorMsg = data.detail.map(e => e.msg).join('\n');
+        } else if (data.detail && typeof data.detail === 'object') {
+          errorMsg = JSON.stringify(data.detail);
+        }
+        Alert.alert('Error', errorMsg);
+      }
+    } catch (error) {
+      Alert.alert('Error de red', 'No se pudo conectar con el servidor.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -97,11 +201,45 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
 
             {/* Submit Button */}
-            <TouchableOpacity style={styles.primaryButton} onPress={login}>
-              <Text style={styles.primaryButtonText}>Entrar al juego</Text>
-              <Ionicons name="arrow-forward" size={18} color="#ffffff" style={{ marginLeft: 6 }} />
+            <TouchableOpacity 
+              style={[styles.primaryButton, loading && { opacity: 0.7 }]} 
+              onPress={handleLogin}
+              disabled={loading || googleLoading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.primaryButtonText}>Entrar al juego</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#ffffff" style={{ marginLeft: 6 }} />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>O O O</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Google Login Button */}
+            <TouchableOpacity
+              style={[styles.googleButton, (googleLoading || !request) && { opacity: 0.7 }]}
+              onPress={() => promptAsync()}
+              disabled={googleLoading || !request}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color="#111827" />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={20} color="#ea4335" style={{ marginRight: 8 }} />
+                  <Text style={styles.googleButtonText}>Continuar con Google</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
+
 
           {/* Footer Link */}
           <View style={styles.footer}>
@@ -241,6 +379,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 12,
+    color: '#9ca3af',
+    fontWeight: '600',
+    letterSpacing: 2,
+  },
+  googleButton: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 14,
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  googleButtonText: {
+    color: '#1f2937',
+    fontSize: 15,
+    fontWeight: '700',
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -257,3 +432,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+

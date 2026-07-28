@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL, API_KEY } from '../api/config';
 
 const { width } = Dimensions.get('window');
 
@@ -43,6 +44,10 @@ export default function InicioScreen({ route, navigation }) {
   const [filterType, setFilterType] = useState('all'); // 'all' | 'pendiente' | 'completada' | 'alta' | 'media' | 'baja'
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('task'); // 'task' | 'routine'
+  
+  // Seleccionar tarea para rutina
+  const [selectTaskModalVisible, setSelectTaskModalVisible] = useState(false);
+  const [selectedRoutineForTask, setSelectedRoutineForTask] = useState(null);
 
   // Form states for new task/routine
   const [newTitle, setNewTitle] = useState('');
@@ -113,51 +118,62 @@ export default function InicioScreen({ route, navigation }) {
   const [editDeadlineDate, setEditDeadlineDate] = useState('');
   const [editDeadlineTime, setEditDeadlineTime] = useState('');
 
-  // Verificar la racha en el montante del componente (Regla de negocio: /usuarios/{id}/check-streak)
-  useEffect(() => {
-    console.log("Streak check request sent to API: /usuarios/check-streak");
-  }, []);
+  // Data States
+  const [user, setUser] = useState(null);
+  const [tareas, setTareas] = useState([]);
+  const [rutinas, setRutinas] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Cargar rutinas de AsyncStorage
-  const loadRoutinesFromStorage = async () => {
+  const fetchData = async () => {
     try {
-      const storedRoutinesJson = await AsyncStorage.getItem('@rutinas');
-      if (storedRoutinesJson) {
-        setRutinas(JSON.parse(storedRoutinesJson));
-      } else {
-        const defaultRoutines = [
-          {
-            id: 'r1',
-            nombre: 'Mañana Maestra 🌅',
-            esta_activa: true,
-            tareas: [
-              { id: 'rt1', titulo: 'Hidratación', descripcion: 'Beber 500ml de agua', xp_recompensa: 5, estado: 'pendiente' },
-              { id: 'rt2', titulo: 'Estiramiento', descripcion: 'Movilidad ligera', xp_recompensa: 10, estado: 'completada' },
-              { id: 'rt3', titulo: 'Meditación', descripcion: 'Respiración consciente', xp_recompensa: 15, estado: 'pendiente' }
-            ]
-          },
-          {
-            id: 'r2',
-            nombre: 'Bloque de Enfoque Nocturno 🌌',
-            esta_activa: true,
-            tareas: [
-              { id: 'rt4', titulo: 'Planificar el día siguiente', descripcion: 'Definir 3 prioridades del mañana', xp_recompensa: 20, estado: 'pendiente' },
-              { id: 'rt5', titulo: 'Lectura offline', descripcion: 'Leer 10 páginas de un libro físico', xp_recompensa: 15, estado: 'pendiente' }
-            ]
-          }
-        ];
-        setRutinas(defaultRoutines);
-        await AsyncStorage.setItem('@rutinas', JSON.stringify(defaultRoutines));
+      const storedUserData = await AsyncStorage.getItem('userData');
+      const token = await AsyncStorage.getItem('userToken');
+      
+      if (!storedUserData || !token) {
+        setLoading(false);
+        return;
+      }
+      
+      const userData = JSON.parse(storedUserData);
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY,
+        'Authorization': `Bearer ${token}`
+      };
+
+      // 1. Check streak (esto actualiza y devuelve el usuario)
+      const userRes = await fetch(`${API_URL}/usuarios/${userData.id}/check-streak`, { 
+        method: 'POST', 
+        headers 
+      });
+      if (userRes.ok) {
+        const u = await userRes.json();
+        setUser(u);
+      }
+
+      // 2. Tareas
+      const tareasRes = await fetch(`${API_URL}/tareas/usuario/${userData.id}`, { headers });
+      if (tareasRes.ok) {
+        const t = await tareasRes.json();
+        setTareas(t);
+      }
+
+      // 3. Rutinas
+      const rutinasRes = await fetch(`${API_URL}/rutinas/usuario/${userData.id}`, { headers });
+      if (rutinasRes.ok) {
+        const r = await rutinasRes.json();
+        setRutinas(r);
       }
     } catch (e) {
-      console.error("Failed to load routines from AsyncStorage", e);
+      console.error("Error fetching data:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Cargar de AsyncStorage cada vez que gane foco
   useFocusEffect(
     useCallback(() => {
-      loadRoutinesFromStorage();
+      fetchData();
     }, [])
   );
 
@@ -174,13 +190,13 @@ export default function InicioScreen({ route, navigation }) {
     setSelectedTask(task);
     setEditTitle(task.titulo);
     setEditDesc(task.descripcion || '');
-    setEditPriority(task.xp_recompensa.toString());
+    setEditPriority((task.xp_recompensa || 10).toString());
     setEditTags(task.tags || '');
 
     if (task.fecha_limite) {
-      const parts = task.fecha_limite.split(' ');
+      const parts = task.fecha_limite.split('T');
       setEditDeadlineDate(parts[0] || getTodayDateString());
-      setEditDeadlineTime(parts[1] || getTodayTimeString());
+      setEditDeadlineTime(parts[1] ? parts[1].substring(0,5) : getTodayTimeString());
     } else {
       setEditDeadlineDate(getTodayDateString());
       setEditDeadlineTime(getTodayTimeString());
@@ -189,79 +205,153 @@ export default function InicioScreen({ route, navigation }) {
     setEditModalVisible(true);
   };
 
-  // Mock initial tasks with local state to allow toggling completion status
-  const [tareas, setTareas] = useState([
-    { id: '1', titulo: 'Completar informe final', descripcion: 'Redactar conclusiones y enviar al equipo de PI.', es_critica: true, xp_recompensa: 90, estado: 'pendiente', tags: 'Trabajo,Urgente', fecha_limite: '2026-07-06 23:59' },
-    { id: '2', titulo: 'Revisar documentación de API', descripcion: 'Verificar los nuevos endpoints de FastAPI.', es_critica: false, xp_recompensa: 40, estado: 'pendiente', tags: 'Estudio', fecha_limite: '2026-07-07 14:00' },
-    { id: '3', titulo: 'Comprar víveres', descripcion: 'Frutas, verduras y leche de almendra.', es_critica: false, xp_recompensa: 10, estado: 'completada', tags: 'Personal', fecha_limite: '2026-07-05 18:00' },
-    { id: '4', titulo: 'Cita con el dentista', descripcion: 'Limpieza semestral a las 4:00 PM.', es_critica: true, xp_recompensa: 85, estado: 'pendiente', tags: 'Salud', fecha_limite: '2026-07-06 16:00' },
-  ]);
-
-  // Mock initial routines with local state
-  const [rutinas, setRutinas] = useState([]);
-
-  // Handle toggling task state
-  const toggleTarea = (id) => {
-    setTareas(prev =>
-      prev.map(t =>
-        t.id === id ? { ...t, estado: t.estado === 'completada' ? 'pendiente' : 'completada' } : t
-      )
-    );
+  // Handle toggling task state API call
+  const toggleTarea = async (id) => {
+    const task = tareas.find(t => t.id === id);
+    if (!task) return;
+    
+    // Optimistic UI update
+    setTareas(prev => prev.map(t => t.id === id ? { ...t, estado: t.estado === 'completada' ? 'pendiente' : 'completada' } : t));
+    
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY,
+        'Authorization': `Bearer ${token}`
+      };
+      
+      const payload = { ...task, estado: task.estado === 'completada' ? 'pendiente' : 'completada' };
+      const res = await fetch(`${API_URL}/tareas/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        // Revert on error
+        setTareas(prev => prev.map(t => t.id === id ? { ...t, estado: task.estado } : t));
+        Alert.alert("Error", "No se pudo actualizar la tarea");
+      } else {
+        // Refetch user to get new XP and streak
+        fetchData();
+      }
+    } catch (e) {
+      // Revert on error
+      setTareas(prev => prev.map(t => t.id === id ? { ...t, estado: task.estado } : t));
+      Alert.alert("Error", "Problema de red");
+    }
   };
 
-  // Handle toggling routine sub-task state
-  const toggleRoutineTarea = (routineId, subTaskId) => {
-    const updatedRutinas = rutinas.map(r => {
+  const toggleRoutineTarea = async (routineId, subTaskId) => {
+    // Optimistic Update
+    setRutinas(prev => prev.map(r => {
       if (r.id === routineId) {
         return {
           ...r,
-          tareas: r.tareas.map(st =>
-            st.id === subTaskId ? { ...st, estado: st.estado === 'completada' ? 'pendiente' : 'completada' } : st
-          )
+          tareas: r.tareas.map(st => st.id === subTaskId ? { ...st, estado: st.estado === 'completada' ? 'pendiente' : 'completada' } : st)
         };
       }
       return r;
-    });
-    setRutinas(updatedRutinas);
-    AsyncStorage.setItem('@rutinas', JSON.stringify(updatedRutinas)).catch(e => console.error(e));
+    }));
+    
+    // In a real app we'd call the toggle-tarea API endpoint for this subtask too.
+    // For now we assume routine subtasks are just tasks in the DB.
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const headers = { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` };
+      
+      let subTaskToToggle = null;
+      rutinas.forEach(r => { if (r.id === routineId) { subTaskToToggle = r.tareas.find(t => t.id === subTaskId); }});
+      
+      if (subTaskToToggle) {
+        const payload = { ...subTaskToToggle, estado: subTaskToToggle.estado === 'completada' ? 'pendiente' : 'completada' };
+        await fetch(`${API_URL}/tareas/${subTaskId}`, { method: 'PUT', headers, body: JSON.stringify(payload) });
+        fetchData();
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
-  // Handle adding new task mockup
-  const handleCreateTask = () => {
-    if (!newTitle.trim()) return;
-    const isCritica = parseInt(newPriority) >= 80;
-    const newTask = {
-      id: Date.now().toString(),
-      titulo: newTitle,
-      descripcion: newDesc || 'Sin descripción',
-      es_critica: isCritica,
-      xp_recompensa: parseInt(newPriority) || 10,
-      estado: 'pendiente',
-      tags: newTags || 'General',
-      fecha_limite: (newDeadlineDate && newDeadlineTime) ? `${newDeadlineDate} ${newDeadlineTime}` : null
-    };
-    setTareas([newTask, ...tareas]);
-    setNewTitle('');
-    setNewDesc('');
-    setNewPriority('50');
-    setNewTags('');
-    setNewDeadlineDate(getTodayDateString());
-    setNewDeadlineTime(getTodayTimeString());
-    setModalVisible(false);
+  const handleRemoveTaskFromRoutine = async (taskId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const res = await fetch(`${API_URL}/tareas/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ rutina_id: null })
+      });
+      if (res.ok) fetchData();
+      else Alert.alert("Error", "No se pudo remover la tarea");
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // Handle adding new routine mockup
-  const handleCreateRoutine = () => {
+  const handleAddTaskToRoutine = async (taskId, routineId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const res = await fetch(`${API_URL}/tareas/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ rutina_id: routineId })
+      });
+      if (res.ok) fetchData();
+      else Alert.alert("Error", "No se pudo añadir la tarea a la rutina");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const openSelectTaskModal = (routineId) => {
+    setSelectedRoutineForTask(routineId);
+    setSelectTaskModalVisible(true);
+  };
+
+  const handleCreateTask = async () => {
     if (!newTitle.trim()) return;
-    const newRoutine = {
-      id: Date.now().toString(),
-      nombre: newTitle,
-      esta_activa: true,
-      tareas: []
-    };
-    setRutinas([newRoutine, ...rutinas]);
-    setNewTitle('');
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const userData = JSON.parse(await AsyncStorage.getItem('userData'));
+      const isCritica = parseInt(newPriority) >= 80;
+      
+      const payload = {
+        titulo: newTitle,
+        descripcion: newDesc || null,
+        es_critica: isCritica,
+        xp_recompensa: parseInt(newPriority) || 10,
+        estado: 'pendiente',
+        tags: newTags || 'General',
+        fecha_limite: (newDeadlineDate && newDeadlineTime) ? `${newDeadlineDate}T${newDeadlineTime}:00` : null,
+        usuario_id: userData.id
+      };
+      
+      const res = await fetch(`${API_URL}/tareas/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        setNewTitle('');
+        setNewDesc('');
+        setNewPriority('50');
+        setNewTags('');
+        setModalVisible(false);
+        fetchData();
+      } else {
+        Alert.alert("Error", "No se pudo crear la tarea");
+      }
+    } catch (e) {
+      Alert.alert("Error", "No se pudo conectar");
+    }
+  };
+
+  const handleCreateRoutine = async () => {
+    // For now, this is mocked as we might not have a POST /rutinas endpoint ready
     setModalVisible(false);
+    Alert.alert("Info", "Endpoint de crear rutina en progreso");
   };
 
 
@@ -397,26 +487,26 @@ export default function InicioScreen({ route, navigation }) {
         <View style={styles.profileCard}>
           <View style={styles.profileRow}>
             <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>M</Text>
+              <Text style={styles.avatarText}>{user?.nombre_usuario?.[0]?.toUpperCase() || 'U'}</Text>
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.welcomeText}>Hola de nuevo,</Text>
-              <Text style={styles.userName}>Mauricio 👋</Text>
+              <Text style={styles.userName}>{user?.nombre_usuario || 'Usuario'} 👋</Text>
             </View>
             <View style={styles.streakBadge}>
               <Text style={styles.streakEmoji}>🔥</Text>
-              <Text style={styles.streakText}>12 Días</Text>
+              <Text style={styles.streakText}>{user?.racha_actual || 0} Días</Text>
             </View>
           </View>
 
           {/* Level Progress */}
           <View style={styles.levelContainer}>
             <View style={styles.levelHeader}>
-              <Text style={styles.levelText}>Nivel 4</Text>
-              <Text style={styles.xpText}>500 / 1000 XP</Text>
+              <Text style={styles.levelText}>Nivel {user?.nivel_id || 1}</Text>
+              <Text style={styles.xpText}>{user?.xp_total || 0} XP</Text>
             </View>
             <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: '50%' }]} />
+              <View style={[styles.progressBarFill, { width: `${Math.min(100, ((user?.xp_total || 0) % 100))}%` }]} />
             </View>
           </View>
         </View>
@@ -533,11 +623,14 @@ export default function InicioScreen({ route, navigation }) {
                         
                         {/* Badges container */}
                         <View style={styles.badgesContainer}>
-                          {item.tags.split(',').map((tag, idx) => (
-                            <View key={idx} style={[styles.tagBadge, { marginRight: 6, marginBottom: 4 }]}>
-                              <Text style={styles.tagBadgeText}>{tag}</Text>
-                            </View>
-                          ))}
+                          {(item.tags || '').split(',').map((tag, idx) => {
+                            if (!tag.trim()) return null;
+                            return (
+                              <View key={idx} style={[styles.tagBadge, { marginRight: 6, marginBottom: 4 }]}>
+                                <Text style={styles.tagBadgeText}>{tag.trim()}</Text>
+                              </View>
+                            );
+                          })}
                           {item.fecha_limite && (
                             <View style={styles.deadlineBadge}>
                               <Ionicons name="time-outline" size={11} color="#f43f5e" style={{ marginRight: 3 }} />
@@ -591,10 +684,15 @@ export default function InicioScreen({ route, navigation }) {
                       <Ionicons name="calendar-sharp" size={18} color="#6e00ff" style={{ marginRight: 6 }} />
                       <Text style={styles.routineName}>{routine.nombre}</Text>
                     </View>
-                    <View style={styles.routineStats}>
-                      <Text style={styles.routineStatsText}>
-                        {routine.tareas.filter(st => st.estado === 'completada').length}/{routine.tareas.length}
-                      </Text>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <TouchableOpacity onPress={() => openSelectTaskModal(routine.id)} style={{ marginRight: 12 }}>
+                        <Ionicons name="add-circle" size={24} color="#6e00ff" />
+                      </TouchableOpacity>
+                      <View style={styles.routineStats}>
+                        <Text style={styles.routineStatsText}>
+                          {routine.tareas.filter(st => st.estado === 'completada').length}/{routine.tareas.length}
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
@@ -624,7 +722,12 @@ export default function InicioScreen({ route, navigation }) {
                               <Text style={styles.subtaskDesc}>{subTask.descripcion}</Text>
                             </View>
                           </View>
-                          <Text style={styles.subtaskXp}>+{subTask.xp_recompensa} XP</Text>
+                          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Text style={styles.subtaskXp}>+{subTask.xp_recompensa} XP</Text>
+                            <TouchableOpacity onPress={() => handleRemoveTaskFromRoutine(subTask.id)} style={{marginLeft: 8, padding: 4}}>
+                              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                            </TouchableOpacity>
+                          </View>
                         </TouchableOpacity>
                       )
                     })
@@ -1026,6 +1129,45 @@ export default function InicioScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
+      {/* Modal para seleccionar tarea existente */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={selectTaskModalVisible}
+        onRequestClose={() => setSelectTaskModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Añadir Tarea a Rutina</Text>
+              <TouchableOpacity onPress={() => setSelectTaskModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{maxHeight: 400, marginTop: 10}}>
+              {tareas.filter(t => t.rutina_id !== selectedRoutineForTask).length === 0 ? (
+                <Text style={{textAlign: 'center', color: '#6b7280', marginVertical: 20}}>No hay tareas disponibles para añadir.</Text>
+              ) : (
+                tareas.filter(t => t.rutina_id !== selectedRoutineForTask).map(t => (
+                  <TouchableOpacity 
+                    key={t.id} 
+                    style={{padding: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6'}}
+                    onPress={() => {
+                      handleAddTaskToRoutine(t.id, selectedRoutineForTask);
+                      setSelectTaskModalVisible(false);
+                    }}
+                  >
+                    <Text style={{fontWeight: 'bold', color: '#111827', fontSize: 16}}>{t.titulo}</Text>
+                    <Text style={{fontSize: 13, color: '#6b7280', marginTop: 2}}>{t.descripcion || 'Sin descripción'}</Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }

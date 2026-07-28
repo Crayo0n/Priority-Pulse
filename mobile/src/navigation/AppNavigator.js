@@ -1,9 +1,10 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, View, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Screens (we will create these next)
 import LoginScreen from '../screens/LoginScreen';
@@ -81,9 +82,38 @@ function AppTabs() {
 
 export default function AppNavigator() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        if (token) {
+          setIsAuthenticated(true);
+        }
+      } catch (e) {
+        console.error("Error al obtener token", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkToken();
+  }, []);
 
   const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const logout = async () => {
+    await AsyncStorage.removeItem('userToken');
+    await AsyncStorage.removeItem('userData');
+    setIsAuthenticated(false);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fcfaff' }}>
+        <ActivityIndicator size="large" color="#6e00ff" />
+      </View>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

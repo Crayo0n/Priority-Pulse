@@ -6,21 +6,35 @@
 
 {% block form_content %}
 <form action="/registro" method="POST" class="flex flex-col gap-5">
-    
-    <div class="grid grid-cols-2 gap-4">
-        <button type="button" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors group">
-            <span class="text-sm font-bold text-gray-700">Google</span>
-        </button>
-        <button type="button" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors group">
-            <span class="text-sm font-bold text-gray-700">Apple</span>
-        </button>
-    </div>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-    <div class="relative flex items-center py-2">
-        <div class="flex-grow border-t border-gray-100"></div>
-        <span class="flex-shrink-0 mx-4 text-[0.65rem] font-bold text-gray-400 uppercase tracking-wide">O usa tu correo</span>
-        <div class="flex-grow border-t border-gray-100"></div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<div class="flex flex-col gap-3 mb-4">
+    <div id="g_id_onload"
+         data-client_id="{{ config['GOOGLE_CLIENT_ID'] or 'YOUR_GOOGLE_CLIENT_ID' }}"
+         data-callback="handleCredentialResponse">
     </div>
+    <div class="g_id_signin w-full flex justify-center" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signup_with" data-size="large" data-logo_alignment="left"></div>
+    <script>
+        function handleCredentialResponse(response) {
+            console.log("Google credential response received:", response);
+            document.getElementById('google_id_token').value = response.credential;
+            document.getElementById('google-login-form').submit();
+        }
+    </script>
+</div>
+
+<form id="google-login-form" action="/login/google" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <input type="hidden" id="google_id_token" name="id_token" value=""/>
+</form>
+
+<div class="relative flex items-center py-2 mb-4">
+    <div class="flex-grow border-t border-gray-100"></div>
+    <span class="flex-shrink-0 mx-4 text-[0.65rem] font-bold text-gray-400 uppercase tracking-wide">O usa tu correo</span>
+    <div class="flex-grow border-t border-gray-100"></div>
+</div>
+
 
     <div class="space-y-4">
         <div class="flex flex-col gap-1.5">
@@ -60,7 +74,7 @@
                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                     <span class="material-symbols-outlined text-gray-400 text-[20px] group-focus-within:text-primary transition-colors">lock</span>
                 </div>
-                <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-4">
+                <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-4" onclick="togglePasswordVisibility('password', this)">
                     <span class="material-symbols-outlined text-gray-400 text-[20px] hover:text-gray-600">visibility_off</span>
                 </button>
             </div>
@@ -71,4 +85,18 @@
         Crear Cuenta
     </button>
 </form>
+
+<script>
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('span');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'visibility_off';
+    }
+}
+</script>
 {% endblock %}

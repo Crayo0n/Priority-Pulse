@@ -3,321 +3,261 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<div class="space-y-12">
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.4s ease-out forwards;
+    }
+</style>
+<div class="space-y-6">
 
     <section>
-        <!-- Daily Command Center Hero -->
-        <div
-            class="bg-gradient-to-br from-[#1e0a3d] via-[#11052c] to-[#09021a] rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between mb-8 border border-purple-500/20">
-            <!-- Cool glowing orb background effects -->
-            <div
-                class="absolute -right-32 -top-32 w-96 h-96 bg-primary opacity-30 rounded-full blur-[100px] pointer-events-none">
-            </div>
-            <div
-                class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-500 opacity-30 rounded-full blur-[80px] pointer-events-none">
-            </div>
-
-            <div class="flex-1 w-full relative z-10 mb-8 md:mb-0">
-                <div class="flex items-center gap-3 mb-2">
-                    <span
-                        class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-bold tracking-widest uppercase flex items-center gap-1 backdrop-blur-md">
-                        <span class="material-symbols-outlined text-[14px] text-green-400">check_circle</span>
-                        Tareas Activas
+        <!-- Clean Light Hero -->
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-200 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+            <div class="flex-1 w-full relative z-10 mb-6 md:mb-0">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="px-3 py-1 bg-purple-50 text-primary border border-purple-100 rounded-full text-[0.65rem] font-bold tracking-widest uppercase flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">dashboard</span>
+                        Panel de Control
                     </span>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Panel de Control</span>
                 </div>
-
-                <h1 class="text-4xl md:text-5xl font-black mb-3 leading-tight">
-                    Conquista tu Día <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#b87cff] to-blue-400">Productivo</span>
+                <h1 class="text-3xl md:text-4xl font-black mb-2 text-gray-900 tracking-tight">
+                    Conquista tu Día
                 </h1>
-
-                <p class="text-gray-300 font-medium max-w-lg text-sm mb-6 leading-relaxed">
-                    Tienes <strong class="text-white font-black">{{ tareas|length }} tareas</strong> esperándote. Mantén tu racha
-                    activa y acelera hacia tu próxima meta.
+                <p class="text-gray-500 font-medium max-w-lg text-sm mb-6">
+                    Tienes <strong id="task-count-text" class="text-gray-900">{{ tareas|length }} tareas</strong> esperándote.
                 </p>
-
-                <!-- Gamified Stats Minibar -->
+                <!-- Compact Stats -->
                 <div class="flex flex-wrap items-center gap-4">
-                    <div
-                        class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-colors">
-                        <div
-                            class="w-10 h-10 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center">
-                            <span class="material-symbols-outlined">local_fire_department</span>
+                    <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2 rounded-2xl">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px]">local_fire_department</span>
                         </div>
                         <div>
-                            <p
-                                class="text-[0.6rem] font-bold text-purple-300 uppercase tracking-widest leading-none mb-1">
-                                Racha Activa</p>
-                            <p class="text-lg font-black text-white leading-none">{{ usuario.racha }} Días</p>
+                            <p class="text-[0.6rem] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Racha</p>
+                            <p class="text-sm font-black text-gray-900 leading-none">{{ usuario.racha }} Días</p>
                         </div>
                     </div>
-
-                    <div
-                        class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-colors">
-                        <div
-                            class="w-10 h-10 rounded-full bg-yellow-400/20 text-yellow-300 flex items-center justify-center">
-                            <span class="material-symbols-outlined">star</span>
+                    <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2 rounded-2xl">
+                        <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px]">star</span>
                         </div>
                         <div>
-                            <p
-                                class="text-[0.6rem] font-bold text-purple-300 uppercase tracking-widest leading-none mb-1">
-                                Progreso NVL {{ usuario.nivel }}</p>
-                            <p class="text-sm font-black text-white leading-none">
-                                <span class="text-yellow-400">{{ usuario.xp }}</span> <span
-                                    class="text-gray-400 text-xs">/ {{"%d" % usuario.xp_siguiente}} XP</span>
-                            </p>
+                            <p class="text-[0.6rem] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Nivel {{ usuario.nivel }}</p>
+                            <p id="user-xp-display" class="text-sm font-black text-gray-900 leading-none transition-all duration-300">{{ usuario.xp }} <span class="text-gray-400 text-xs">/ {{"%d" % usuario.xp_siguiente}}</span></p>
                         </div>
                     </div>
                 </div>
             </div>
-
             <!-- Action Button Area -->
-            <div class="relative z-10 w-full md:w-auto flex flex-col md:flex-row flex-shrink-0 items-center gap-6">
-                <!-- Circular streak progress (fills at 30 days) -->
-                <div
-                    class="relative w-28 h-28 hidden xl:flex items-center justify-center -mr-2 shadow-inner rounded-full bg-black/20">
-                    {% set racha_pct = [usuario.racha / 30, 1.0] | min %}
-                    {% set stroke_offset = (283 * (1 - racha_pct)) | int %}
-                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8">
-                        </circle>
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="#f97316" stroke-width="8"
-                            stroke-dasharray="283" stroke-dashoffset="{{ stroke_offset }}"
-                            stroke-linecap="round"
-                            class="transition-all duration-1000 origin-center scale-95"></circle>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="text-xl font-black text-white">{{ usuario.racha }}🔥</span>
-                        <span
-                            class="text-[0.55rem] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Racha</span>
-                    </div>
-                </div>
-
+            <div class="relative z-10 w-full md:w-auto flex flex-col items-center">
                 <button onclick="openModalAdd()"
-                    class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary-hover hover:to-blue-700 text-white rounded-2xl font-black shadow-[0_0_20px_rgba(110,0,255,0.4)] transition-all flex items-center justify-center gap-2 group hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(110,0,255,0.6)]">
-                    <span
-                        class="material-symbols-outlined text-[24px] group-hover:rotate-90 transition-transform">add_task</span>
+                    class="w-full md:w-auto px-8 py-3.5 bg-primary hover:bg-primary-hover text-white rounded-2xl font-black shadow-[0_4px_14px_0_rgba(110,0,255,0.39)] hover:shadow-[0_6px_20px_rgba(110,0,255,0.23)] transition-all flex items-center justify-center gap-2 group hover:-translate-y-0.5">
+                    <span class="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">add_task</span>
                     Nueva Tarea
                 </button>
             </div>
         </div>
     </section>
 
-    <!-- Sección de Rutinas Gamificadas -->
-    <section class="mb-12">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-2xl font-black text-gray-900 tracking-tight">Tus Rutinas</h2>
-                <p class="text-sm text-gray-600 font-bold mt-1">Grupos de misiones para mantener tus hábitos diarios.
-                </p>
-            </div>
-            <button onclick="openModal('modal-add-rutina')"
-                class="px-4 py-2 bg-[#f3ebff] text-primary hover:bg-[#e9d5ff] rounded-xl text-sm font-bold shadow-sm transition-colors border border-[#e9d5ff]">
-                + Nueva Rutina
-            </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% if rutinas %}
-            {% for rutina in rutinas %}
-            <div
-                class="bg-gradient-to-b from-[#fbf9ff] to-[#f3ebff] p-6 rounded-3xl shadow-md border border-purple-100 relative overflow-hidden group hover:shadow-lg transition-all animate-fade-in-up">
-                <div
-                    class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500 opacity-10 rounded-full blur-[40px] pointer-events-none">
+    <!-- Grid Layout: Tasks (Left) and Routines (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- MAIN COLUMN: TAREAS -->
+        <div class="lg:col-span-8 space-y-8">
+            <section>
+                <div class="mb-4">
+                    <h2 class="text-2xl font-black text-gray-900 tracking-tight">Feed de Tareas</h2>
+                    <p class="text-sm text-gray-600 font-bold mt-1">Revisa tus actividades importantes del día y complétalas.</p>
                 </div>
-
-                <div class="relative z-10 flex justify-between items-start mb-4">
-                    <div>
-                        <span
-                            class="px-2 py-0.5 bg-purple-100 text-primary text-[0.6rem] font-bold rounded-lg uppercase tracking-widest border border-purple-200">Rutina</span>
-                        <h3 class="text-gray-900 text-lg font-black mt-2">{{ rutina.nombre }}</h3>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="openDeleteRoutineModal('{{ rutina.id }}', '{{ rutina.nombre }}')" type="button"
-                            class="w-8 h-8 rounded-full bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors shadow-sm shrink-0 border border-gray-100 hover:border-red-200">
-                            <span class="material-symbols-outlined text-[16px]">delete</span>
-                        </button>
-                        <div
-                            class="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center text-primary shadow-sm shrink-0 border border-purple-100">
-                            <span class="material-symbols-outlined text-[18px]">sync</span>
-                        </div>
+                
+                <!-- Calendario Horizontal -->
+                <div class="mb-6">
+                    <div id="horizontal-calendar" class="flex overflow-x-auto gap-3 pb-2 snap-x scrollbar-hide" style="scrollbar-width: none;">
+                        <!-- Se generarán dinámicamente con JS -->
                     </div>
                 </div>
 
-                <div class="bg-white/70 rounded-2xl p-4 mb-4 border border-purple-100/50 shadow-sm">
-                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Progreso de Tareas</h4>
-                    {% if rutina.tareas %}
-                    <div class="space-y-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
-                        {% for sub in rutina.tareas | sort(attribute='id') %}
-                        <div
-                            class="flex items-center justify-between gap-1 p-1 rounded-lg hover:bg-purple-50/50 transition-colors group/task">
-                            <div class="flex items-center gap-2 truncate">
-                                <form action="{{ url_for('toggle_tarea', tarea_id=sub.id) }}" method="POST"
-                                    class="m-0 p-0 flex shrink-0">
-                                    <button type="submit"
-                                        class="w-4 h-4 rounded border flex items-center justify-center transition-all hover:scale-110 
-                                                {% if sub.estado == 'completada' %}bg-green-500 border-green-500 text-white
-                                                {% else %}bg-white border-gray-300 hover:border-primary{% endif %}">
-                                        {% if sub.estado == 'completada' %}
-                                        <span class="material-symbols-outlined text-[10px] font-black">check</span>
-                                        {% endif %}
-                                    </button>
-                                </form>
-                                <span
-                                    class="text-xs font-medium {% if sub.estado == 'completada' %}text-gray-400 line-through{% else %}text-gray-700{% endif %} truncate">{{
-                                    sub.titulo }}</span>
+                <div class="flex flex-wrap gap-2 mb-6 items-center border-b border-gray-200 pb-4" id="task-filters-container">
+                    <button onclick="filterFeed('all', this)" class="filter-btn px-4 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-full transition-all shadow-sm">Todas</button>
+                    <div class="w-px h-4 bg-gray-300 mx-2"></div>
+                    <button onclick="filterFeed('completada', this)" class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full text-xs font-bold transition-colors">Completadas</button>
+                    <button onclick="filterFeed('pendiente', this)" class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full text-xs font-bold transition-colors">Pendientes</button>
+                    <div class="w-px h-4 bg-gray-300 mx-2"></div>
+                    <button onclick="filterFeed('alta', this)" class="filter-btn px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-full text-xs font-bold transition-colors">Alta</button>
+                    <button onclick="filterFeed('media', this)" class="filter-btn px-3 py-1.5 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-full text-xs font-bold transition-colors">Media</button>
+                    <button onclick="filterFeed('baja', this)" class="filter-btn px-3 py-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full text-xs font-bold transition-colors">Baja</button>
+                </div>
+
+                <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% if tareas %}
+                    {% for tarea in tareas %}
+                    <div class="task-card bg-white p-5 rounded-2xl shadow-sm border-2 {% if tarea.es_critica %}border-red-200 hover:border-red-400{% else %}border-gray-200 hover:border-primary{% endif %} flex flex-col gap-3 transition-all group overflow-hidden relative"
+                        data-status="{{ tarea.estado }}"
+                        data-priority="{% if tarea.es_critica or (tarea.xp_recompensa and tarea.xp_recompensa > 50) %}alta{% elif tarea.xp_recompensa and tarea.xp_recompensa > 20 %}media{% else %}baja{% endif %}">
+                        
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 {% if tarea.es_critica %}bg-red-50 text-red-500{% else %}bg-purple-50 text-primary{% endif %} rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-[18px] font-bold">{% if tarea.es_critica %}local_fire_department{% else %}rocket_launch{% endif %}</span>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <h4 class="text-base font-black {% if tarea.estado == 'completada' %}text-gray-400 line-through{% else %}text-gray-900{% endif %} truncate" title="{{ tarea.titulo }}">
+                                        {{ tarea.titulo }}
+                                    </h4>
+                                    {% if tarea.descripcion %}
+                                    <p class="text-[0.7rem] font-bold text-gray-500 truncate" title="{{ tarea.descripcion }}">{{ tarea.descripcion }}</p>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <span
-                                class="text-[10px] text-primary font-bold bg-purple-50 px-1.5 py-0.5 rounded shadow-sm shrink-0">+{{
-                                sub.xp_recompensa }} XP</span>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col gap-2 shrink-0">
+                                <button type="button" onclick="toggleTask('{{ tarea.id }}', this, false)"
+                                    class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shadow-sm
+                                        {% if tarea.estado == 'completada' %}bg-emerald-500 text-white border-emerald-500
+                                        {% else %}bg-gray-50 text-gray-400 border-gray-200 hover:bg-emerald-50 hover:text-emerald-500 hover:border-emerald-300{% endif %}">
+                                    <span class="material-symbols-outlined text-[16px] font-bold">check</span>
+                                </button>
+                                <button onclick="openEditModal(this)" data-id="{{ tarea.id }}" data-titulo="{{ tarea.titulo }}"
+                                    data-descripcion="{{ tarea.descripcion or '' }}" data-fecha="{{ tarea.fecha_limite or '' }}"
+                                    data-xp="{{ tarea.xp_recompensa or 10 }}" data-tags="{{ tarea.tags or '' }}" 
+                                    data-emoji="{{ tarea.emoji or '' }}" data-repeticion="{{ tarea.repeticion or '' }}"
+                                    data-tiempo-inicio="{{ tarea.tiempo_inicio or '' }}" data-tiempo-fin="{{ tarea.tiempo_fin or '' }}"
+                                    data-recordatorio-hora="{{ tarea.recordatorio_hora or '' }}"
+                                    data-grupo-id="{{ tarea.grupo_id or '' }}"
+                                    data-rutina-id="{{ tarea.rutina_id if tarea.rutina_id else 'none' }}" type="button"
+                                    class="w-8 h-8 rounded-xl bg-gray-50 text-yellow-500 flex items-center justify-center hover:bg-yellow-500 hover:text-white transition-colors border border-gray-200 hover:border-yellow-500 shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px] font-bold">edit</span>
+                                </button>
+                                <button onclick="openDeleteModal(this)" data-id="{{ tarea.id }}" data-titulo="{{ tarea.titulo }}" data-grupo-id="{{ tarea.grupo_id or '' }}" type="button"
+                                    class="w-8 h-8 rounded-xl bg-gray-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border border-gray-200 hover:border-red-500 shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px] font-bold">delete</span>
+                                </button>
+                            </div>
                         </div>
-                        {% endfor %}
+
+                        <!-- Footer details -->
+                        <div class="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-gray-100">
+                            <span class="text-[0.65rem] font-bold px-2 py-0.5 rounded uppercase tracking-wider
+                                {% if tarea.es_critica %}bg-red-50 text-red-600{% elif tarea.xp_recompensa >= 80 %}bg-orange-50 text-orange-600{% elif tarea.xp_recompensa >= 50 %}bg-yellow-50 text-yellow-600{% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {% if tarea.es_critica %}Crítica{% elif tarea.xp_recompensa >= 80 %}Alta{% elif tarea.xp_recompensa >= 50 %}Media{% else %}Baja{% endif %}
+                            </span>
+                            <span class="text-[0.65rem] font-black text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded shadow-sm">+{{ tarea.xp_recompensa }} XP</span>
+                            
+                            {% if tarea.tags %}
+                            {% for tag in tarea.tags.split(',') %}
+                            <span class="px-2 py-0.5 rounded text-[0.65rem] font-bold bg-purple-50 text-primary border border-purple-100 lowercase truncate max-w-[80px]">#{{ tag.strip() }}</span>
+                            {% endfor %}
+                            {% endif %}
+                            
+                            <div class="flex items-center gap-1 ml-auto text-gray-500">
+                                <span class="material-symbols-outlined text-[14px]">schedule</span>
+                                <span class="text-[0.65rem] font-bold">
+                                    {% if tarea.fecha_limite %}{{ tarea.fecha_limite.split('T')[0] }}{% else %}Sin fecha{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
                     </div>
+                    {% endfor %}
                     {% else %}
-                    <p class="text-[0.65rem] font-medium text-gray-400 text-center py-4">No hay tareas en esta rutina.
-                        ¡Añade la primera!</p>
-                    {% endif %}
-                </div>
-
-                <button onclick="openAddTaskToRoutine('{{ rutina.id }}')"
-                    class="relative z-10 w-full py-2.5 bg-white hover:bg-purple-50 text-primary rounded-xl text-xs font-bold transition-all border border-purple-200 hover:border-purple-300 flex items-center justify-center gap-2 shadow-sm">
-                    <span class="material-symbols-outlined text-[16px]">add</span>
-                    Añadir Tarea a Rutina
-                </button>
-            </div>
-            {% endfor %}
-            {% else %}
-            <div
-                class="col-span-full py-8 text-center bg-white rounded-3xl border border-dashed border-gray-300 flex flex-col items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-3xl text-gray-400">route</span>
-                <h3 class="font-bold text-gray-600 text-sm">Aún no has creado rutinas</h3>
-                <p class="text-xs text-gray-400">Agrupa tus tareas repetitivas en rutinas y súbelas de nivel más rápido.
-                </p>
-            </div>
-            {% endif %}
-        </div>
-    </section>
-
-    <section>
-        <div class="mb-6">
-            <h2 class="text-2xl font-black text-gray-900 tracking-tight">Feed de Tareas</h2>
-            <p class="text-sm text-gray-600 font-bold mt-1">Revisa tus actividades importantes del día y márcalas como
-                completada para mantener tu racha.</p>
-        </div>
-
-        <div class="flex flex-wrap gap-2 mb-8 items-center border-b border-gray-200 pb-4" id="task-filters-container">
-            <button onclick="filterFeed('all', this)"
-                class="filter-btn px-4 py-1.5 bg-[#b87cff] text-white text-xs font-bold rounded-full transition-all">Todas</button>
-            <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            <button onclick="filterFeed('completada', this)"
-                class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 text-xs font-bold transition-colors">Completadas</button>
-            <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            <button onclick="filterFeed('pendiente', this)"
-                class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 text-xs font-bold transition-colors">Pendientes</button>
-            <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            <button onclick="filterFeed('alta', this)"
-                class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 text-xs font-bold transition-colors">Alta</button>
-            <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            <button onclick="filterFeed('media', this)"
-                class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 text-xs font-bold transition-colors">Media</button>
-            <div class="w-px h-4 bg-gray-300 mx-2"></div>
-            <button onclick="filterFeed('baja', this)"
-                class="filter-btn px-3 py-1.5 text-gray-600 hover:text-gray-900 text-xs font-bold transition-colors">Baja</button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {% if tareas %}
-            {% for tarea in tareas %}
-            <div class="task-card bg-white p-5 rounded-2xl shadow-sm border-2 {% if tarea.es_critica %}border-[#ffcfcf]{% else %}border-[#e9d5ff]{% endif %} flex items-center gap-4 hover:border-primary transition-all group overflow-hidden relative"
-                data-status="{{ tarea.estado }}"
-                data-priority="{% if tarea.es_critica or (tarea.xp_recompensa and tarea.xp_recompensa > 50) %}alta{% elif tarea.xp_recompensa and tarea.xp_recompensa > 20 %}media{% else %}baja{% endif %}">
-
-                {% if tarea.es_critica %}
-                <div
-                    class="absolute top-0 right-0 w-16 h-16 bg-red-50 rounded-bl-full -z-10 transition-transform group-hover:scale-150">
-                </div>
-                {% else %}
-                <div
-                    class="absolute top-0 right-0 w-16 h-16 bg-[#faf5ff] rounded-bl-full -z-10 transition-transform group-hover:scale-150">
-                </div>
-                {% endif %}
-
-                <div
-                    class="w-12 h-12 {% if tarea.es_critica %}bg-red-50 text-red-500{% else %}bg-purple-50 text-primary{% endif %} rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer shadow-inner">
-                    <span class="material-symbols-outlined text-[20px] font-bold">rocket_launch</span>
-                </div>
-
-                <div class="flex-1 w-full overflow-hidden">
-                    <h4
-                        class="text-sm font-black {% if tarea.estado == 'completada' %}text-gray-400 line-through{% else %}text-gray-900{% endif %} mb-0.5 truncate">
-                        {{ tarea.titulo }}</h4>
-                    {% if tarea.descripcion %}
-                    <p class="text-[0.65rem] font-bold text-gray-400 mb-2 truncate">{{ tarea.descripcion }}</p>
-                    {% endif %}
-                    <div class="flex gap-2 items-center">
-                        <span
-                            class="flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-600 text-[0.6rem] font-extrabold rounded-full border border-yellow-200">
-                            <span class="material-symbols-outlined text-[12px]">monetization_on</span>
-                            +{{ tarea.xp_recompensa or 10 }} XP
-                        </span>
-                        {% if tarea.tags %}
-                        {% for tag in tarea.tags.split(',') %}
-                        <span
-                            class="px-2 py-0.5 bg-purple-50 text-primary border border-purple-100 rounded-full text-[0.6rem] font-bold truncate max-w-[80px]">#{{
-                            tag }}</span>
-                        {% endfor %}
-                        {% endif %}
-                        {% if tarea.fecha_limite %}
-                        <span class="text-[0.6rem] font-bold text-gray-400 truncate max-w-[80px]">🕒 {{
-                            tarea.fecha_limite.split('T')[0] }}</span>
-                        {% endif %}
+                    <div id="no-tasks-placeholder" class="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-gray-300 flex flex-col items-center justify-center gap-4">
+                        <div class="w-16 h-16 bg-[#f3ebff] rounded-full flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-4xl">task</span>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-gray-900 text-lg">No hay tareas pendientes</h3>
+                            <p class="text-sm text-gray-500 font-medium">¡Añade tu primera tarea y empieza a ganar experiencia!</p>
+                        </div>
                     </div>
-                </div>
-
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    {% if tarea.es_critica %}
-                    <span
-                        class="px-2 py-1 bg-red-50 text-red-500 text-[0.6rem] font-black rounded-lg border border-red-100 uppercase tracking-widest hidden sm:inline-block">Crítica</span>
                     {% endif %}
-                    <form action="{{ url_for('toggle_tarea', tarea_id=tarea.id) }}" method="POST"
-                        class="m-0 p-0 shrink-0">
-                        <button type="submit"
-                            class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shadow-sm flex-shrink-0
-                                {% if tarea.estado == 'completada' %}bg-emerald-500 text-white border-emerald-500
-                                {% else %}bg-gray-50 text-gray-400 border-gray-200 hover:bg-emerald-50 hover:text-emerald-500 hover:border-emerald-300{% endif %}">
-                            <span class="material-symbols-outlined text-[16px] font-bold">check</span>
-                        </button>
-                    </form>
-                    <button onclick="openEditModal(this)" data-id="{{ tarea.id }}" data-titulo="{{ tarea.titulo }}"
-                        data-descripcion="{{ tarea.descripcion or '' }}" data-fecha="{{ tarea.fecha_limite or '' }}"
-                        data-xp="{{ tarea.xp_recompensa or 10 }}" data-tags="{{ tarea.tags or '' }}" type="button"
-                        class="w-8 h-8 rounded-xl bg-gray-50 text-yellow-500 flex items-center justify-center hover:bg-yellow-500 hover:text-white transition-colors border border-gray-200 hover:border-yellow-500 shadow-sm flex-shrink-0">
-                        <span class="material-symbols-outlined text-[16px] font-bold">edit</span>
-                    </button>
-                    <button onclick="openDeleteModal(this)" data-id="{{ tarea.id }}" data-titulo="{{ tarea.titulo }}"
-                        type="button"
-                        class="w-8 h-8 rounded-xl bg-gray-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border border-gray-200 hover:border-red-500 shadow-sm flex-shrink-0">
-                        <span class="material-symbols-outlined text-[16px] font-bold">delete</span>
-                    </button>
                 </div>
-            </div>
-            {% endfor %}
-            {% else %}
-            <div
-                class="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-gray-300 flex flex-col items-center justify-center gap-4">
-                <div class="w-16 h-16 bg-[#f3ebff] rounded-full flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined text-4xl">task</span>
-                </div>
-                <div>
-                    <h3 class="font-black text-gray-900 text-lg">No hay tareas pendientes</h3>
-                    <p class="text-sm text-gray-500 font-medium">¡Añade tu primera tarea y empieza a ganar experiencia!
-                    </p>
-                </div>
-            </div>
-            {% endif %}
+            </section>
         </div>
-    </section>
 
+        <!-- SIDEBAR COLUMN: RUTINAS -->
+        <div class="lg:col-span-4 space-y-6">
+            <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+                    <h2 class="text-xl font-black text-gray-900 tracking-tight">Rutinas</h2>
+                    <button onclick="openModal('modal-add-rutina')" class="p-1.5 bg-purple-50 text-primary hover:bg-purple-100 rounded-lg transition-colors border border-purple-100 shadow-sm" title="Nueva Rutina">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    {% if rutinas %}
+                    {% for rutina in rutinas %}
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 hover:border-purple-200 transition-colors group">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-gray-900 text-sm font-black">{{ rutina.nombre }}</h3>
+                            <div class="flex items-center gap-1">
+                                <button onclick="openDeleteRoutineModal('{{ rutina.id }}', '{{ rutina.nombre }}')" type="button"
+                                    class="w-6 h-6 rounded bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors shadow-sm border border-gray-100">
+                                    <span class="material-symbols-outlined text-[14px]">delete</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-2.5 mb-3 border border-gray-100 shadow-sm">
+                            <div id="routine-tasks-{{ rutina.id }}" class="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                {% if rutina.tareas %}
+                                {% for sub in rutina.tareas | sort(attribute='id') %}
+                                <div class="flex items-center justify-between gap-1 p-1 rounded hover:bg-purple-50/50 transition-colors group/task">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <button type="button" onclick="toggleTask('{{ sub.id }}', this, true)"
+                                            class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all
+                                                    {% if sub.estado == 'completada' %}bg-green-500 border-green-500 text-white
+                                                    {% else %}bg-white border-gray-300 hover:border-primary{% endif %}">
+                                            {% if sub.estado == 'completada' %}<span class="material-symbols-outlined text-[10px] font-black">check</span>{% endif %}
+                                        </button>
+                                        <span class="text-[0.7rem] font-bold {% if sub.estado == 'completada' %}text-gray-400 line-through{% else %}text-gray-700{% endif %} truncate">{{ sub.titulo }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <span class="text-[9px] text-primary font-black bg-purple-50 px-1 rounded">+{{ sub.xp_recompensa }}</span>
+                                        <button onclick="openEditModal(this)" data-id="{{ sub.id }}" data-titulo="{{ sub.titulo }}"
+                                            data-descripcion="{{ sub.descripcion or '' }}" data-fecha="{{ sub.fecha_limite or '' }}"
+                                            data-xp="{{ sub.xp_recompensa or 10 }}" data-tags="{{ sub.tags or '' }}" 
+                                            data-rutina-id="{{ rutina.id }}" type="button"
+                                            class="w-4 h-4 rounded hover:bg-yellow-100 text-yellow-600 flex items-center justify-center transition-colors opacity-0 group-hover/task:opacity-100">
+                                            <span class="material-symbols-outlined text-[10px] font-bold">edit</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <p class="text-[0.6rem] font-bold text-gray-400 text-center py-2">No hay tareas en esta rutina.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <button onclick="openAddTaskToRoutine('{{ rutina.id }}')"
+                            class="w-full py-1.5 bg-white hover:bg-purple-50 text-primary rounded-lg text-[0.65rem] font-black transition-all border border-purple-100 flex items-center justify-center gap-1 shadow-sm uppercase tracking-widest">
+                            <span class="material-symbols-outlined text-[14px]">add</span>
+                            Añadir Tarea
+                        </button>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="py-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                        <span class="material-symbols-outlined text-2xl text-gray-400 mb-1">route</span>
+                        <p class="text-xs text-gray-500 font-bold px-4">Agrupa tus tareas repetitivas creando tu primera rutina.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
 </div>
 
 
@@ -326,8 +266,9 @@
     <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-add')">
     </div>
 
-    <form action="{{ url_for('crear_tarea') }}" method="POST"
-        class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
+    <form id="add-task-form" action="{{ url_for('crear_tarea') }}" method="POST"
+        class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <!-- Hidden input for routine connection -->
         <input type="hidden" name="rutina_id" id="hidden-add-rutina-id" value="">
 
@@ -340,11 +281,34 @@
 
         <div class="p-6 sm:p-8 space-y-6 overflow-y-auto">
 
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Nombre</label>
-                <input name="titulo" type="text" placeholder="Nombre de la actividad o tarea"
-                    class="w-full px-4 py-3 bg-white border-2 border-primary/20 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-400"
-                    required>
+            <div class="flex gap-4">
+                <div class="flex-shrink-0">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Icono</label>
+                    <div class="relative">
+                        <select name="emoji" class="w-16 px-2 py-3 bg-white border border-gray-200 rounded-xl text-xl text-center focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+                            <option value="">🚀</option>
+                            <option value="🏃">🏃</option>
+                            <option value="💧">💧</option>
+                            <option value="📚">📚</option>
+                            <option value="🧘">🧘</option>
+                            <option value="🥗">🥗</option>
+                            <option value="💊">💊</option>
+                            <option value="💪">💪</option>
+                            <option value="🧹">🧹</option>
+                            <option value="💤">💤</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Nombre</label>
+                        <span id="title-counter" class="text-[0.65rem] font-bold text-gray-400">0/50</span>
+                    </div>
+                    <input name="titulo" type="text" placeholder="Nombre de la actividad o tarea" maxlength="50"
+                        oninput="document.getElementById('title-counter').textContent = this.value.length + '/50'"
+                        class="w-full px-4 py-3 bg-white border-2 border-primary/20 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-400"
+                        required>
+                </div>
             </div>
 
             <div>
@@ -355,11 +319,37 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Día Fecha &
-                        Hora</label>
-                    <input name="fecha_limite" type="datetime-local"
-                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Día de Inicio</label>
+                        <input id="add-fecha" name="fecha_limite" type="date"
+                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Repetición</label>
+                        <select name="repeticion" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                            <option value="no_repetir">No repetir (Una sola vez)</option>
+                            <option value="diario">Diario</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="fin_semana">Fin de semana</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Horario</label>
+                        <div class="flex items-center gap-2">
+                            <input name="tiempo_inicio" type="time" class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-primary">
+                            <span class="text-gray-400 text-sm font-bold">a</span>
+                            <input name="tiempo_fin" type="time" class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-primary" title="Opcional (Dejar vacío si es hora exacta)">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Recordatorio</label>
+                        <input name="recordatorio_hora" type="time" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-primary">
+                    </div>
                 </div>
 
                 <div>
@@ -424,7 +414,8 @@
     </div>
 
     <form id="edit-form" method="POST"
-        class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
+        class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         <div class="flex justify-between items-center p-6 sm:px-8 border-b border-gray-100">
             <div class="flex items-center gap-2 text-gray-900">
@@ -435,26 +426,75 @@
 
         <div class="p-6 sm:p-8 space-y-6 overflow-y-auto">
 
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Nombre</label>
-                <input id="edit-titulo" name="titulo" type="text"
-                    class="w-full px-4 py-3 bg-white border-2 border-primary/20 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                    required>
+            <div class="flex gap-4">
+                <div class="flex-shrink-0">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Icono</label>
+                    <div class="relative">
+                        <select id="edit-emoji" name="emoji" class="w-16 px-2 py-3 bg-white border border-gray-200 rounded-xl text-xl text-center focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+                            <option value="">🚀</option>
+                            <option value="🏃">🏃</option>
+                            <option value="💧">💧</option>
+                            <option value="📚">📚</option>
+                            <option value="🧘">🧘</option>
+                            <option value="🥗">🥗</option>
+                            <option value="💊">💊</option>
+                            <option value="💪">💪</option>
+                            <option value="🧹">🧹</option>
+                            <option value="💤">💤</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Nombre</label>
+                        <span id="edit-title-counter" class="text-[0.65rem] font-bold text-gray-400">0/50</span>
+                    </div>
+                    <input id="edit-titulo" name="titulo" type="text" placeholder="Nombre de la actividad o tarea" maxlength="50"
+                        oninput="document.getElementById('edit-title-counter').textContent = this.value.length + '/50'"
+                        class="w-full px-4 py-3 bg-white border-2 border-primary/20 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-400"
+                        required>
+                </div>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Descripción</label>
-                <textarea id="edit-descripcion" name="descripcion"
-                    class="w-full h-24 px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"></textarea>
+                <textarea id="edit-descripcion" name="descripcion" placeholder="Añadir una descripcion"
+                    class="w-full h-24 px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-gray-400 resize-none"></textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Día Fecha &
-                        Hora</label>
-                    <input id="edit-fecha" name="fecha_limite" type="datetime-local"
-                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Día de Inicio</label>
+                        <input id="edit-fecha" name="fecha_limite" type="date"
+                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Repetición</label>
+                        <select id="edit-repeticion" name="repeticion" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                            <option value="no_repetir">No repetir (Una sola vez)</option>
+                            <option value="diario">Diario</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="fin_semana">Fin de semana</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Horario</label>
+                        <div class="flex items-center gap-2">
+                            <input id="edit-tiempo-inicio" name="tiempo_inicio" type="time" class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-primary">
+                            <span class="text-gray-400 text-sm font-bold">a</span>
+                            <input id="edit-tiempo-fin" name="tiempo_fin" type="time" class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-primary" title="Opcional (Dejar vacío si es hora exacta)">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Recordatorio</label>
+                        <input id="edit-recordatorio-hora" name="recordatorio_hora" type="time" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-primary">
+                    </div>
                 </div>
 
                 <div>
@@ -481,19 +521,32 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Tags</label>
-                <div id="edit-tags-container" class="flex flex-wrap items-center gap-2 mb-2">
-                    <!-- Chips will be generated here -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Tags</label>
+                    <div id="edit-tags-container" class="flex flex-wrap items-center gap-2 mb-2">
+                        <!-- Chips will be generated here -->
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <input type="text" id="edit-tag-input" placeholder="Añade o edita tags..."
+                            class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                            onkeydown="handleTagKeydown(event, 'edit-tag-input', 'edit-tags-container', 'hidden-edit-tags')">
+                        <button type="button" onclick="addTag('edit-tag-input', 'edit-tags-container', 'hidden-edit-tags')"
+                            class="px-4 py-2 bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200 hover:bg-gray-200 rounded-xl text-xs font-bold transition-colors">Añadir</button>
+                    </div>
+                    <input type="hidden" name="tags" id="hidden-edit-tags" value="">
                 </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="text" id="edit-tag-input" placeholder="Añade o edita tags..."
-                        class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                        onkeydown="handleTagKeydown(event, 'edit-tag-input', 'edit-tags-container', 'hidden-edit-tags')">
-                    <button type="button" onclick="addTag('edit-tag-input', 'edit-tags-container', 'hidden-edit-tags')"
-                        class="px-4 py-2 bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200 hover:bg-gray-200 rounded-xl text-xs font-bold transition-colors">Añadir</button>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Rutina (Opcional)</label>
+                    <select id="edit-rutina" name="rutina_id"
+                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                        <option value="none">Sin Rutina</option>
+                        {% for rutina in rutinas %}
+                        <option value="{{ rutina.id }}">{{ rutina.titulo }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <input type="hidden" name="tags" id="hidden-edit-tags" value="">
             </div>
 
         </div>
@@ -528,6 +581,7 @@
 
     <form action="{{ url_for('crear_rutina') }}" method="POST"
         class="relative bg-white/80 border border-white/50 rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.15)] w-full max-w-md flex flex-col overflow-hidden animate-fade-in-up backdrop-blur-2xl">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         <!-- Subtle decorative orbs -->
         <div class="absolute -right-16 -top-16 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -594,6 +648,67 @@
     </form>
 </div>
 
+<!-- Modal Eliminar Tarea -->
+<div id="modal-eliminar" class="fixed inset-0 z-50 items-center justify-center p-4 sm:p-6 hidden">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+        onclick="closeModal('modal-eliminar')"></div>
+
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-fade-in-up">
+        <div class="p-6 sm:p-8 flex flex-col items-center text-center">
+            <div class="w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-3xl">delete</span>
+            </div>
+            <h2 class="text-xl font-black text-gray-900 mb-2">¿Eliminar esta Tarea?</h2>
+            <p class="text-sm font-medium text-gray-500 mb-2">
+                Estás a punto de borrar la tarea: <br>
+                <span id="delete-tarea-titulo" class="font-black text-gray-800 bg-gray-100 px-2 py-0.5 rounded"></span>
+            </p>
+        </div>
+
+        <div class="p-6 sm:p-8 bg-gray-50/50 flex justify-end gap-3 border-t border-gray-100">
+            <button type="button" onclick="closeModal('modal-eliminar')"
+                class="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors">
+                Cancelar
+            </button>
+            <form id="delete-form" action="" method="POST" class="m-0" onsubmit="return handleTaskActionSubmit(event, 'delete')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="apply_to_series" id="delete-apply-to-series" value="false"/>
+                <button type="submit"
+                    class="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 shadow-md shadow-red-500/20 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+                    Eliminar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Serie -->
+<div id="modal-confirm-series" class="fixed inset-0 z-[60] items-center justify-center p-4 sm:p-6 hidden">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+        onclick="closeSeriesConfirmModal(false)"></div>
+
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-fade-in-up">
+        <div class="p-6 sm:p-8 flex flex-col items-center text-center">
+            <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-3xl">event_repeat</span>
+            </div>
+            <h2 class="text-xl font-black text-gray-900 mb-2">Tarea Repetitiva</h2>
+            <p class="text-sm font-medium text-gray-500 mb-4">
+                Esta tarea es parte de una serie. ¿A qué deseas aplicar los cambios?
+            </p>
+            <div class="flex flex-col gap-2 w-full">
+                <button type="button" onclick="closeSeriesConfirmModal(false)" class="px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 transition-colors">
+                    Solo a esta tarea
+                </button>
+                <button type="button" onclick="closeSeriesConfirmModal(true)" class="px-4 py-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-sm font-bold text-blue-700 transition-colors">
+                    A toda la serie
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Eliminar Rutina Confirmación -->
 <div id="modal-eliminar-rutina" class="fixed inset-0 z-50 items-center justify-center p-4 sm:p-6 hidden">
     <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
@@ -621,6 +736,7 @@
                 Cancelar
             </button>
             <form id="delete-rutina-form" action="" method="POST" class="m-0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit"
                     class="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 shadow-md shadow-red-500/20 transition-all flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">delete_forever</span>
@@ -649,6 +765,10 @@
         }
     }
 
+    let currentTaskGrupoId = null;
+    let pendingAction = null;
+    let pendingEvent = null;
+
     function openEditModal(button) {
         const id = button.dataset.id;
         const titulo = button.dataset.titulo;
@@ -656,12 +776,25 @@
         const fecha = button.dataset.fecha;
         const xp = button.dataset.xp;
         const tags = button.dataset.tags;
+        const rutinaId = button.dataset.rutinaId;
+        const emoji = button.dataset.emoji;
+        const repeticion = button.dataset.repeticion;
+        const tiempoInicio = button.dataset.tiempoInicio;
+        const tiempoFin = button.dataset.tiempoFin;
+        const recordatorioHora = button.dataset.recordatorioHora;
+        currentTaskGrupoId = button.dataset.grupoId;
 
         document.getElementById('hidden-edit-tags').value = tags ? tags : '';
         renderTags('edit-tags-container', 'hidden-edit-tags', tags ? tags.split(',') : []);
 
         document.getElementById('edit-form').action = '/editar-tarea/' + id;
         document.getElementById('edit-titulo').value = titulo;
+        
+        if (rutinaId) {
+            document.getElementById('edit-rutina').value = rutinaId;
+        } else {
+            document.getElementById('edit-rutina').value = 'none';
+        }
         if (descripcion && descripcion !== 'None') {
             document.getElementById('edit-descripcion').value = descripcion;
         } else {
@@ -677,17 +810,94 @@
         } else {
             selectPriorityButton('edit', 50);
         }
+        
+        document.getElementById('edit-emoji').value = emoji || '';
+        document.getElementById('edit-repeticion').value = repeticion || 'no_repetir';
+        document.getElementById('edit-tiempo-inicio').value = tiempoInicio || '';
+        document.getElementById('edit-tiempo-fin').value = tiempoFin || '';
+        document.getElementById('edit-recordatorio-hora').value = recordatorioHora || '';
+        
         openModal('modal-edit');
     }
 
     function openDeleteModal(button) {
         const id = button.dataset.id;
         const titulo = button.dataset.titulo;
+        currentTaskGrupoId = button.dataset.grupoId;
 
         document.getElementById('delete-form').action = '/eliminar-tarea/' + id;
         document.getElementById('delete-tarea-titulo').textContent = titulo;
         openModal('modal-eliminar');
     }
+
+    function openDeleteModalFromEdit() {
+        closeModal('modal-edit');
+        // Retrieve the cached grupoId since we don't have the button reference directly
+        const editAction = document.getElementById('edit-form').action;
+        const id = editAction.substring(editAction.lastIndexOf('/') + 1);
+        
+        document.getElementById('delete-form').action = '/eliminar-tarea/' + id;
+        document.getElementById('delete-tarea-titulo').textContent = document.getElementById('edit-titulo').value;
+        openModal('modal-eliminar');
+    }
+
+    function handleTaskActionSubmit(e, actionType) {
+        if (!currentTaskGrupoId || currentTaskGrupoId === "None" || currentTaskGrupoId === "null" || currentTaskGrupoId === "") {
+            return true; // Normal submit
+        }
+        
+        if (pendingAction === actionType) {
+            return true; // We already confirmed and are submitting
+        }
+        
+        e.preventDefault();
+        pendingAction = actionType;
+        pendingEvent = e.target; // the form
+        
+        // Hide current modal if needed (though it can stay behind)
+        if (actionType === 'delete') closeModal('modal-eliminar');
+        if (actionType === 'edit') closeModal('modal-edit');
+        
+        openModal('modal-confirm-series');
+        return false;
+    }
+
+    function closeSeriesConfirmModal(applyToSeries) {
+        closeModal('modal-confirm-series');
+        
+        if (pendingEvent) {
+            // Add or update the hidden input
+            let input = pendingEvent.querySelector('input[name="apply_to_series"]');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'apply_to_series';
+                pendingEvent.appendChild(input);
+            }
+            input.value = applyToSeries ? "true" : "false";
+            
+            // Actually submit the form
+            pendingEvent.submit();
+        }
+        
+        pendingAction = null;
+        pendingEvent = null;
+    }
+
+    // Add hidden input and event listener to edit form
+    document.addEventListener("DOMContentLoaded", function() {
+        const editForm = document.getElementById('edit-form');
+        if(editForm) {
+            editForm.addEventListener('submit', function(e) {
+                return handleTaskActionSubmit(e, 'edit');
+            });
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'apply_to_series';
+            input.value = 'false';
+            editForm.appendChild(input);
+        }
+    });
 
     // Tags Logic
     function handleTagKeydown(e, inputId, containerId, hiddenId) {
@@ -734,14 +944,86 @@
     function openDeleteModalFromEdit() {
         const editAction = document.getElementById('edit-form').action;
         const id = editAction.substring(editAction.lastIndexOf('/') + 1);
-        const titulo = document.getElementById('edit-titulo').value;
-
-        document.getElementById('delete-form').action = '/eliminar-tarea/' + id;
-        document.getElementById('delete-tarea-titulo').textContent = titulo;
-
         closeModal('modal-edit');
-        openModal('modal-eliminar');
+        const btn = document.querySelector(`button[data-id="${id}"][onclick="openDeleteModal(this)"]`);
+        if(btn) openDeleteModal(btn);
     }
+
+    async function toggleTask(tareaId, btn, isSubTask) {
+        // Prevent multiple clicks
+        if (btn.classList.contains('pointer-events-none')) return;
+        
+        btn.classList.add('opacity-50', 'pointer-events-none', 'scale-90');
+        
+        try {
+            const response = await fetch(`/toggle-tarea/${tareaId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            const data = await response.json();
+            
+            btn.classList.remove('opacity-50', 'pointer-events-none', 'scale-90');
+            
+            if (data.success) {
+                if (isSubTask) {
+                    const spanEl = btn.parentElement.parentElement.querySelector('span.truncate');
+                    if (data.estado === 'completada') {
+                        btn.className = 'w-4 h-4 rounded border flex items-center justify-center transition-all hover:scale-110 bg-green-500 border-green-500 text-white';
+                        btn.innerHTML = '<span class="material-symbols-outlined text-[10px] font-black">check</span>';
+                        if(spanEl) {
+                            spanEl.classList.add('text-gray-400', 'line-through');
+                            spanEl.classList.remove('text-gray-700');
+                        }
+                    } else {
+                        btn.className = 'w-4 h-4 rounded border flex items-center justify-center transition-all hover:scale-110 bg-white border-gray-300 hover:border-primary';
+                        btn.innerHTML = '';
+                        if(spanEl) {
+                            spanEl.classList.remove('text-gray-400', 'line-through');
+                            spanEl.classList.add('text-gray-700');
+                        }
+                    }
+                } else {
+                    const card = btn.closest('.task-card');
+                    const title = card.querySelector('h4');
+                    if (data.estado === 'completada') {
+                        btn.className = 'w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shadow-sm flex-shrink-0 bg-emerald-500 text-white border-emerald-500';
+                        card.dataset.status = 'completada';
+                        if(title) {
+                            title.classList.add('text-gray-400', 'line-through');
+                            title.classList.remove('text-gray-900');
+                        }
+                    } else {
+                        btn.className = 'w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shadow-sm flex-shrink-0 bg-gray-50 text-gray-400 border-gray-200 hover:bg-emerald-50 hover:text-emerald-500 hover:border-emerald-300';
+                        card.dataset.status = 'pendiente';
+                        if(title) {
+                            title.classList.remove('text-gray-400', 'line-through');
+                            title.classList.add('text-gray-900');
+                        }
+                    }
+                }
+                
+                // Update global XP counter if provided
+                if (data.nuevo_xp !== undefined && data.xp_siguiente !== undefined) {
+                    const xpDisplay = document.getElementById('user-xp-display');
+                    if (xpDisplay) {
+                        xpDisplay.innerHTML = `${data.nuevo_xp} <span class="text-gray-400 text-xs">/ ${Math.floor(data.xp_siguiente)}</span>`;
+                        // Simple animation
+                        xpDisplay.classList.add('text-green-500', 'scale-110');
+                        setTimeout(() => {
+                            xpDisplay.classList.remove('text-green-500', 'scale-110');
+                        }, 500);
+                    }
+                }
+
+            }
+        } catch (e) {
+            btn.classList.remove('opacity-50', 'pointer-events-none', 'scale-90');
+        }
+    }
+
 
     function openDeleteRoutineModal(id, titulo) {
         document.getElementById('delete-rutina-form').action = '/eliminar-rutina/' + id;
@@ -860,8 +1142,385 @@
         }
     }
 
+    // Toast helper function
+    function showToast(message, category = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed top-24 right-6 z-[200] flex flex-col gap-3 pointer-events-none';
+            document.body.appendChild(container);
+        }
+        
+        const bgCol = category === 'success' ? 'bg-green-500' : (category === 'error' ? 'bg-red-500' : 'bg-primary');
+        const icon = category === 'success' ? 'check_circle' : (category === 'error' ? 'error' : 'info');
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-message flex items-center gap-3 px-5 py-3.5 rounded-2xl ${bgCol} text-white shadow-xl animate-fade-in-up transform transition-all cursor-pointer pointer-events-auto border border-white/20 backdrop-blur-sm`;
+        toast.onclick = function() { toast.remove(); };
+        
+        toast.innerHTML = `
+            <span class="material-symbols-outlined text-[20px]">${icon}</span>
+            <p class="text-sm font-bold tracking-wide">${message}</p>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         selectPriorityButton('add', 50);
+
+        const addForm = document.getElementById('add-task-form');
+        if (addForm) {
+            addForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(addForm);
+                const submitBtn = addForm.querySelector('button[type="submit"]');
+                const origBtnText = submitBtn ? submitBtn.innerHTML : 'Añadir';
+                
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Guardando...';
+                }
+                
+                try {
+                    const response = await fetch(addForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.tarea) {
+                        const task = data.tarea;
+                        const isCritica = task.es_critica;
+                        const xp = task.xp_recompensa || 10;
+                        const priority = isCritica || xp > 50 ? 'alta' : (xp > 20 ? 'media' : 'baja');
+
+                        // Create the task card HTML element
+                        const card = document.createElement('div');
+                        card.className = `task-card bg-white p-5 rounded-2xl shadow-sm border-2 ${isCritica ? 'border-[#ffcfcf]' : 'border-[#e9d5ff]'} flex items-center gap-4 hover:border-primary transition-all group overflow-hidden relative animate-fade-in-up`;
+                        card.dataset.status = task.estado;
+                        card.dataset.priority = priority;
+
+                        card.innerHTML = `
+                            <div class="absolute top-0 right-0 w-16 h-16 ${isCritica ? 'bg-red-50' : 'bg-[#faf5ff]'} rounded-bl-full -z-10 transition-transform group-hover:scale-150"></div>
+                            
+                            <div class="w-12 h-12 ${isCritica ? 'bg-red-50 text-red-500' : 'bg-purple-50 text-primary'} rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer shadow-inner">
+                                <span class="material-symbols-outlined text-[20px] font-bold">rocket_launch</span>
+                            </div>
+
+                            <div class="flex-1 w-full overflow-hidden">
+                                <h4 class="text-sm font-black text-gray-900 mb-0.5 truncate">${task.titulo}</h4>
+                                ${task.descripcion ? `<p class="text-[0.65rem] font-bold text-gray-400 mb-2 truncate">${task.descripcion}</p>` : ''}
+                                <div class="flex gap-2 items-center">
+                                    <span class="flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-600 text-[0.6rem] font-extrabold rounded-full border border-yellow-200">
+                                        <span class="material-symbols-outlined text-[12px]">monetization_on</span>
+                                        +${xp} XP
+                                    </span>
+                                    ${task.tags ? task.tags.split(',').map(tag => `
+                                        <span class="px-2 py-0.5 bg-purple-50 text-primary border border-purple-100 rounded-full text-[0.6rem] font-bold truncate max-w-[80px]">#${tag.trim()}</span>
+                                    `).join('') : ''}
+                                    ${task.fecha_limite ? `
+                                        <span class="text-[0.6rem] font-bold text-gray-400 truncate max-w-[80px]">🕒 ${task.fecha_limite.split('T')[0]}</span>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                ${isCritica ? `
+                                    <span class="px-2 py-1 bg-red-50 text-red-500 text-[0.6rem] font-black rounded-lg border border-red-100 uppercase tracking-widest hidden sm:inline-block">Crítica</span>
+                                ` : ''}
+                                <div class="m-0 p-0 shrink-0">
+                                    <button type="button" class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shadow-sm flex-shrink-0 bg-gray-50 text-gray-400 border-gray-200 hover:bg-emerald-50 hover:text-emerald-500 hover:border-emerald-300">
+                                        <span class="material-symbols-outlined text-[16px] font-bold">check</span>
+                                    </button>
+                                </div>
+                                <button type="button" class="w-8 h-8 rounded-xl bg-gray-50 text-yellow-500 flex items-center justify-center hover:bg-yellow-500 hover:text-white transition-colors border border-gray-200 hover:border-yellow-500 shadow-sm flex-shrink-0">
+                                    <span class="material-symbols-outlined text-[16px] font-bold">edit</span>
+                                </button>
+                                <button type="button" class="w-8 h-8 rounded-xl bg-gray-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border border-gray-200 hover:border-red-500 shadow-sm flex-shrink-0">
+                                    <span class="material-symbols-outlined text-[16px] font-bold">delete</span>
+                                </button>
+                            </div>
+                        `;
+
+                        // Add event listeners to card buttons
+                        const buttons = card.querySelectorAll('button');
+                        // Checkbox button
+                        buttons[0].onclick = function() { toggleTask(task.id, this, false); };
+                        // Edit button
+                        buttons[1].onclick = function() { openEditModal(this); };
+                        buttons[1].dataset.id = task.id;
+                        buttons[1].dataset.titulo = task.titulo;
+                        buttons[1].dataset.descripcion = task.descripcion || '';
+                        buttons[1].dataset.fecha = task.fecha_limite || '';
+                        buttons[1].dataset.xp = xp;
+                        buttons[1].dataset.tags = task.tags || '';
+                        // Delete button
+                        buttons[2].onclick = function() { openDeleteModal(this); };
+                        buttons[2].dataset.id = task.id;
+                        buttons[2].dataset.titulo = task.titulo;
+
+                        // Insert card in task feed
+                        const tasksContainer = document.getElementById('tasks-container');
+                        if (tasksContainer) {
+                            const placeholder = document.getElementById('no-tasks-placeholder');
+                            if (placeholder) {
+                                placeholder.remove();
+                            }
+                            tasksContainer.prepend(card);
+                        }
+
+                        // Update task count in hero
+                        const taskCountText = document.getElementById('task-count-text');
+                        if (taskCountText) {
+                            const currentCount = document.querySelectorAll('.task-card').length;
+                            taskCountText.textContent = `${currentCount} tareas`;
+                        }
+
+                        // If task belongs to a routine, add it there as well
+                        if (task.rutina_id) {
+                            const routineTasksContainer = document.getElementById(`routine-tasks-${task.rutina_id}`);
+                            if (routineTasksContainer) {
+                                const emptyPlaceholder = routineTasksContainer.querySelector('.routine-empty-placeholder');
+                                if (emptyPlaceholder) {
+                                    emptyPlaceholder.remove();
+                                }
+                                
+                                const rRow = document.createElement('div');
+                                rRow.className = 'flex items-center justify-between gap-1 p-1 rounded-lg hover:bg-purple-50/50 transition-colors group/task animate-fade-in-up';
+                                
+                                rRow.innerHTML = `
+                                    <div class="flex items-center gap-2 truncate">
+                                        <div class="m-0 p-0 flex shrink-0">
+                                            <button type="button" class="w-4 h-4 rounded border flex items-center justify-center transition-all hover:scale-110 bg-white border-gray-300 hover:border-primary"></button>
+                                        </div>
+                                        <span class="text-xs font-medium text-gray-700 truncate">${task.titulo}</span>
+                                    </div>
+                                    <span class="text-[10px] text-primary font-bold bg-purple-50 px-1.5 py-0.5 rounded shadow-sm shrink-0">+${xp} XP</span>
+                                `;
+                                rRow.querySelector('button').onclick = function() { toggleTask(task.id, this, true); };
+                                
+                                routineTasksContainer.appendChild(rRow);
+                            }
+                        }
+
+                        // Reset form, clear tags, close modal, show success toast
+                        addForm.reset();
+                        document.getElementById('hidden-add-tags').value = '';
+                        const addTagsContainer = document.getElementById('add-tags-container');
+                        if (addTagsContainer) addTagsContainer.innerHTML = '';
+                        closeModal('modal-add');
+                        showToast('¡Tarea creada exitosamente!', 'success');
+                    } else {
+                        showToast(data.error || 'Ocurrió un problema al guardar la tarea.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error de conexión con el servidor.', 'error');
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = origBtnText;
+                    }
+                }
+            });
+        }
     });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        // Format YYYY-MM-DD
+        const minDate = `${year}-${month}-${day}`;
+        // Format YYYY-MM-DDTHH:MM
+        const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        const addFecha = document.getElementById('add-fecha');
+        if (addFecha) { addFecha.min = minDate; }
+        
+        const editFecha = document.getElementById('edit-fecha');
+        if (editFecha) { editFecha.min = minDateTime; }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarContainer = document.getElementById('horizontal-calendar');
+        if (!calendarContainer) return;
+        
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        // Get days in current month
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        
+        let todayElement = null;
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const d = new Date(currentYear, currentMonth, i);
+            const isToday = (d.getDate() === today.getDate() && d.getMonth() === today.getMonth());
+            
+            const btn = document.createElement('button');
+            const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            
+            btn.className = `flex flex-col items-center justify-center min-w-[60px] h-[75px] rounded-2xl transition-all shadow-sm border ${isToday ? 'bg-primary text-white border-primary scale-110 shadow-md shadow-primary/30 z-10' : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'} snap-center flex-shrink-0 cursor-pointer`;
+            btn.onclick = () => loadTasksForDate(dateString, btn);
+            
+            btn.innerHTML = `
+                <span class="text-[0.65rem] font-bold uppercase tracking-wider ${isToday ? 'text-white/90' : 'text-gray-400'}">${dayNames[d.getDay()]}</span>
+                <span class="text-xl font-black mt-1">${i}</span>
+            `;
+            
+            calendarContainer.appendChild(btn);
+            if (isToday) todayElement = btn;
+        }
+        
+        // Scroll to today
+        if (todayElement) {
+            setTimeout(() => {
+                todayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }, 100);
+        }
+    });
+
+    async function loadTasksForDate(dateString, clickedBtn) {
+        // Highlight logic
+        const buttons = document.querySelectorAll('#horizontal-calendar button');
+        buttons.forEach(btn => {
+            if (btn === clickedBtn) {
+                btn.className = 'flex flex-col items-center justify-center min-w-[60px] h-[75px] rounded-2xl transition-all shadow-md border bg-primary text-white border-primary scale-110 shadow-primary/30 z-10 snap-center flex-shrink-0 cursor-pointer';
+                btn.querySelector('span:first-child').className = 'text-[0.65rem] font-bold uppercase tracking-wider text-white/90';
+            } else {
+                btn.className = 'flex flex-col items-center justify-center min-w-[60px] h-[75px] rounded-2xl transition-all shadow-sm border bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary snap-center flex-shrink-0 cursor-pointer';
+                btn.querySelector('span:first-child').className = 'text-[0.65rem] font-bold uppercase tracking-wider text-gray-400';
+            }
+        });
+        
+        try {
+            const res = await fetch(`/api/tareas?fecha=${dateString}`);
+            const tareas = await res.json();
+            renderTasks(tareas, dateString);
+        } catch (e) {
+            console.error(e);
+            showToast('Error cargando tareas del día', 'error');
+        }
+    }
+    
+    function renderTasks(tareas, dateString) {
+        const now = new Date();
+        const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const isToday = (dateString === todayString);
+        
+        const container = document.getElementById('tasks-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        if (tareas.length === 0) {
+            container.innerHTML = `
+            <div id="no-tasks-placeholder" class="col-span-1 md:col-span-2 bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-10 flex flex-col items-center justify-center text-center animate-fade-in-up">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                    <span class="material-symbols-outlined text-[32px]">task</span>
+                </div>
+                <h3 class="text-lg font-black text-gray-700 mb-1">Día Libre</h3>
+                <p class="text-sm text-gray-500 max-w-sm">No tienes tareas para este día.</p>
+            </div>`;
+            return;
+        }
+        
+        tareas.forEach(tarea => {
+            const isCritica = tarea.es_critica;
+            const xp = tarea.xp_recompensa || 10;
+            const estado = tarea.estado;
+            const borderColor = isCritica ? 'border-red-200 hover:border-red-400' : 'border-gray-200 hover:border-primary';
+            const iconBg = isCritica ? 'bg-red-50 text-red-500' : 'bg-purple-50 text-primary';
+            const iconName = isCritica ? 'local_fire_department' : 'rocket_launch';
+            const textClass = estado === 'completada' ? 'text-gray-400 line-through' : 'text-gray-900';
+            
+            const btnClass = estado === 'completada' ? 
+                'bg-emerald-500 text-white border-emerald-500' : 
+                'bg-gray-50 text-gray-400 border-gray-200 hover:bg-emerald-50 hover:text-emerald-500 hover:border-emerald-300';
+            const checkHTML = '<span class="material-symbols-outlined text-[16px] font-black">check</span>';
+            
+            let emojiHTML = '';
+            if (tarea.emoji) {
+                emojiHTML = `<span class="text-xl">${tarea.emoji}</span>`;
+            } else {
+                emojiHTML = `<span class="material-symbols-outlined text-[18px] font-bold">${iconName}</span>`;
+            }
+
+            let metaHTML = '';
+            if (tarea.tiempo_inicio) {
+                metaHTML += `<div class="flex items-center gap-1 text-[0.65rem] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded shadow-sm"><span class="material-symbols-outlined text-[12px]">schedule</span> ${tarea.tiempo_inicio} ${tarea.tiempo_fin ? '- ' + tarea.tiempo_fin : ''}</div>`;
+            }
+
+            const card = document.createElement('div');
+            card.className = `task-card bg-white p-5 rounded-2xl shadow-sm border-2 ${borderColor} flex flex-col gap-3 transition-all group overflow-hidden relative`;
+            card.dataset.status = estado;
+            
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 ${iconBg} rounded-full flex items-center justify-center flex-shrink-0">
+                            ${emojiHTML}
+                        </div>
+                        <div class="overflow-hidden">
+                            <h4 class="text-base font-black ${textClass} truncate" title="${tarea.titulo}">
+                                ${tarea.titulo}
+                            </h4>
+                            ${tarea.descripcion ? `<p class="text-[0.7rem] font-bold text-gray-500 truncate" title="${tarea.descripcion}">${tarea.descripcion}</p>` : ''}
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                ${metaHTML}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2 shrink-0">
+                        ${isToday ? `
+                        <button type="button" onclick="toggleTask('${tarea.id}', this, false)"
+                            class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shadow-sm ${btnClass}">
+                            ${checkHTML}
+                        </button>
+                        <button onclick="openEditModal(this)" data-id="${tarea.id}" data-titulo="${tarea.titulo}"
+                            data-descripcion="${tarea.descripcion || ''}" data-fecha="${tarea.fecha_limite || ''}"
+                            data-xp="${tarea.xp_recompensa || 10}" data-tags="${tarea.tags || ''}" 
+                            data-emoji="${tarea.emoji || ''}" data-repeticion="${tarea.repeticion || ''}"
+                            data-tiempo-inicio="${tarea.tiempo_inicio || ''}" data-tiempo-fin="${tarea.tiempo_fin || ''}"
+                            data-recordatorio-hora="${tarea.recordatorio_hora || ''}" data-grupo-id="${tarea.grupo_id || ''}"
+                            data-rutina-id="${tarea.rutina_id || 'none'}" type="button"
+                            class="w-8 h-8 rounded-xl bg-gray-50 text-yellow-500 flex items-center justify-center hover:bg-yellow-500 hover:text-white transition-colors border border-gray-200 hover:border-yellow-500 shadow-sm">
+                            <span class="material-symbols-outlined text-[16px] font-bold">edit</span>
+                        </button>
+                        <button onclick="openDeleteModal(this)" data-id="${tarea.id}" data-titulo="${tarea.titulo}" data-grupo-id="${tarea.grupo_id || ''}" type="button"
+                            class="w-8 h-8 rounded-xl bg-gray-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border border-gray-200 hover:border-red-500 shadow-sm">
+                            <span class="material-symbols-outlined text-[16px] font-bold">delete</span>
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
 </script>
 {% endblock %}

@@ -5,3 +5,5 @@ venv/
 *.log
 __pycache__/
 *.py[cod]
+check_photo.py
+test_api.py

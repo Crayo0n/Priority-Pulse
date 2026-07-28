@@ -3,8 +3,10 @@ from typing import Optional
 
 
 class UsuarioBase(BaseModel):
+    nombre: Optional[str] = None
     nombre_usuario: str
     correo: EmailStr
+    foto_perfil: Optional[str] = None
     rol: Optional[str] = "user"
     zona_horaria: Optional[str] = "UTC"
 
@@ -13,12 +15,18 @@ class UsuarioCreate(UsuarioBase):
     password: str
 
 class UsuarioUpdate(BaseModel):
+    nombre: Optional[str] = None
     nombre_usuario: Optional[str] = None
     correo: Optional[EmailStr] = None
+    foto_perfil: Optional[str] = None
 
 class UsuarioLogin(BaseModel):
     correo: EmailStr
     password: str
+
+class UsuarioPasswordUpdate(BaseModel):
+    password_actual: str
+    nueva_password: str
 
 # Propiedades al devolver usuario (output)
 class UsuarioResponse(UsuarioBase):
@@ -44,6 +52,10 @@ class LoginResponse(BaseModel):
     correo: str
     rol: str
     xp_total: int
+    foto_perfil: Optional[str] = None
     access_token: str
     token_type: str = "bearer"
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str
 

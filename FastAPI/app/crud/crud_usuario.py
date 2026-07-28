@@ -33,7 +33,7 @@ def get_usuarios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Usuario).offset(skip).limit(limit).all()
 
 def get_usuarios_by_xp(db: Session, limit: int = 100):
-    return db.query(Usuario).order_by(Usuario.xp_total.desc()).limit(limit).all()
+    return db.query(Usuario).filter(Usuario.rol != 'admin').order_by(Usuario.xp_total.desc()).limit(limit).all()
 
 def crear_usuario(db: Session, usuario: UsuarioCreate):
     hashed_pwd = obtener_password_hash(usuario.password)
@@ -92,3 +92,41 @@ def verificar_y_resetear_racha(db: Session, usuario_id: int):
         usuario.racha_actual = 0
         db.add(usuario)
         db.commit()
+
+from app.models.nivel import Nivel
+from app.models.historial_xp import HistorialXp
+
+def otorgar_xp(db: Session, usuario_id: int, cantidad: int, motivo: str):
+    """Otorga XP a un usuario, evalúa si sube de nivel y registra el historial."""
+    if cantidad <= 0:
+        return
+    
+    usuario = get_usuario(db, usuario_id)
+    if not usuario:
+        return
+        
+    # Añadir al historial
+    historial = HistorialXp(
+        usuario_id=usuario_id,
+        cantidad_xp=cantidad,
+        motivo=motivo
+    )
+    db.add(historial)
+    
+    # Sumar XP
+    usuario.xp_total += cantidad
+    
+    # Calcular nivel
+    # Asume que Nivel.numero_nivel está ordenado de menor a mayor
+    # Buscamos el nivel más alto cuya xp_requerida sea <= xp_total
+    nivel_correspondiente = db.query(Nivel).filter(
+        Nivel.xp_requerida <= usuario.xp_total
+    ).order_by(Nivel.xp_requerida.desc()).first()
+    
+    if nivel_correspondiente and (usuario.nivel_id != nivel_correspondiente.id):
+        usuario.nivel_id = nivel_correspondiente.id
+        # TODO: Se podría crear una notificación aquí de "¡Subiste de nivel!"
+        
+    db.add(usuario)
+    db.commit()
+

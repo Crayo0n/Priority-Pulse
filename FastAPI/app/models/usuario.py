@@ -9,9 +9,11 @@ class Usuario(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     nivel_id: Mapped[Optional[int]] = mapped_column(ForeignKey("niveles.id"), nullable=True)
+    nombre: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     nombre_usuario: Mapped[str] = mapped_column(String, index=True)
     correo: Mapped[str] = mapped_column(String, unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String)
+    foto_perfil: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     rol: Mapped[str] = mapped_column(String, default="user")
     xp_total: Mapped[int] = mapped_column(Integer, default=0)
     racha_actual: Mapped[int] = mapped_column(Integer, default=0)

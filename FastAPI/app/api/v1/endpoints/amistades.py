@@ -39,6 +39,31 @@ def enviar_solicitud(
         raise HTTPException(status_code=400, detail="Ya existe una amistad o solicitud entre estos usuarios")
         
     return crud_amistad.enviar_solicitud_amistad(db=db, solicitud=solicitud)
+@router.get("/estado/{usuario_id}", status_code=status.HTTP_200_OK)
+@limiter.limit("60/minute")
+def consultar_estado_amistad(
+    request: Request,
+    usuario_id: int,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
+    if usuario_id == usuario_actual.id:
+        return {"estado": "mismo_usuario"}
+        
+    amistad = crud_amistad.get_amistad_entre_usuarios(db, usuario_actual.id, usuario_id)
+    if not amistad:
+        return {"estado": "ninguna"}
+        
+    if amistad.estado == "aceptada":
+        return {"estado": "aceptada", "id": amistad.id}
+    elif amistad.estado == "pendiente":
+        if amistad.usuario_id_1 == usuario_actual.id:
+            return {"estado": "pendiente_enviada", "id": amistad.id}
+        else:
+            return {"estado": "pendiente_recibida", "id": amistad.id}
+    
+    return {"estado": amistad.estado, "id": amistad.id}
 
 
 @router.get("/usuario/{usuario_id}", response_model=List[AmistadResponse])

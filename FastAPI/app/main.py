@@ -6,7 +6,8 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.limiter import limiter
-from app.db.database import engine, Base
+from app.db.database import engine, Base, sesionLocal
+from app.models import Usuario
 import app.models
 
 Base.metadata.create_all(bind=engine)

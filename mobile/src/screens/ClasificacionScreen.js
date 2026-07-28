@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,20 +7,23 @@ import {
   FlatList,
   StatusBar,
   ScrollView,
-  Platform
+  Platform,
+  TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ClasificacionScreen() {
+  const [activeTab, setActiveTab] = useState('global');
+
   // Mock data for top users
-  const topUsers = [
+  const topUsersGlobal = [
     { rank: 1, name: 'Sofia_Dev', level: 12, xp: 12450, avatar: 'S', color: '#fbbf24' }, // Gold
     { rank: 2, name: 'Alex_Pulse', level: 10, xp: 9800, avatar: 'A', color: '#9ca3af' }, // Silver
     { rank: 3, name: 'Gaby21', level: 9, xp: 8250, avatar: 'G', color: '#b45309' },   // Bronze
   ];
 
   // Mock data for the rest of the ranks
-  const restUsers = [
+  const restUsersGlobal = [
     { rank: 4, name: 'Carlos_H', level: 8, xp: 7400, avatar: 'C', isCurrentUser: false },
     { rank: 5, name: 'Daniela_M', level: 7, xp: 6200, avatar: 'D', isCurrentUser: false },
     { rank: 6, name: 'LucasTask', level: 7, xp: 5900, avatar: 'L', isCurrentUser: false },
@@ -32,6 +35,21 @@ export default function ClasificacionScreen() {
     { rank: 12, name: 'Mauricio', level: 4, xp: 2500, avatar: 'M', isCurrentUser: true }, // Current User Highlight
     { rank: 13, name: 'Hugo_Sprint', level: 3, xp: 1800, avatar: 'H', isCurrentUser: false },
   ];
+
+  // Mock data for top users (Amigos)
+  const topUsersAmigos = [
+    { rank: 1, name: 'Sarah_J', level: 8, xp: 8250, avatar: 'S', color: '#fbbf24' },
+    { rank: 2, name: 'Carlos_D', level: 5, xp: 4200, avatar: 'C', color: '#9ca3af' },
+    { rank: 3, name: 'Mauricio', level: 4, xp: 2500, avatar: 'M', color: '#b45309', isCurrentUser: true },
+  ];
+
+  const restUsersAmigos = [
+    { rank: 4, name: 'Andrea_T', level: 3, xp: 1900, avatar: 'A', isCurrentUser: false },
+    { rank: 5, name: 'Luis_P', level: 2, xp: 1100, avatar: 'L', isCurrentUser: false },
+  ];
+
+  const topUsers = activeTab === 'global' ? topUsersGlobal : topUsersAmigos;
+  const restUsers = activeTab === 'global' ? restUsersGlobal : restUsersAmigos;
 
   const renderLeaderboardItem = ({ item }) => {
     return (
@@ -76,7 +94,42 @@ export default function ClasificacionScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Clasificación</Text>
-          <Text style={styles.subtitle}>Compite con la comunidad de Priority Pulse</Text>
+          <Text style={styles.subtitle}>
+            {activeTab === 'global' ? 'Compite con la comunidad de Priority Pulse' : 'Compite con tus amigos'}
+          </Text>
+
+          {/* Sub-tabs Selector */}
+          <View style={styles.subTabContainer}>
+            <TouchableOpacity
+              style={[styles.subTabButton, activeTab === 'global' && styles.subTabButtonActive]}
+              onPress={() => setActiveTab('global')}
+            >
+              <Ionicons
+                name="earth-outline"
+                size={16}
+                color={activeTab === 'global' ? '#6e00ff' : '#6b7280'}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subTabText, activeTab === 'global' && styles.subTabTextActive]}>
+                Global
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.subTabButton, activeTab === 'amigos' && styles.subTabButtonActive]}
+              onPress={() => setActiveTab('amigos')}
+            >
+              <Ionicons
+                name="people-outline"
+                size={16}
+                color={activeTab === 'amigos' ? '#6e00ff' : '#6b7280'}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subTabText, activeTab === 'amigos' && styles.subTabTextActive]}>
+                Amigos
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Leaderboard list with Podium as Header */}
@@ -169,6 +222,34 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 2,
     fontWeight: '500',
+  },
+  subTabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f9fafb',
+    borderRadius: 14,
+    marginTop: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  subTabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  subTabButtonActive: {
+    backgroundColor: '#f3ebff',
+  },
+  subTabText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6b7280',
+  },
+  subTabTextActive: {
+    color: '#6e00ff',
   },
   listContent: {
     paddingHorizontal: 16,

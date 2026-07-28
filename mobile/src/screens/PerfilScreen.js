@@ -128,6 +128,21 @@ export default function PerfilScreen({ navigation }) {
           <Text style={styles.profileUsername}>@{username}</Text>
           <Text style={styles.profileSubtitle}>Lvl 12 Arquitecto de Enfoque • Miembro desde Ene 2026</Text>
 
+          <View style={styles.statsRow}>
+            <View style={styles.statItemHeader}>
+              <Text style={styles.statNumberHeader}>1,248</Text>
+              <Text style={styles.statLabelHeader}>Tareas</Text>
+            </View>
+            <View style={styles.statItemHeader}>
+              <Text style={styles.statNumberHeader}>{amigos.length}</Text>
+              <Text style={styles.statLabelHeader}>Amigos</Text>
+            </View>
+            <View style={styles.statItemHeader}>
+              <Text style={styles.statNumberHeader}>12</Text>
+              <Text style={styles.statLabelHeader}>Racha</Text>
+            </View>
+          </View>
+
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity style={styles.editBtn} onPress={handleOpenEdit}>
               <Ionicons name="create-outline" size={16} color="#6e00ff" style={{ marginRight: 4 }} />
@@ -824,6 +839,27 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     lineHeight: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 32,
+  },
+  statItemHeader: {
+    alignItems: 'center',
+  },
+  statNumberHeader: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  statLabelHeader: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '600',
+    marginTop: 2,
   },
   actionButtonsRow: {
     flexDirection: 'row',

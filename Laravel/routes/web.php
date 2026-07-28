@@ -22,6 +22,9 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/analitica/exportar', [DashboardController::class, 'exportar'])->name('analitica.exportar');
 
     Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+    Route::put('/api/usuarios/{id}', [UsuarioController::class, 'update'])->name('usuarios.update');
+    Route::delete('/api/usuarios/{id}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
+
 
     Route::get('/niveles', [NivelController::class, 'index'])->name('niveles.index');
     Route::post('/niveles', [NivelController::class, 'store'])->name('niveles.store');

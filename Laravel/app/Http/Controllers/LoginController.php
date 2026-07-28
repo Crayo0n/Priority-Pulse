@@ -44,13 +44,15 @@ class LoginController extends Controller
         // Guardar datos del admin en sesión
         $user = $response->json();
         session([
-            'admin_user' => $user,
-            'admin_id'   => $user['id'],
+            'admin_user'  => $user,
+            'admin_id'    => $user['id'],
             'admin_nombre' => $user['nombre_usuario'],
-            'admin_rol'  => $user['rol'],
+            'admin_rol'   => $user['rol'],
+            'admin_token' => $user['access_token'] ?? null,
         ]);
 
         return redirect()->route('dashboard');
+
     }
 
     public function logout()

@@ -15,40 +15,35 @@
                 <svg id="refresh-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 Actualizar
             </button>
-            <button onclick="document.getElementById('modal-alerta').classList.remove('hidden')" class="flex items-center gap-2 px-4 py-2 bg-[#6e00ff] border border-transparent rounded-lg text-sm font-bold text-white hover:bg-[#5a00d1] transition shadow-md">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                Nueva Alerta
-            </button>
         </div>
+
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         
+        <!-- Total Usuarios -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
             <div class="flex justify-between items-start mb-2 relative z-10">
-                <h3 class="text-sm font-semibold text-gray-500">Usuarios en Línea</h3>
-                <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                <h3 class="text-sm font-semibold text-gray-500">Usuarios Registrados</h3>
+                <div class="p-2 bg-[#f3ebff] text-[#6e00ff] rounded-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
             </div>
             <div class="relative z-10">
                 <span class="text-4xl font-black text-gray-900">{{ $stats ? number_format($stats['total_usuarios']) : '—' }}</span>
                 <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                        12%
-                    </span>
-                    <span class="text-xs text-gray-400">vs. ayer</span>
+                    <span class="text-xs font-semibold text-gray-500">Comunidad activa</span>
                 </div>
             </div>
         </div>
 
+        <!-- Tareas Hoy -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-[#f3ebff] rounded-full -mr-16 -mt-16 opacity-50"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
             <div class="flex justify-between items-start mb-2 relative z-10">
                 <h3 class="text-sm font-semibold text-gray-500">Tareas Creadas Hoy</h3>
-                <div class="p-2 bg-[#f3ebff] text-[#6e00ff] rounded-lg">
+                <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
             </div>
@@ -56,11 +51,12 @@
                 <span class="text-4xl font-black text-gray-900">{{ $stats ? number_format($stats['tareas_creadas_hoy']) : '—' }}</span>
                 <div class="flex items-center gap-2 mt-2">
                     <span class="text-xs text-gray-400">Total en sistema:</span>
-                    <span class="text-xs font-bold text-[#6e00ff]">{{ $stats ? number_format($stats['total_tareas']) : '—' }}</span>
+                    <span class="text-xs font-bold text-blue-600">{{ $stats ? number_format($stats['total_tareas']) : '—' }}</span>
                 </div>
             </div>
         </div>
 
+        <!-- Medallas Desbloqueadas -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
             <div class="flex justify-between items-start mb-2 relative z-10">
@@ -72,45 +68,32 @@
             <div class="relative z-10">
                 <span class="text-4xl font-black text-gray-900">{{ $stats ? number_format($stats['medallas_desbloqueadas']) : '—' }}</span>
                 <div class="mt-2">
-                    <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded flex items-center w-max gap-1 border border-orange-200">
+                    <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded flex items-center w-max gap-1 border border-orange-200">
                         Catálogo: {{ $stats ? $stats['total_medallas_catalogo'] : '0' }} tipos
                     </span>
                 </div>
             </div>
         </div>
 
+        <!-- XP Total y Racha -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+            <div class="flex justify-between items-start mb-2 relative z-10">
+                <h3 class="text-sm font-semibold text-gray-500">XP Total Generada</h3>
+                <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+            </div>
+            <div class="relative z-10">
+                <span class="text-3xl font-black text-emerald-600">{{ $stats ? number_format($stats['xp_total_generada']) : '0' }}</span>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs font-bold text-gray-700">Racha Promed.: 🔥 {{ $stats ? $stats['racha_promedio'] : '0.0' }} días</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h2 class="text-lg font-bold text-gray-900">Crecimiento del Pulso</h2>
-                <p class="text-xs text-gray-400">Adquisición de usuarios nuevos (Últimos 30 días)</p>
-            </div>
-            <div class="flex items-center gap-2 text-xs font-semibold text-gray-500">
-                <span class="w-2 h-2 rounded-full bg-[#6e00ff]"></span> Datos en tiempo real
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-[#faf8ff] border border-[#ede0ff] rounded-xl p-4 text-center">
-                <div class="text-2xl font-black text-[#6e00ff]">{{ $stats ? number_format($stats['xp_total_generada']) : '0' }}</div>
-                <div class="text-xs text-gray-500 font-semibold mt-1">XP Total Generada</div>
-            </div>
-            <div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center">
-                <div class="text-2xl font-black text-orange-500">{{ $stats ? $stats['racha_promedio'] : '0.0' }} días</div>
-                <div class="text-xs text-gray-500 font-semibold mt-1">Racha Promedio</div>
-            </div>
-            <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
-                <div class="text-2xl font-black text-emerald-600">{{ $stats ? number_format($stats['total_tareas']) : '0' }}</div>
-                <div class="text-xs text-gray-500 font-semibold mt-1">Total de Tareas</div>
-            </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
-                <div class="text-2xl font-black text-blue-600">{{ $stats ? number_format($stats['total_medallas_catalogo']) : '0' }}</div>
-                <div class="text-xs text-gray-500 font-semibold mt-1">Tipos de Medalla</div>
-            </div>
-        </div>
-    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -188,64 +171,4 @@
 
     </div>
 </div>
-
-{{-- ===== Modal: Nueva Alerta ===== --}}
-<div id="modal-alerta" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div class="bg-gradient-to-r from-[#6e00ff] to-[#9b51e0] p-5 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                <h2 class="text-white font-bold text-base">Nueva Alerta del Sistema</h2>
-            </div>
-            <button onclick="document.getElementById('modal-alerta').classList.add('hidden')" class="text-white/70 hover:text-white transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <div class="p-6">
-            <div id="alerta-success" class="hidden mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold px-4 py-3 rounded-lg">✅ Alerta enviada correctamente.</div>
-            <div id="alerta-error"   class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold px-4 py-3 rounded-lg">❌ Error al enviar la alerta.</div>
-
-            <label class="block text-xs font-bold text-gray-500 mb-1">Mensaje de la alerta</label>
-            <textarea id="alerta-mensaje" rows="3" placeholder="Ej: El servidor entrará en mantenimiento a las 03:00 AM..." class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#6e00ff] resize-none"></textarea>
-
-            <label class="block text-xs font-bold text-gray-500 mb-1 mt-4">Usuario destino (ID) — dejar vacío para difundir</label>
-            <input id="alerta-usuario" type="number" min="1" placeholder="ID del usuario (opcional)" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#6e00ff]">
-
-            <div class="flex gap-3 mt-6">
-                <button onclick="document.getElementById('modal-alerta').classList.add('hidden')" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
-                <button onclick="enviarAlerta()" class="flex-1 py-2 bg-[#6e00ff] rounded-lg text-sm font-bold text-white hover:bg-[#5a00d1] transition">Enviar Alerta</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function enviarAlerta() {
-    const mensaje = document.getElementById('alerta-mensaje').value.trim();
-    const usuarioId = document.getElementById('alerta-usuario').value.trim();
-
-    if (!mensaje) {
-        document.getElementById('alerta-mensaje').focus();
-        return;
-    }
-
-    const body = { mensaje: mensaje };
-    if (usuarioId) body.usuario_id = parseInt(usuarioId);
-
-    fetch('/api/alerta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-        body: JSON.stringify(body)
-    })
-    .then(r => {
-        document.getElementById(r.ok ? 'alerta-success' : 'alerta-error').classList.remove('hidden');
-        if (r.ok) {
-            document.getElementById('alerta-mensaje').value = '';
-            document.getElementById('alerta-usuario').value = '';
-            setTimeout(() => document.getElementById('modal-alerta').classList.add('hidden'), 1800);
-        }
-    })
-    .catch(() => document.getElementById('alerta-error').classList.remove('hidden'));
-}
-</script>
 @endsection

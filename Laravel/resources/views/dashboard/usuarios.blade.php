@@ -184,24 +184,35 @@
                 </div>
             </div>
 
-            {{-- Notas admin --}}
-            <div class="p-6 bg-gray-50 flex-1">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Notas Admin</h3>
-                </div>
-                <textarea id="panel-nota" placeholder="Escribe una nota interna sobre este usuario..."
-                    class="w-full h-24 p-3 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#6e00ff] focus:ring-1 focus:ring-[#6e00ff] resize-none"></textarea>
-            </div>
+            {{-- Acciones de Administrador --}}
+            <div class="p-6 bg-gray-50 flex-1 space-y-3">
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">Acciones de Administrador</h3>
+                
+                <button id="btn-cambiar-rol" onclick="cambiarRolUsuario()"
+                    class="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-100 transition shadow-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <span id="label-cambiar-rol">Cambiar Rol</span>
+                </button>
 
+                <button onclick="eliminarUsuario()"
+                    class="w-full py-2.5 px-4 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600 hover:bg-red-100 transition shadow-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Eliminar Usuario
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
 
 {{-- Datos JSON para JS --}}
 <script>
 const todosUsuarios = @json($usuarios);
 
+let usuarioSeleccionado = null;
+
 function mostrarPanel(u) {
+    usuarioSeleccionado = u;
     // Poblar datos
     document.getElementById('panel-avatar').textContent = u.nombre_usuario.charAt(0).toUpperCase();
     document.getElementById('panel-nombre').textContent = u.nombre_usuario;
@@ -212,6 +223,11 @@ function mostrarPanel(u) {
     document.getElementById('panel-racha').textContent = '🔥 ' + u.racha_actual + ' días';
     document.getElementById('panel-nivel').textContent = 'Nivel ' + (u.nivel_id ?? 1);
     document.getElementById('panel-rol-text').textContent = u.rol.charAt(0).toUpperCase() + u.rol.slice(1);
+
+    const labelBtn = document.getElementById('label-cambiar-rol');
+    if (labelBtn) {
+        labelBtn.textContent = u.rol === 'admin' ? 'Hacer Usuario Normal' : 'Ascender a Admin';
+    }
 
     const badge = document.getElementById('panel-rol-badge');
     if (u.rol === 'admin') {
@@ -236,6 +252,56 @@ function mostrarPanel(u) {
         if (r.dataset.id == u.id) r.classList.add('bg-purple-50');
     });
 }
+
+function cambiarRolUsuario() {
+    if (!usuarioSeleccionado) return;
+    const nuevoRol = usuarioSeleccionado.rol === 'admin' ? 'user' : 'admin';
+    const confirmacion = confirm(`¿Estás seguro de cambiar el rol de ${usuarioSeleccionado.nombre_usuario} a "${nuevoRol}"?`);
+    if (!confirmacion) return;
+
+    fetch(`/api/usuarios/${usuarioSeleccionado.id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ rol: nuevoRol })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            alert('Rol actualizado correctamente');
+            window.location.reload();
+        } else {
+            alert('Error al cambiar el rol: ' + (data.data?.detail || 'Operación fallida'));
+        }
+    })
+    .catch(() => alert('Error de conexión con la API.'));
+}
+
+function eliminarUsuario() {
+    if (!usuarioSeleccionado) return;
+    const confirmacion = confirm(`⚠️ ¿ATENCIÓN: Estás seguro de ELIMINAR permanentemente la cuenta de ${usuarioSeleccionado.nombre_usuario}? Esta acción no se puede deshacer.`);
+    if (!confirmacion) return;
+
+    fetch(`/api/usuarios/${usuarioSeleccionado.id}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            alert('Usuario eliminado del sistema.');
+            window.location.reload();
+        } else {
+            alert('Error al eliminar el usuario.');
+        }
+    })
+    .catch(() => alert('Error de conexión con la API.'));
+}
+
 
 function cerrarPanel() {
     // Desktop: Mostrar vacío

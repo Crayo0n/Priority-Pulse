@@ -12,10 +12,19 @@ class ApiService
      */
     public static function make()
     {
-        return Http::baseUrl(env('FASTAPI_BASE_URL', 'http://api:8000/api/v1'))
+        $request = Http::baseUrl(env('FASTAPI_BASE_URL', 'http://api:8000/api/v1'))
+            ->withHeaders(['X-API-Key' => env('API_KEY', 'ABC123')])
             ->timeout(15)
             ->acceptJson();
+
+        if (session('admin_token')) {
+            $request->withToken(session('admin_token'));
+        }
+
+        return $request;
     }
+
+
 
     public static function get($endpoint, $queryParams = [])
     {

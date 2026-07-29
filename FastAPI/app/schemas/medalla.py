@@ -20,10 +20,10 @@ class UsuarioMedallaResponse(UsuarioMedallaBase):
 # --- Medalla Schemas ---
 class MedallaBase(BaseModel):
     nombre: str
-    descripcion: str
-    url_icono: str
-    tipo_trigger: str
-    valor_requerido: int
+    descripcion: Optional[str] = "Medalla del sistema"
+    url_icono: Optional[str] = "workspace_premium"
+    tipo_trigger: Optional[str] = "acciones"
+    valor_requerido: Optional[int] = 1
 
 class MedallaCreate(MedallaBase):
     pass

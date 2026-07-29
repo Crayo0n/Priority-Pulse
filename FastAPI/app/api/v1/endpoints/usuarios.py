@@ -138,6 +138,8 @@ def google_login(
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=f"Token de Google inválido: {str(ve)}")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error al autenticar con Google: {str(e)}")
 
 @router.post("/google/register", response_model=LoginResponse, summary="Finalizar registro con Google")
@@ -155,6 +157,8 @@ def google_register(
         # Verify Google ID token
         id_info = id_token.verify_oauth2_token(payload.id_token, google_requests.Request())
         correo = id_info.get("email")
+        nombre_completo = id_info.get("name")
+        foto_perfil = id_info.get("picture")
         
         if not correo:
             raise HTTPException(status_code=400, detail="Token de Google no contiene email")
@@ -172,6 +176,8 @@ def google_register(
         # Create user
         usuario_data = UsuarioCreate(
             nombre_usuario=payload.nombre_usuario,
+            nombre=nombre_completo,
+            foto_perfil=foto_perfil,
             correo=correo,
             password="google_oauth_user_no_password"
         )
@@ -344,7 +350,7 @@ def delete_usuario(
     usuario_actual: Usuario = Depends(obtener_usuario_actual),
     db: Session = Depends(get_db)
 ):
-    if usuario_actual.rol != "admin":
+    if usuario_actual.rol != "admin" and usuario_actual.id != usuario_id:
         raise HTTPException(status_code=403, detail="Privilegios insuficientes para eliminar usuarios")
     
     db_usuario = crud_usuario.get_usuario(db, usuario_id=usuario_id)

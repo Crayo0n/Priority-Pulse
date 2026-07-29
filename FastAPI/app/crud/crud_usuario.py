@@ -13,6 +13,9 @@ def get_usuario_by_email(db: Session, correo: str):
 def get_usuario_by_correo(db: Session, correo: str):
     return get_usuario_by_email(db, correo)
 
+def get_usuario_by_username(db: Session, username: str):
+    return db.query(Usuario).filter(Usuario.nombre_usuario == username).first()
+
 def autenticar_usuario(db: Session, correo: str, password: str):
     usuario = get_usuario_by_email(db, correo=correo)
     if not usuario:
@@ -40,6 +43,8 @@ def crear_usuario(db: Session, usuario: UsuarioCreate):
     db_usuario = Usuario(
         correo=usuario.correo, 
         nombre_usuario=usuario.nombre_usuario,
+        nombre=usuario.nombre,
+        foto_perfil=usuario.foto_perfil,
         password_hash=hashed_pwd,
         rol=usuario.rol or "user"
     )

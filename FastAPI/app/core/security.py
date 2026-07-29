@@ -8,10 +8,13 @@ def verificar_password(password_plano: str, password_hash: str) -> bool:
     if password_hash.startswith("$2y$"):
         password_hash = password_hash.replace("$2y$", "$2b$")
     
-    return bcrypt.checkpw(
-        password_plano.encode("utf-8"),
-        password_hash.encode("utf-8")
-    )
+    try:
+        return bcrypt.checkpw(
+            password_plano.encode("utf-8"),
+            password_hash.encode("utf-8")
+        )
+    except ValueError:
+        return False
 
 def obtener_password_hash(password: str) -> str:
     return bcrypt.hashpw(

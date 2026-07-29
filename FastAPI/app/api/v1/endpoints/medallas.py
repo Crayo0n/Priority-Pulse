@@ -22,7 +22,38 @@ def create_medalla(
     db: Session = Depends(get_db)
 ):
     # RBAC: Only admin can create medals
-    return crud_medalla.crear_medalla(db=db, medalla=medalla)
+    db_medalla = crud_medalla.crear_medalla(db=db, medalla=medalla)
+    # Disparar evaluación automática para todos los usuarios existentes al crear nueva regla
+    try:
+        crud_medalla.evaluar_y_otorgar_medallas_todos(db=db)
+    except Exception:
+        pass
+    return db_medalla
+
+
+@router.post("/evaluar-todos", summary="Evaluar reglas de medallas para todos los jugadores")
+@limiter.limit("10/minute")
+def evaluar_medallas_todos(
+    request: Request,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(requiere_rol("admin")),
+    db: Session = Depends(get_db)
+):
+    total = crud_medalla.evaluar_y_otorgar_medallas_todos(db=db)
+    return {"ok": True, "total_otorgadas": total}
+
+
+@router.post("/evaluar/{usuario_id}", summary="Evaluar reglas de medallas para un usuario específico")
+@limiter.limit("30/minute")
+def evaluar_medallas_usuario(
+    request: Request,
+    usuario_id: int,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
+    nuevas = crud_medalla.evaluar_y_otorgar_medallas(db=db, usuario_id=usuario_id)
+    return {"ok": True, "nuevas_desbloqueadas": len(nuevas)}
 
 
 @router.get("/", response_model=List[MedallaResponse])

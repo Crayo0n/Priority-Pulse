@@ -24,13 +24,13 @@ def get_dashboard_stats(
     db: Session = Depends(get_db)
 ):
 
-    # --- KPIs de Usuarios ---
-    total_usuarios: int = db.query(func.count(Usuario.id)).scalar() or 0
+    # --- KPIs de Usuarios (solo jugadores regulares) ---
+    total_usuarios: int = db.query(func.count(Usuario.id)).filter(Usuario.rol != 'admin').scalar() or 0
 
-    racha_promedio_raw = db.query(func.avg(Usuario.racha_actual)).scalar()
+    racha_promedio_raw = db.query(func.avg(Usuario.racha_actual)).filter(Usuario.rol != 'admin').scalar()
     racha_promedio: float = round(float(racha_promedio_raw), 1) if racha_promedio_raw else 0.0
 
-    xp_total_generada: int = db.query(func.sum(Usuario.xp_total)).scalar() or 0
+    xp_total_generada: int = db.query(func.sum(Usuario.xp_total)).filter(Usuario.rol != 'admin').scalar() or 0
 
     # --- KPIs de Tareas ---
     total_tareas: int = db.query(func.count(Tarea.id)).scalar() or 0
@@ -48,7 +48,6 @@ def get_dashboard_stats(
     total_medallas_catalogo: int = db.query(func.count(Medalla.id)).scalar() or 0
 
     # --- Funnel de Retención por Niveles ---
-    # Contamos usuarios agrupando por su nivel_id (1-10, 11-20, etc.)
     rangos = [
         ("Nivel 1-10",  1,  10),
         ("Nivel 11-20", 11, 20),
@@ -64,6 +63,7 @@ def get_dashboard_stats(
                 db.query(func.count(Usuario.id))
                 .outerjoin(Nivel, Usuario.nivel_id == Nivel.id)
                 .filter(
+                    Usuario.rol != 'admin',
                     (Usuario.nivel_id.is_(None)) | 
                     ((Nivel.numero_nivel >= min_nivel) & (Nivel.numero_nivel <= max_nivel))
                 )
@@ -75,6 +75,7 @@ def get_dashboard_stats(
                 db.query(func.count(Usuario.id))
                 .join(Nivel, Usuario.nivel_id == Nivel.id)
                 .filter(
+                    Usuario.rol != 'admin',
                     Nivel.numero_nivel >= min_nivel,
                     Nivel.numero_nivel <= max_nivel,
                 )

@@ -1,0 +1,35 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Completa tu Registro{% endblock %}
+{% block heading %}¡Ya casi estamos, {{ google_name }}!{% endblock %}
+{% block subheading %}Solo falta elegir tu Nametag único para comenzar a usar Priority Pulse.{% endblock %}
+
+{% block form_content %}
+<form action="{{ url_for('google_register_view') }}" method="POST" class="flex flex-col gap-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    <div class="space-y-4">
+        <!-- Nametag Field -->
+        <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider" for="nombre_usuario">Tu Nametag</label>
+            <div class="relative group">
+                <input type="text" id="nombre_usuario" name="nombre_usuario" placeholder="Ej. {{ google_name | replace(' ', '') | lower }}123" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary block p-3.5 pl-11 transition-all"/>
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <span class="material-symbols-outlined text-gray-400 text-[20px] group-focus-within:text-primary transition-colors">alternate_email</span>
+                </div>
+            </div>
+            <p class="text-[0.65rem] font-medium text-gray-400 mt-1">Este será tu identificador único en la aplicación. No se permiten espacios.</p>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="w-full text-white bg-primary hover:bg-primary-hover focus:ring-4 focus:outline-none focus:ring-primary/30 font-bold rounded-xl text-sm px-5 py-3.5 text-center shadow-md shadow-primary/20 transition-all flex justify-center items-center gap-2 group mt-2">
+        <span>Comenzar ahora</span>
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+    </button>
+</form>
+
+<div class="mt-8 text-center border-t border-gray-100 pt-6">
+    <p class="text-sm font-medium text-gray-500">¿Estás usando otra cuenta? <a href="{{ url_for('login') }}" class="font-bold text-primary hover:text-primary-hover transition-colors">Cancelar</a></p>
+</div>
+{% endblock %}

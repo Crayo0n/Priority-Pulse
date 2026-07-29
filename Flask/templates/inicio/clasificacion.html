@@ -16,15 +16,15 @@
         {% if usuarios|length > 1 %}
         {% set u = usuarios[1] %}
         <div class="flex flex-col items-center animate-fade-in-up" style="animation-delay: 100ms;">
-            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="relative group block cursor-pointer">
-                <div class="w-20 h-20 rounded-full border-4 border-white shadow-[0_0_20px_rgba(110,0,255,0.15)] overflow-hidden bg-white z-10 relative flex items-center justify-center group-hover:scale-105 transition-transform">
+            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="relative group block {% if u.id != session.usuario_id %}cursor-pointer{% endif %}">
+                <div class="w-20 h-20 rounded-full border-4 border-white shadow-[0_0_20px_rgba(110,0,255,0.15)] overflow-hidden bg-white z-10 relative flex items-center justify-center {% if u.id != session.usuario_id %}group-hover:scale-105{% endif %} transition-transform">
                     <img src="{% if u.foto_perfil %}{{ u.foto_perfil }}{% else %}https://ui-avatars.com/api/?name={{ u.nombre_usuario|urlencode }}&background=6e00ff&color=fff&bold=true{% endif %}" alt="{{ u.nombre_usuario }}" class="w-full h-full object-cover">
                 </div>
                 <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-gray-300 rounded-full border-2 border-white flex items-center justify-center shadow-sm z-20">
                     <span class="text-[10px] font-black text-gray-700">2</span>
                 </div>
             </a>
-            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="mt-4 text-base font-black text-gray-900 hover:text-primary transition-colors">@{{ u.nombre_usuario }}</a>
+            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="mt-4 text-base font-black text-gray-900 {% if u.id != session.usuario_id %}hover:text-primary cursor-pointer{% endif %} transition-colors">@{{ u.nombre_usuario }}</a>
             <span class="text-sm font-bold text-primary">{{ u.xp_total }} XP</span>
         </div>
         {% endif %}
@@ -33,18 +33,18 @@
         {% if usuarios|length > 0 %}
         {% set u = usuarios[0] %}
         <div class="flex flex-col items-center mb-6 animate-fade-in-up">
-            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="relative group block cursor-pointer">
-                <div class="absolute -top-8 left-1/2 -translate-x-1/2 z-30 group-hover:-translate-y-1 transition-transform">
+            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="relative group block {% if u.id != session.usuario_id %}cursor-pointer{% endif %}">
+                <div class="absolute -top-8 left-1/2 -translate-x-1/2 z-30 {% if u.id != session.usuario_id %}group-hover:-translate-y-1{% endif %} transition-transform">
                     <span class="text-3xl filter drop-shadow-md">👑</span>
                 </div>
-                <div class="w-28 h-28 rounded-full border-4 border-white shadow-[0_0_30px_rgba(110,0,255,0.3)] overflow-hidden bg-white z-10 relative flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div class="w-28 h-28 rounded-full border-4 border-white shadow-[0_0_30px_rgba(110,0,255,0.3)] overflow-hidden bg-white z-10 relative flex items-center justify-center {% if u.id != session.usuario_id %}group-hover:scale-105{% endif %} transition-transform">
                     <img src="{% if u.foto_perfil %}{{ u.foto_perfil }}{% else %}https://ui-avatars.com/api/?name={{ u.nombre_usuario|urlencode }}&background=6e00ff&color=fff&bold=true{% endif %}" alt="{{ u.nombre_usuario }}" class="w-full h-full object-cover">
                 </div>
                 <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-yellow-400 rounded-full border-2 border-white flex items-center justify-center shadow-md z-20">
                     <span class="text-xs font-black text-yellow-900">1</span>
                 </div>
             </a>
-            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="mt-5 text-xl font-black text-gray-900 hover:text-primary transition-colors">@{{ u.nombre_usuario }}</a>
+            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="mt-5 text-xl font-black text-gray-900 {% if u.id != session.usuario_id %}hover:text-primary cursor-pointer{% endif %} transition-colors">@{{ u.nombre_usuario }}</a>
             <span class="text-base font-black text-primary">{{ u.xp_total }} XP</span>
         </div>
         {% endif %}
@@ -53,15 +53,15 @@
         {% if usuarios|length > 2 %}
         {% set u = usuarios[2] %}
         <div class="flex flex-col items-center animate-fade-in-up" style="animation-delay: 200ms;">
-            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="relative group block cursor-pointer">
-                <div class="w-20 h-20 rounded-full border-4 border-white shadow-[0_0_20px_rgba(110,0,255,0.15)] overflow-hidden bg-white z-10 relative flex items-center justify-center group-hover:scale-105 transition-transform">
+            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="relative group block {% if u.id != session.usuario_id %}cursor-pointer{% endif %}">
+                <div class="w-20 h-20 rounded-full border-4 border-white shadow-[0_0_20px_rgba(110,0,255,0.15)] overflow-hidden bg-white z-10 relative flex items-center justify-center {% if u.id != session.usuario_id %}group-hover:scale-105{% endif %} transition-transform">
                     <img src="{% if u.foto_perfil %}{{ u.foto_perfil }}{% else %}https://ui-avatars.com/api/?name={{ u.nombre_usuario|urlencode }}&background=6e00ff&color=fff&bold=true{% endif %}" alt="{{ u.nombre_usuario }}" class="w-full h-full object-cover">
                 </div>
                 <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-orange-300 rounded-full border-2 border-white flex items-center justify-center shadow-sm z-20">
                     <span class="text-[10px] font-black text-orange-900">3</span>
                 </div>
             </a>
-            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="mt-4 text-base font-black text-gray-900 hover:text-primary transition-colors">@{{ u.nombre_usuario }}</a>
+            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="mt-4 text-base font-black text-gray-900 {% if u.id != session.usuario_id %}hover:text-primary cursor-pointer{% endif %} transition-colors">@{{ u.nombre_usuario }}</a>
             <span class="text-sm font-bold text-primary">{{ u.xp_total }} XP</span>
         </div>
         {% endif %}
@@ -83,11 +83,11 @@
                     <tr class="border-b border-gray-50 transition-colors {% if u.id == session.usuario_id %}bg-purple-50 hover:bg-purple-100{% else %}hover:bg-gray-50{% endif %}">
                         <td class="p-4 text-center text-gray-500 font-bold">{{ loop.index }}</td>
                         <td class="p-4 flex items-center gap-3">
-                            <a href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)" class="flex items-center gap-3 group">
-                                <div class="w-8 h-8 rounded-full overflow-hidden border border-gray-200 group-hover:ring-2 group-hover:ring-primary transition-all">
+                            <a {% if u.id != session.usuario_id %}href="{{ url_for('perfil_publico', usuario_id=u.id) }}" onclick="openProfileModal(event, this.href)"{% endif %} class="flex items-center gap-3 {% if u.id != session.usuario_id %}group cursor-pointer{% endif %}">
+                                <div class="w-8 h-8 rounded-full overflow-hidden border border-gray-200 {% if u.id != session.usuario_id %}group-hover:ring-2 group-hover:ring-primary{% endif %} transition-all">
                                     <img src="{% if u.foto_perfil %}{{ u.foto_perfil }}{% else %}https://ui-avatars.com/api/?name={{ u.nombre_usuario|urlencode }}&background=6e00ff&color=fff&bold=true{% endif %}" alt="{{ u.nombre_usuario }}" class="w-full h-full object-cover">
                                 </div>
-                                <span class="font-bold text-gray-900 group-hover:text-primary transition-colors">@{{ u.nombre_usuario }}</span>
+                                <span class="font-bold text-gray-900 {% if u.id != session.usuario_id %}group-hover:text-primary{% endif %} transition-colors">@{{ u.nombre_usuario }}</span>
                             </a>
                             {% if u.id == session.usuario_id %}
                             <span class="ml-2 text-[0.6rem] font-bold text-primary px-2 py-0.5 bg-white rounded-full border border-primary/20 shadow-sm">Tú</span>

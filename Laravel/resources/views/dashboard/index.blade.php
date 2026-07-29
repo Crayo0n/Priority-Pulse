@@ -97,7 +97,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-bold text-gray-900">Distribución por Nivel</h2>
                 <a href="{{ route('analitica') }}" class="text-xs font-bold text-[#6e00ff] hover:underline">Ver Analítica →</a>
@@ -123,51 +123,7 @@
             </div>
         </div>
 
-        <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-bold text-gray-900">Estado del Sistema</h2>
-                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
-            </div>
-            <div class="space-y-4 flex-1">
-                <div class="border border-gray-100 rounded-xl p-4 bg-gray-50 relative overflow-hidden">
-                    <div class="absolute left-0 top-0 h-full w-1 bg-emerald-400"></div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
-                            <span class="font-bold text-sm text-gray-900">FastAPI (Priority Pulse)</span>
-                        </div>
-                        <span class="text-[0.65rem] font-bold {{ $stats ? 'text-emerald-600 bg-emerald-100' : 'text-red-600 bg-red-100' }} px-2 py-0.5 rounded uppercase tracking-wider">
-                            {{ $stats ? 'Operativo' : 'Sin conexión' }}
-                        </span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-500 mt-2">
-                        <span>Usuarios: {{ $stats['total_usuarios'] ?? '—' }}</span>
-                        <span>Tareas: {{ $stats['total_tareas'] ?? '—' }}</span>
-                    </div>
-                </div>
-                <div class="border border-gray-100 rounded-xl p-4 bg-gray-50 relative overflow-hidden">
-                    <div class="absolute left-0 top-0 h-full w-1 bg-emerald-400"></div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
-                            <span class="font-bold text-sm text-gray-900">PostgreSQL</span>
-                        </div>
-                        <span class="text-[0.65rem] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded uppercase tracking-wider">Operativo</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-500 mt-2">
-                        <span>XP generada: {{ $stats ? number_format($stats['xp_total_generada']) : '—' }}</span>
-                        <span>Medallas: {{ $stats['medallas_desbloqueadas'] ?? '—' }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-4 bg-[#f3ebff] border border-[#e0ccff] rounded-xl p-4 flex gap-3 items-start">
-                <svg class="w-5 h-5 text-[#6e00ff] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <div>
-                    <h4 class="text-xs font-bold text-[#5a00d1]">Sesión Admin Activa</h4>
-                    <p class="text-[0.65rem] text-[#6e00ff] mt-0.5 font-semibold">{{ session('admin_nombre', 'Administrador') }}</p>
-                </div>
-            </div>
-        </div>
+
 
     </div>
 </div>

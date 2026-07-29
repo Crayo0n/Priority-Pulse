@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.schemas.usuario import UsuarioCreate, UsuarioResponse, UsuarioUpdate, LoginRequest, LoginResponse, GoogleLoginRequest, UsuarioPasswordUpdate
+from app.schemas.usuario import UsuarioCreate, UsuarioResponse, UsuarioUpdate, LoginRequest, LoginResponse, GoogleLoginRequest, GoogleRegisterRequest, UsuarioPasswordUpdate
 
 from app.crud import crud_usuario
 from app.core.limiter import limiter
@@ -110,12 +110,14 @@ def google_login(
             
         usuario = crud_usuario.get_usuario_by_email(db, correo=correo)
         if not usuario:
-            usuario_data = UsuarioCreate(
-                nombre_usuario=nombre,
-                correo=correo,
-                password="google_oauth_user_no_password"
-            )
-            usuario = crud_usuario.crear_usuario(db=db, usuario=usuario_data)
+            # En lugar de crearlo, devolvemos un 202 indicando que es usuario nuevo
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=202, content={
+                "is_new_user": True,
+                "email": correo,
+                "google_name": nombre,
+                "message": "Usuario nuevo, se requiere nametag."
+            })
             
         token = crear_access_token(
             usuario_id=usuario.id,
@@ -137,6 +139,66 @@ def google_login(
         raise HTTPException(status_code=400, detail=f"Token de Google inválido: {str(ve)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al autenticar con Google: {str(e)}")
+
+@router.post("/google/register", response_model=LoginResponse, summary="Finalizar registro con Google")
+@limiter.limit("5/minute")
+def google_register(
+    request: Request,
+    payload: GoogleRegisterRequest,
+    api_key_valida: bool = Depends(validar_api_key),
+    db: Session = Depends(get_db)
+):
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        
+        # Verify Google ID token
+        id_info = id_token.verify_oauth2_token(payload.id_token, google_requests.Request())
+        correo = id_info.get("email")
+        
+        if not correo:
+            raise HTTPException(status_code=400, detail="Token de Google no contiene email")
+            
+        # Check if username is taken
+        usuario_existente = crud_usuario.get_usuario_by_username(db, username=payload.nombre_usuario)
+        if usuario_existente:
+            raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+            
+        # Check if email is somehow already taken between steps
+        usuario_email = crud_usuario.get_usuario_by_email(db, correo=correo)
+        if usuario_email:
+            raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+            
+        # Create user
+        usuario_data = UsuarioCreate(
+            nombre_usuario=payload.nombre_usuario,
+            correo=correo,
+            password="google_oauth_user_no_password"
+        )
+        usuario = crud_usuario.crear_usuario(db=db, usuario=usuario_data)
+        
+        token = crear_access_token(
+            usuario_id=usuario.id,
+            rol=usuario.rol,
+            nombre_usuario=usuario.nombre_usuario
+        )
+        
+        return LoginResponse(
+            id=usuario.id,
+            nombre_usuario=usuario.nombre_usuario,
+            correo=usuario.correo,
+            rol=usuario.rol,
+            xp_total=usuario.xp_total,
+            foto_perfil=usuario.foto_perfil,
+            access_token=token,
+            token_type="bearer"
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=f"Token de Google inválido: {str(ve)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al registrar con Google: {str(e)}")
 
 
 @router.post("/", response_model=UsuarioResponse)

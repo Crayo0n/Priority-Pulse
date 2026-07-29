@@ -69,13 +69,19 @@ def actualizar_racha_tras_tarea(db: Session, usuario_id: int):
         # Primera tarea completada
         usuario.racha_actual = 1
     else:
-        diff = ahora - ultima
-        if diff.total_seconds() > 86400:  # Mas de 24h -> racha rota
+        # Usar fechas para calcular la diferencia de días calendario (asumiendo UTC)
+        ahora_fecha = ahora.date()
+        ultima_fecha = ultima.date()
+        
+        diff_dias = (ahora_fecha - ultima_fecha).days
+        
+        if diff_dias > 1:
+            # Pasó más de un día calendario, racha rota
             usuario.racha_actual = 1
-        elif ahora.date() > ultima.date():
-            # Nueva tarea en un día distinto (dentro de 24h)
+        elif diff_dias == 1:
+            # Nueva tarea en el día siguiente
             usuario.racha_actual += 1
-        # else: mismo día, no incrementar de nuevo
+        # Si diff_dias == 0, fue el mismo día, no se incrementa
 
     usuario.ultima_tarea_completada = ahora
     db.add(usuario)
@@ -87,8 +93,8 @@ def verificar_y_resetear_racha(db: Session, usuario_id: int):
     if not usuario or usuario.ultima_tarea_completada is None:
         return
     ahora = datetime.utcnow()
-    diff = ahora - usuario.ultima_tarea_completada
-    if diff.total_seconds() > 86400 and usuario.racha_actual > 0:
+    diff_dias = (ahora.date() - usuario.ultima_tarea_completada.date()).days
+    if diff_dias > 1 and usuario.racha_actual > 0:
         usuario.racha_actual = 0
         db.add(usuario)
         db.commit()

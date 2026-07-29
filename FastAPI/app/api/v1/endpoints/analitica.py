@@ -7,6 +7,7 @@ from app.db.database import get_db
 from app.models.usuario import Usuario
 from app.models.tarea import Tarea
 from app.models.medalla import Medalla, UsuarioMedalla
+from app.models.nivel import Nivel
 from app.schemas.analitica import DashboardStats, NivelFunnel
 from app.core.limiter import limiter
 from app.api.deps import validar_api_key, requiere_rol
@@ -58,15 +59,28 @@ def get_dashboard_stats(
 
     funnel: list[NivelFunnel] = []
     for rango, min_nivel, max_nivel in rangos:
-        count = (
-            db.query(func.count(Usuario.id))
-            .filter(
-                Usuario.nivel_id >= min_nivel,
-                Usuario.nivel_id <= max_nivel,
+        if min_nivel == 1:
+            count = (
+                db.query(func.count(Usuario.id))
+                .outerjoin(Nivel, Usuario.nivel_id == Nivel.id)
+                .filter(
+                    (Usuario.nivel_id.is_(None)) | 
+                    ((Nivel.numero_nivel >= min_nivel) & (Nivel.numero_nivel <= max_nivel))
+                )
+                .scalar()
+                or 0
             )
-            .scalar()
-            or 0
-        )
+        else:
+            count = (
+                db.query(func.count(Usuario.id))
+                .join(Nivel, Usuario.nivel_id == Nivel.id)
+                .filter(
+                    Nivel.numero_nivel >= min_nivel,
+                    Nivel.numero_nivel <= max_nivel,
+                )
+                .scalar()
+                or 0
+            )
         pct = round((count / total_usuarios * 100), 1) if total_usuarios > 0 else 0.0
         funnel.append(NivelFunnel(rango=rango, total_usuarios=count, porcentaje=pct))
 

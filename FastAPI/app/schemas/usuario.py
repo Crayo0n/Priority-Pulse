@@ -59,3 +59,7 @@ class LoginResponse(BaseModel):
 class GoogleLoginRequest(BaseModel):
     id_token: str
 
+class GoogleRegisterRequest(BaseModel):
+    id_token: str
+    nombre_usuario: str
+

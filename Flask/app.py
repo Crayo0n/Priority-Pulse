@@ -214,6 +214,13 @@ def google_login():
             session['foto_perfil'] = user.get('foto_perfil')
             session['access_token'] = user['access_token']
             return redirect(url_for('inicio'))
+        elif response.status_code == 202:
+            # Usuario nuevo, redirigir a elegir nametag
+            data = response.json()
+            session['temp_google_token'] = id_token
+            session['temp_google_name'] = data.get('google_name', '')
+            session['temp_google_email'] = data.get('email', '')
+            return redirect(url_for('google_register_view'))
         else:
             try:
                 err_data = response.json()
@@ -227,7 +234,57 @@ def google_login():
     return redirect(url_for('login'))
 
 
-@app.route('/registro', methods=['GET', 'POST'])
+@app.route('/registro/google', methods=['GET', 'POST'])
+def google_register_view():
+    # Solo permitir acceso si hay un token temporal en la sesión
+    if 'temp_google_token' not in session:
+        return redirect(url_for('login'))
+        
+    if request.method == 'POST':
+        nametag = request.form.get('nombre_usuario')
+        if not nametag:
+            flash('Por favor, ingresa un nametag.', 'error')
+            return redirect(url_for('google_register_view'))
+            
+        id_token = session.get('temp_google_token')
+        try:
+            response = api_request('POST', '/usuarios/google/register', json={
+                "id_token": id_token,
+                "nombre_usuario": nametag
+            })
+            
+            if response.status_code == 200:
+                user = response.json()
+                # Limpiar sesión temporal
+                session.pop('temp_google_token', None)
+                session.pop('temp_google_name', None)
+                session.pop('temp_google_email', None)
+                
+                # Iniciar sesión
+                session['usuario_id'] = user['id']
+                session['nombre_usuario'] = user['nombre_usuario']
+                session['foto_perfil'] = user.get('foto_perfil')
+                session['access_token'] = user['access_token']
+                flash('¡Bienvenido! Tu cuenta ha sido creada exitosamente.', 'success')
+                return redirect(url_for('inicio'))
+            else:
+                try:
+                    err_data = response.json()
+                    detail = err_data.get('detail', 'Error al crear la cuenta.')
+                    flash(detail, 'error')
+                except Exception:
+                    flash('Error al crear la cuenta con Google.', 'error')
+        except Exception as e:
+            print(f"DEBUG Google Register Exception: {e}")
+            flash('Error de conexión.', 'error')
+            
+        return redirect(url_for('google_register_view'))
+        
+    # GET method
+    return render_template('auth/google_register.html', 
+                          google_name=session.get('temp_google_name', 'Nuevo Usuario'),
+                          google_email=session.get('temp_google_email', ''))
+
 def registro():
     if 'usuario_id' in session:
         return redirect(url_for('inicio'))
@@ -566,6 +623,13 @@ def eliminar_rutina(rutina_id):
 @login_required
 def toggle_tarea(tarea_id):
     try:
+        usuario_id = session.get('usuario_id')
+        racha_before = 0
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and usuario_id:
+            user_res_before = api_request('GET', f'/usuarios/{usuario_id}')
+            if user_res_before.status_code == 200:
+                racha_before = user_res_before.json().get('racha_actual', 0)
+                
         res = api_request('GET', f'/tareas/{tarea_id}')
         if res.status_code == 200:
             tarea = res.json()
@@ -577,20 +641,27 @@ def toggle_tarea(tarea_id):
             put_res = api_request('PUT', f'/tareas/{tarea_id}', json=payload)
             
             if put_res.status_code == 200:
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    usuario_id = session.get('usuario_id')
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and usuario_id:
                     user_res = api_request('GET', f'/usuarios/{usuario_id}')
                     nuevo_xp = 0
                     xp_siguiente = 0
+                    racha_incrementada = False
+                    racha_actual = 0
+                    
                     if user_res.status_code == 200:
                         u_data = user_res.json()
                         nuevo_xp = u_data.get('xp_total', 0)
                         nivel_actual = u_data.get('nivel', 1)
                         xp_siguiente = nivel_actual * 100
-                    return {"success": True, "estado": nuevo_estado, "nuevo_xp": nuevo_xp, "xp_siguiente": xp_siguiente}
+                        racha_actual = u_data.get('racha_actual', 0)
+                        
+                        if nuevo_estado == "completada" and racha_actual > racha_before:
+                            racha_incrementada = True
+                            
+                    return {"success": True, "estado": nuevo_estado, "nuevo_xp": nuevo_xp, "xp_siguiente": xp_siguiente, "racha_incrementada": racha_incrementada, "racha_actual": racha_actual}
+                
                 if nuevo_estado == "completada":
                     flash('¡Excelente! Tarea completada. +XP', 'success')
-                else:
                     flash('Tarea desmarcada.', 'info')
             else:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

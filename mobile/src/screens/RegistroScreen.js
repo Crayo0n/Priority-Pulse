@@ -34,7 +34,7 @@ export default function RegistroScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const redirectUri = makeRedirectUri({ useProxy: true });
+  const redirectUri = makeRedirectUri();
   console.log("GOOGLE OAUTH REDIRECT URI (RegistroScreen):", redirectUri);
 
   const [request, response, promptAsync] = Google.useAuthRequest({

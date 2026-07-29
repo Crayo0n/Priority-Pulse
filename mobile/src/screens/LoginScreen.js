@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const redirectUri = makeRedirectUri({ useProxy: true });
+  const redirectUri = makeRedirectUri();
   console.log("GOOGLE OAUTH REDIRECT URI (LoginScreen):", redirectUri);
 
   const [request, response, promptAsync] = Google.useAuthRequest({

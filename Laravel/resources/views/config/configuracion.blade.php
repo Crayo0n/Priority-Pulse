@@ -54,6 +54,29 @@
                             <span class="material-symbols-outlined text-[20px]">stadia_controller</span>
                             Gamificación
                         </a>
+
+                        {{-- Resumen del Sistema --}}
+                        <div class="mt-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm space-y-3">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Estado de la Plataforma</h4>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Usuarios:</span>
+                                    <span id="stat-usuarios" class="font-extrabold text-gray-900">—</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Tareas Totales:</span>
+                                    <span id="stat-tareas" class="font-extrabold text-gray-900">—</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">XP Generada:</span>
+                                    <span id="stat-xp" class="font-extrabold text-[#6e00ff]">—</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Medallas Catálogo:</span>
+                                    <span id="stat-medallas" class="font-extrabold text-amber-600">—</span>
+                                </div>
+                            </div>
+                        </div>
                     </nav>
                 </div>
 
@@ -67,72 +90,11 @@
                         <span id="toast-msg">Cambios guardados correctamente.</span>
                     </div>
 
-                    {{-- Control del Sistema --}}
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                        <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                            <div class="bg-[#f3ebff] p-2 rounded-lg">
-                                <span class="material-symbols-outlined text-[#6e00ff] text-[20px]">settings_suggest</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Control del Sistema</h3>
-                                <p class="text-sm text-gray-500">Interruptores principales para la operatividad de la
-                                    plataforma.</p>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <div
-                                class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                                <div class="flex flex-col max-w-xl pr-4">
-                                    <h4 class="text-gray-900 font-bold text-sm mb-1">Modo Mantenimiento</h4>
-                                    <p class="text-xs text-gray-500">Activa el modo mantenimiento. Los usuarios verán una
-                                        pantalla de "En construcción".</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input id="toggle-mantenimiento" type="checkbox" class="sr-only peer"
-                                        onchange="saveToggle('mantenimiento', this.checked)">
-                                    <div
-                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500">
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div class="border-t border-gray-100"></div>
-
-                            <div
-                                class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                                <div class="flex flex-col max-w-xl pr-4">
-                                    <h4 class="text-gray-900 font-bold text-sm mb-1">Registro de Nuevos Usuarios</h4>
-                                    <p class="text-xs text-gray-500">Permitir que nuevos usuarios se registren en la
-                                        plataforma.</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input id="toggle-registro" type="checkbox" class="sr-only peer"
-                                        onchange="saveToggle('registro', this.checked)">
-                                    <div
-                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6e00ff]">
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div class="border-t border-gray-100"></div>
-
-                            <div
-                                class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                                <div class="flex flex-col max-w-xl pr-4">
-                                    <h4 class="text-gray-900 font-bold text-sm mb-1">API Integrations (Público)</h4>
-                                    <p class="text-xs text-gray-500">Habilitar los endpoints públicos de la API para
-                                        integraciones de terceros.</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input id="toggle-api" type="checkbox" class="sr-only peer"
-                                        onchange="saveToggle('api', this.checked)">
-                                    <div
-                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6e00ff]">
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
+                    {{-- Toast de confirmación --}}
+                    <div id="toast"
+                        class="hidden fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-sm font-bold text-white transition-all duration-300 bg-emerald-600">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        <span id="toast-msg">Cambios guardados correctamente.</span>
                     </div>
 
                     {{-- Información de la Organización --}}
@@ -143,7 +105,7 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">Información de la Organización</h3>
-                                <p class="text-sm text-gray-500">Datos visibles en correos y pie de página.</p>
+                                <p class="text-sm text-gray-500">Datos visibles en correos y pie de página de la plataforma.</p>
                             </div>
                         </div>
 
@@ -184,8 +146,7 @@
                         <div>
                             <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Nota sobre cambios</h4>
                             <p class="text-xs text-blue-700 mt-1 leading-relaxed">Los cambios en "Control del Sistema" se
-                                aplican inmediatamente, pero pueden tardar hasta 5 minutos en propagarse a todas las
-                                sesiones activas de usuarios debido al caché.</p>
+                                aplican inmediatamente en el entorno activo.</p>
                         </div>
                     </div>
 
@@ -242,30 +203,59 @@
             Object.entries(KEYS).forEach(([key, cfg]) => {
                 const saved = localStorage.getItem('cfg_' + key);
                 const val = saved !== null ? saved === 'true' : cfg.default;
-                document.getElementById(cfg.id).checked = val;
+                const toggleEl = document.getElementById(cfg.id);
+                if (toggleEl) toggleEl.checked = val;
+
+                if (key === 'mantenimiento') {
+                    updateMantenimientoBanner(val);
+                }
             });
         }
 
         function saveToggle(key, val) {
             localStorage.setItem('cfg_' + key, val);
+            if (key === 'mantenimiento') {
+                updateMantenimientoBanner(val);
+            }
             showToast(val ? `${key.charAt(0).toUpperCase() + key.slice(1)} activado.` : `${key.charAt(0).toUpperCase() + key.slice(1)} desactivado.`, val && key === 'mantenimiento' ? 'error' : 'success');
+        }
+
+        function updateMantenimientoBanner(active) {
+            const banner = document.getElementById('banner-mantenimiento');
+            if (banner) {
+                if (active) banner.classList.remove('hidden');
+                else banner.classList.add('hidden');
+            }
+        }
+
+        function desactivarMantenimiento() {
+            const toggle = document.getElementById('toggle-mantenimiento');
+            if (toggle) toggle.checked = false;
+            saveToggle('mantenimiento', false);
         }
 
         // ─── Persistencia de formulario con localStorage ─────────────────────────────
         function loadOrgInfo() {
-            const nombre = localStorage.getItem('cfg_org_nombre') ?? '';
-            const correo = localStorage.getItem('cfg_org_correo') ?? '';
-            const timezone = localStorage.getItem('cfg_org_timezone') ?? 'CET';
-            if (nombre) document.getElementById('org-nombre').value = nombre;
-            if (correo) document.getElementById('org-correo').value = correo;
-            const sel = document.getElementById('org-timezone');
-            [...sel.options].forEach(o => { if (o.value === timezone) o.selected = true; });
+            const nombre = localStorage.getItem('cfg_org_nombre') ?? 'Priority Pulse';
+            const correo = localStorage.getItem('cfg_org_correo') ?? 'support@prioritypulse.com';
+            const timezone = localStorage.getItem('cfg_org_timezone') ?? 'CST';
+            
+            const elNombre = document.getElementById('org-nombre');
+            const elCorreo = document.getElementById('org-correo');
+            const elTimezone = document.getElementById('org-timezone');
+
+            if (elNombre) elNombre.value = nombre;
+            if (elCorreo) elCorreo.value = correo;
+            if (elTimezone) {
+                [...elTimezone.options].forEach(o => { if (o.value === timezone) o.selected = true; });
+            }
         }
 
         function guardarConfiguracion() {
-            const nombre = document.getElementById('org-nombre').value.trim();
-            const correo = document.getElementById('org-correo').value.trim();
-            const timezone = document.getElementById('org-timezone').value;
+            const nombre = document.getElementById('org-nombre')?.value.trim() ?? 'Priority Pulse';
+            const correo = document.getElementById('org-correo')?.value.trim() ?? 'support@prioritypulse.com';
+            const timezone = document.getElementById('org-timezone')?.value ?? 'CST';
+            
             localStorage.setItem('cfg_org_nombre', nombre);
             localStorage.setItem('cfg_org_correo', correo);
             localStorage.setItem('cfg_org_timezone', timezone);
@@ -275,10 +265,13 @@
         // ─── Toast ────────────────────────────────────────────────────────────────────
         function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').textContent = msg;
-            toast.className = `fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-sm font-bold text-white transition-all duration-300 ${type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+            const msgEl = document.getElementById('toast-msg');
+            if (msgEl) msgEl.textContent = msg;
+            if (toast) {
+                toast.className = `fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-sm font-bold text-white transition-all duration-300 ${type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 3000);
+            }
         }
 
         // ─── Panel de Logs ────────────────────────────────────────────────────────────
@@ -286,6 +279,7 @@
         function toggleLogsPanel() {
             const panel = document.getElementById('logs-panel');
             const overlay = document.getElementById('logs-overlay');
+            if (!panel || !overlay) return;
             const isOpen = !panel.classList.contains('translate-x-full');
 
             if (isOpen) {
@@ -325,8 +319,10 @@
                     </div>
                 </div>`).join('');
             } catch {
-                document.getElementById('logs-body').innerHTML =
-                    '<p class="text-sm text-red-400 text-center py-8">Error al cargar logs desde la API.</p>';
+                const body = document.getElementById('logs-body');
+                if (body) {
+                    body.innerHTML = '<p class="text-sm text-red-400 text-center py-8">Error al cargar logs desde la API.</p>';
+                }
             }
         }
 
@@ -336,10 +332,15 @@
                 const res = await fetch('/api/config/stats', { headers: { 'X-CSRF-TOKEN': CSRF } });
                 const data = await res.json();
                 if (data) {
-                    document.getElementById('stat-usuarios').textContent = data.total_usuarios?.toLocaleString() ?? '—';
-                    document.getElementById('stat-tareas').textContent = data.total_tareas?.toLocaleString() ?? '—';
-                    document.getElementById('stat-xp').textContent = (data.xp_total_sistema ?? 0).toLocaleString() + ' XP';
-                    document.getElementById('stat-medallas').textContent = data.total_medallas?.toLocaleString() ?? '—';
+                    const elUsr = document.getElementById('stat-usuarios');
+                    const elTar = document.getElementById('stat-tareas');
+                    const elXp  = document.getElementById('stat-xp');
+                    const elMed = document.getElementById('stat-medallas');
+
+                    if (elUsr) elUsr.textContent = data.total_usuarios?.toLocaleString() ?? '—';
+                    if (elTar) elTar.textContent = data.total_tareas?.toLocaleString() ?? '—';
+                    if (elXp)  elXp.textContent  = (data.xp_total_generada ?? 0).toLocaleString() + ' XP';
+                    if (elMed) elMed.textContent = data.total_medallas_catalogo?.toLocaleString() ?? '—';
                 }
             } catch { /* API no devuelve datos aún */ }
         }

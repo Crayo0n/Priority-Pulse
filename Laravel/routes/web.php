@@ -46,6 +46,9 @@ Route::middleware('admin.auth')->group(function () {
     // Proxy JSON: eliminar medalla
     Route::delete('/api/gamificacion/medalla/{id}', [GamificacionController::class, 'destroyMedalla'])->name('gamificacion.medalla.destroy');
 
+    // Proxy JSON: evaluar medallas
+    Route::post('/api/gamificacion/evaluar', [GamificacionController::class, 'evaluarMedallas'])->name('gamificacion.evaluar');
+
     // Proxy JSON: stats para sidebar de configuración
     Route::get('/api/config/stats', function () {
         $res = \App\Services\ApiService::get('/analitica/dashboard');

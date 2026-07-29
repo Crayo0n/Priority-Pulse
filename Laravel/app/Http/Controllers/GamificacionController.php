@@ -42,12 +42,23 @@ class GamificacionController extends Controller
     public function storeMedalla(Request $request)
     {
         $data = $request->validate([
-            'nombre'      => 'required|string|max:100',
-            'descripcion' => 'nullable|string|max:255',
-            'icono'       => 'nullable|string|max:100',
+            'nombre'          => 'required|string|max:100',
+            'descripcion'     => 'nullable|string|max:255',
+            'icono'           => 'nullable|string|max:100',
+            'url_icono'       => 'nullable|string',
+            'tipo_trigger'    => 'nullable|string',
+            'valor_requerido' => 'nullable|integer',
         ]);
 
-        $response = ApiService::post('/medallas/', $data);
+        $payload = [
+            'nombre'          => $data['nombre'],
+            'descripcion'     => $data['descripcion'] ?? 'Medalla del sistema',
+            'url_icono'       => $data['icono'] ?? $data['url_icono'] ?? 'workspace_premium',
+            'tipo_trigger'    => $data['tipo_trigger'] ?? 'acciones',
+            'valor_requerido' => isset($data['valor_requerido']) ? (int)$data['valor_requerido'] : 1,
+        ];
+
+        $response = ApiService::post('/medallas/', $payload);
 
         return response()->json(
             $response->successful()
@@ -74,6 +85,16 @@ class GamificacionController extends Controller
         return response()->json(
             ['ok' => $response->successful()],
             $response->successful() ? 200 : $response->status()
+        );
+    }
+
+    /** Proxy JSON: evaluar medallas para todos los usuarios → FastAPI POST /medallas/evaluar-todos */
+    public function evaluarMedallas()
+    {
+        $response = ApiService::post('/medallas/evaluar-todos', []);
+        return response()->json(
+            $response->successful() ? $response->json() : ['ok' => false],
+            $response->status()
         );
     }
 }

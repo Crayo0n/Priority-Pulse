@@ -109,23 +109,22 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">Dificultad de Racha</h3>
-                                <p class="text-sm text-gray-500">Define cuántas tareas son necesarias para mantener la llama
-                                    encendida.</p>
+                                <p class="text-sm text-gray-500">Define cuántas tareas son necesarias para mantener la racha activa.</p>
                             </div>
                         </div>
 
                         <div class="bg-gray-50 p-6 rounded-xl border border-gray-100 max-w-sm">
-                            <label class="block text-sm font-bold text-gray-900 mb-2">Mínimo Diario</label>
+                            <label class="block text-sm font-bold text-gray-900 mb-2">Mínimo Diario Requerido</label>
                             <div class="relative mb-2">
                                 <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
                                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
                                 </span>
-                                <input type="number" value="3"
+                                <input id="minimo-tareas-input" type="number" min="1" value="1" onchange="guardarMinimoTareas(this.value)"
                                     class="w-full pl-12 pr-16 py-3 bg-white border border-gray-200 rounded-lg text-base font-bold text-gray-900 focus:outline-none focus:border-[#6e00ff] focus:ring-1 focus:ring-[#6e00ff]">
                                 <span
-                                    class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs font-semibold text-gray-400">tareas</span>
+                                    class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs font-semibold text-gray-400">tarea(s)</span>
                             </div>
-                            <p class="text-[0.65rem] text-gray-500">Número de tareas para contar el día como activo.</p>
+                            <p class="text-[0.65rem] text-gray-500 font-medium">Mínimo 1 tarea requerida al día para contabilizar el día activo.</p>
                         </div>
                     </div>
 
@@ -141,10 +140,18 @@
                                         insignias.</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="openModal('insignia-modal')"
-                                class="px-3 py-1.5 border border-[#d9baff] text-[#6e00ff] rounded-lg text-xs font-bold hover:bg-[#f3ebff] transition">
-                                + Nueva Regla
-                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="evaluarTodasLasMedallas(this)"
+                                    class="px-3 py-1.5 bg-[#f3ebff] text-[#6e00ff] rounded-lg text-xs font-bold hover:bg-[#e9d5ff] transition flex items-center gap-1 shadow-sm"
+                                    title="Evaluar reglas activas para todos los jugadores de inmediato">
+                                    <span class="material-symbols-outlined text-[16px]">bolt</span>
+                                    Evaluar Reglas
+                                </button>
+                                <button type="button" onclick="openModal('insignia-modal')"
+                                    class="px-3 py-1.5 border border-[#d9baff] text-[#6e00ff] rounded-lg text-xs font-bold hover:bg-[#f3ebff] transition">
+                                    + Nueva Regla
+                                </button>
+                            </div>
                         </div>
 
                         <div id="lista-medallas" class="space-y-4">
@@ -231,35 +238,28 @@
                                     placeholder="Describe cómo se gana esta medalla..."></textarea>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-900 mb-1.5">Ícono (Material
-                                        Symbol)</label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                            <span id="icono-preview"
-                                                class="material-symbols-outlined text-[18px]">workspace_premium</span>
-                                        </span>
-                                        <input id="insignia-icono" type="text" value="workspace_premium"
-                                            oninput="document.getElementById('icono-preview').textContent=this.value"
-                                            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#6e00ff] focus:ring-1 focus:ring-[#6e00ff] transition">
-                                    </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-900 mb-2">Selecciona un Ícono</label>
+                                @php
+                                    $iconosInsignia = [
+                                        'workspace_premium', 'emoji_events', 'military_tech', 'local_fire_department',
+                                        'star', 'diamond', 'bolt', 'shield',
+                                        'rocket_launch', 'pest_control', 'crown', 'verified',
+                                        'auto_awesome', 'school', 'psychology', 'fitness_center',
+                                        'lightbulb', 'anchor', 'flag', 'favorite'
+                                    ];
+                                @endphp
+                                <div class="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                                    @foreach($iconosInsignia as $ico)
+                                        <button type="button" onclick="pickIconInsignia('{{ $ico }}')" id="insignia-ico-btn-{{ $ico }}"
+                                            class="insignia-ico-btn w-10 h-10 flex items-center justify-center rounded-lg border border-gray-100 bg-white text-gray-500 hover:border-[#6e00ff] hover:text-[#6e00ff] transition cursor-pointer"
+                                            title="{{ $ico }}">
+                                            <span class="material-symbols-outlined text-[20px]">{{ $ico }}</span>
+                                        </button>
+                                    @endforeach
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-900 mb-1.5">Categoría</label>
-                                    <div class="relative">
-                                        <select
-                                            class="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#6e00ff] focus:ring-1 focus:ring-[#6e00ff] appearance-none cursor-pointer">
-                                            <option>General</option>
-                                            <option selected>Técnico</option>
-                                            <option>Social</option>
-                                        </select>
-                                        <div
-                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                            <span class="material-symbols-outlined text-[18px]">expand_more</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input id="insignia-icono" type="hidden" value="workspace_premium">
+                                <p class="text-[0.65rem] text-gray-400 mt-1.5">Ícono seleccionado: <span id="insignia-icono-label" class="font-bold text-[#6e00ff]">workspace_premium</span></p>
                             </div>
                         </div>
                     </div>
@@ -267,18 +267,20 @@
                     <div>
                         <div class="flex items-center gap-2 mb-4">
                             <span class="material-symbols-outlined text-[#6e00ff] text-[18px]">settings_ethernet</span>
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Lógica</h3>
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Regla de Desbloqueo</h3>
                         </div>
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-bold text-gray-900 mb-1.5">Disparador (Trigger)</label>
+                                <label class="block text-sm font-bold text-gray-900 mb-1.5">Condición de Desbloqueo</label>
                                 <div class="relative">
-                                    <select
-                                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#6e00ff] focus:ring-1 focus:ring-[#6e00ff] appearance-none cursor-pointer">
-                                        <option selected>Acumulación de Acciones</option>
-                                        <option>Logro Único</option>
-                                        <option>Racha Sostenida</option>
+                                    <select id="insignia-trigger" onchange="actualizarLabelAccion(this.value)"
+                                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#6e00ff] focus:ring-1 focus:ring-[#6e00ff] appearance-none cursor-pointer font-medium">
+                                        <option value="racha_dias" selected>Días de Racha Sostenida (Ej: 20 días de racha)</option>
+                                        <option value="tareas_dia">Tareas Completadas en un Día (Ej: 10 tareas en 24h)</option>
+                                        <option value="tareas_totales">Tareas Totales Completadas (Ej: 50 tareas en total)</option>
+                                        <option value="nivel_alcanzado">Nivel de Usuario Alcanzado (Ej: Llegar al Nivel 10)</option>
+                                        <option value="logro_especial">Logro Especial / Único</option>
                                     </select>
                                     <div
                                         class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
@@ -289,13 +291,13 @@
 
                             <div class="p-4 bg-gray-50 border border-gray-100 rounded-xl space-y-3">
                                 <div class="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span class="text-xs font-semibold text-gray-500">Acción Requerida:</span>
-                                    <span class="text-sm font-bold text-gray-900">Reporte de Bug</span>
+                                    <span class="text-xs font-semibold text-gray-500">Condición Seleccionada:</span>
+                                    <span id="trigger-label-preview" class="text-xs font-extrabold text-[#6e00ff]">Días de Racha Sostenida</span>
                                 </div>
                                 <div class="flex justify-between items-center pt-1">
-                                    <span class="text-xs font-semibold text-gray-500">Cantidad:</span>
-                                    <input type="number" value="5"
-                                        class="w-20 px-3 py-1 bg-white border border-gray-200 rounded text-sm text-center focus:outline-none focus:border-[#6e00ff]">
+                                    <span id="trigger-cantidad-label" class="text-xs font-semibold text-gray-500">Días requeridos:</span>
+                                    <input id="insignia-cantidad" type="number" min="1" value="20"
+                                        class="w-24 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-center text-gray-900 focus:outline-none focus:border-[#6e00ff]">
                                 </div>
                             </div>
                         </div>
@@ -315,20 +317,19 @@
                         </div>
 
                         <div
-                            class="w-24 h-24 rounded-full bg-[#f3ebff] border-4 border-[#e9d5ff] flex items-center justify-center mb-4 mt-2">
-                            <span class="material-symbols-outlined text-[#6e00ff] text-[40px]">pest_control</span>
+                            class="w-24 h-24 rounded-full bg-[#f3ebff] border-4 border-[#e9d5ff] flex items-center justify-center mb-4 mt-2 shadow-inner">
+                            <span id="preview-insignia-icon" class="material-symbols-outlined text-[#6e00ff] text-[40px]">workspace_premium</span>
                         </div>
 
                         <span
-                            class="px-2.5 py-0.5 bg-[#f3ebff] text-[#6e00ff] text-[0.6rem] font-black uppercase tracking-widest rounded-full mb-3">Épica</span>
+                            class="px-2.5 py-0.5 bg-[#f3ebff] text-[#6e00ff] text-[0.6rem] font-black uppercase tracking-widest rounded-full mb-3">Medalla</span>
 
-                        <h4 class="text-lg font-black text-gray-900 mb-2 leading-tight">Cazador de Bugs</h4>
-                        <p class="text-[0.7rem] text-gray-500 leading-relaxed px-2">Reporta y verifica 5 errores críticos en
-                            el sistema.</p>
+                        <h4 id="preview-insignia-nombre" class="text-lg font-black text-gray-900 mb-2 leading-tight">Nueva Insignia</h4>
+                        <p id="preview-insignia-desc" class="text-[0.7rem] text-gray-500 leading-relaxed px-2">Descripción de la medalla...</p>
 
                         <div class="mt-6 pt-4 border-t border-gray-50 w-full flex justify-center items-center gap-1.5">
                             <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span class="text-xs font-bold text-emerald-600">+ 250 XP</span>
+                            <span class="text-xs font-bold text-emerald-600">+ Logro RPG</span>
                         </div>
                     </div>
                 </div>
@@ -546,8 +547,45 @@
             document.getElementById('nivel-icono').value = ico;
             document.getElementById('nivel-icono-label').textContent = ico;
         }
-        // Seleccionar el primero por defecto al abrir
-        document.addEventListener('DOMContentLoaded', () => pickIconNivel('emoji_events'));
+
+        // ---- Icon picker para insignias / medallas ----
+        function pickIconInsignia(ico) {
+            document.querySelectorAll('.insignia-ico-btn').forEach(b => {
+                b.classList.remove('border-[#6e00ff]', 'text-[#6e00ff]', 'bg-[#f3ebff]');
+                b.classList.add('border-gray-100', 'bg-white', 'text-gray-500');
+            });
+            const btn = document.getElementById('insignia-ico-btn-' + ico);
+            if (btn) {
+                btn.classList.add('border-[#6e00ff]', 'text-[#6e00ff]', 'bg-[#f3ebff]');
+                btn.classList.remove('border-gray-100', 'bg-white', 'text-gray-500');
+            }
+            document.getElementById('insignia-icono').value = ico;
+            document.getElementById('insignia-icono-label').textContent = ico;
+            const prevIcon = document.getElementById('preview-insignia-icon');
+            if (prevIcon) prevIcon.textContent = ico;
+        }
+
+        // Seleccionar los primeros por defecto al abrir
+        document.addEventListener('DOMContentLoaded', () => {
+            pickIconNivel('emoji_events');
+            pickIconInsignia('workspace_premium');
+
+            // Live updates for insignia preview
+            const nameInput = document.getElementById('insignia-nombre');
+            const descInput = document.getElementById('insignia-descripcion');
+            if (nameInput) {
+                nameInput.addEventListener('input', (e) => {
+                    const prev = document.getElementById('preview-insignia-nombre');
+                    if (prev) prev.textContent = e.target.value.trim() || 'Nueva Insignia';
+                });
+            }
+            if (descInput) {
+                descInput.addEventListener('input', (e) => {
+                    const prev = document.getElementById('preview-insignia-desc');
+                    if (prev) prev.textContent = e.target.value.trim() || 'Descripción de la medalla...';
+                });
+            }
+        });
 
         const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -620,13 +658,43 @@
             finally { btnEl.disabled = false; }
         }
 
+        function actualizarLabelAccion(val) {
+            const labelPreview = document.getElementById('trigger-label-preview');
+            const cantidadLabel = document.getElementById('trigger-cantidad-label');
+            const cantidadInput = document.getElementById('insignia-cantidad');
+
+            if (val === 'racha_dias') {
+                if (labelPreview) labelPreview.textContent = 'Días de Racha Sostenida';
+                if (cantidadLabel) cantidadLabel.textContent = 'Días requeridos:';
+                if (cantidadInput) cantidadInput.value = '20';
+            } else if (val === 'tareas_dia') {
+                if (labelPreview) labelPreview.textContent = 'Tareas en un Día';
+                if (cantidadLabel) cantidadLabel.textContent = 'Tareas requeridas:';
+                if (cantidadInput) cantidadInput.value = '10';
+            } else if (val === 'tareas_totales') {
+                if (labelPreview) labelPreview.textContent = 'Total Tareas Completadas';
+                if (cantidadLabel) cantidadLabel.textContent = 'Tareas requeridas:';
+                if (cantidadInput) cantidadInput.value = '50';
+            } else if (val === 'nivel_alcanzado') {
+                if (labelPreview) labelPreview.textContent = 'Nivel Alcanzado';
+                if (cantidadLabel) cantidadLabel.textContent = 'Nivel meta:';
+                if (cantidadInput) cantidadInput.value = '10';
+            } else {
+                if (labelPreview) labelPreview.textContent = 'Logro Especial';
+                if (cantidadLabel) cantidadLabel.textContent = 'Valor meta:';
+                if (cantidadInput) cantidadInput.value = '1';
+            }
+        }
+
         async function guardarMedalla() {
             const nombre = document.getElementById('insignia-nombre').value.trim();
             const descripcion = document.getElementById('insignia-descripcion').value.trim();
-            const icono = document.getElementById('insignia-icono').value.trim();
+            const icono = document.getElementById('insignia-icono').value.trim() || 'workspace_premium';
+            const tipo_trigger = document.getElementById('insignia-trigger')?.value || 'racha_dias';
+            const valor_requerido = parseInt(document.getElementById('insignia-cantidad')?.value) || 1;
 
             if (!nombre) {
-                mostrarFeedback('insignia-feedback', false, 'El nombre es obligatorio.');
+                mostrarFeedback('insignia-feedback', false, 'El nombre de la medalla es obligatorio.');
                 return;
             }
 
@@ -637,7 +705,14 @@
                 const res = await fetch('{{ route("gamificacion.medalla") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ nombre, descripcion, icono })
+                    body: JSON.stringify({
+                        nombre,
+                        descripcion,
+                        icono,
+                        url_icono: icono,
+                        tipo_trigger,
+                        valor_requerido
+                    })
                 });
                 const json = await res.json();
                 if (json.ok) {
@@ -650,12 +725,17 @@
                     row.innerHTML = `
                         <div class="flex gap-4">
                             <div class="w-12 h-12 bg-[#f3ebff] text-[#6e00ff] rounded-lg flex items-center justify-center flex-shrink-0">
-                                <span class="material-symbols-outlined">${d.icono ?? 'workspace_premium'}</span>
+                                <span class="material-symbols-outlined">${d.url_icono ?? d.icono ?? 'workspace_premium'}</span>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 text-sm mb-0.5">${d.nombre}</h4>
                                 <p class="text-xs text-gray-500">${d.descripcion ?? ''}</p>
-                                <p class="text-xs text-gray-400 mt-1">ID: ${d.id}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[0.65rem] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+                                        ⚡ ${d.tipo_trigger ?? 'racha_dias'}: ${d.valor_requerido ?? 1}
+                                    </span>
+                                    <span class="text-xs text-gray-400">ID: ${d.id}</span>
+                                </div>
                             </div>
                         </div>
                         <button onclick="eliminarMedalla(${d.id}, this)" class="opacity-0 group-hover:opacity-100 transition text-gray-300 hover:text-red-500 flex-shrink-0 ml-2" title="Eliminar medalla">
@@ -695,6 +775,45 @@
             finally { btnEl.disabled = false; }
         }
 
+        async function evaluarTodasLasMedallas(btn) {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[16px]">refresh</span> Evaluando...';
+            }
+            try {
+                const res = await fetch('{{ route("gamificacion.evaluar") }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF }
+                });
+                const json = await res.json();
+                if (json.ok) {
+                    alert(`✅ Evaluación completada. Se otorgaron ${json.total_otorgadas ?? 0} nuevas medalla(s) a los usuarios.`);
+                } else {
+                    alert('⚠️ Ocurrió un inconveniente al evaluar las reglas.');
+                }
+            } catch { alert('Error de conexión.'); }
+            finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">bolt</span> Evaluar Reglas';
+                }
+            }
+        }
+
+        // ─── Gestión de Mínimo Diario de Tareas ─────────────────────────────────────
+        function guardarMinimoTareas(val) {
+            const num = Math.max(parseInt(val) || 1, 1);
+            const input = document.getElementById('minimo-tareas-input');
+            if (input) input.value = num;
+            localStorage.setItem('cfg_minimo_tareas', num);
+        }
+
+        function loadMinimoTareas() {
+            const saved = localStorage.getItem('cfg_minimo_tareas') ?? '1';
+            const input = document.getElementById('minimo-tareas-input');
+            if (input) input.value = Math.max(parseInt(saved) || 1, 1);
+        }
+
         function mostrarFeedback(id, ok, msg) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -702,5 +821,9 @@
             el.className = `mr-auto text-sm font-semibold px-4 py-2 rounded-lg ${ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`;
             el.classList.remove('hidden');
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMinimoTareas();
+        });
     </script>
 @endsection

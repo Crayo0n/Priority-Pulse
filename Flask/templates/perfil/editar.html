@@ -44,7 +44,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-2">Nombre Completo</label>
-                    <input type="text" name="nombre" value="{{ usuario.nombre if usuario.nombre else '' }}" placeholder="Ej. Luis Eduardo" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                    <input type="text" name="nombre" value="{{ usuario.nombre if usuario.nombre else '' }}" placeholder="Tu nombre" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-2">Nombre de Usuario</label>
@@ -199,18 +199,18 @@
             <div class="border border-gray-100 bg-gray-50/80 rounded-2xl p-4 flex items-center justify-between mb-8 shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-full bg-[#6e00ff] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-inner">
-                        LE
+                        {{ (usuario.nombre or usuario.nombre_usuario)[:2] | upper }}
                     </div>
                     <div class="flex flex-col">
-                        <span class="font-bold text-gray-900 text-sm">Luis Eduardo</span>
-                        <span class="text-[0.65rem] font-medium text-gray-500">Nivel 12 • Explorador</span>
+                        <span class="font-bold text-gray-900 text-sm">{{ usuario.nombre or usuario.nombre_usuario }}</span>
+                        <span class="text-[0.65rem] font-medium text-gray-500">@{{ usuario.nombre_usuario }}</span>
                     </div>
                 </div>
                 
                 <div class="flex flex-col items-end text-right">
                     <div class="flex items-center gap-1 text-orange-500">
                         <span class="material-symbols-outlined text-[18px]">local_fire_department</span>
-                        <span class="font-black text-sm">45 días</span>
+                        <span class="font-black text-sm">{{ usuario.racha_actual }} días</span>
                     </div>
                     <span class="text-[0.55rem] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Racha Actual</span>
                 </div>
@@ -220,9 +220,12 @@
                 <button onclick="closeModal('modal-eliminar-cuenta')" type="button" class="w-full sm:w-auto px-6 py-3 text-sm font-bold text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-center">
                     Cancelar
                 </button>
-                <button type="button" class="w-full sm:w-auto px-6 py-3 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/20 transition-all text-center">
-                    Eliminar Permanentemente
-                </button>
+                <form action="{{ url_for('eliminar_cuenta') }}" method="POST" class="w-full sm:w-auto m-0">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/20 transition-all text-center">
+                        Eliminar Permanentemente
+                    </button>
+                </form>
             </div>
 
         </div>

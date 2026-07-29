@@ -336,10 +336,10 @@ def inicio():
 
     usuario_info = {
         "nombre": session.get('nombre_usuario', 'Usuario'),
-        "nivel": 4,
-        "xp": 500,
-        "xp_siguiente": 1000,
-        "racha": 12
+        "nivel": 1,
+        "xp": 0,
+        "xp_siguiente": 500,
+        "racha": 0
     }
     
     try:
@@ -965,6 +965,22 @@ def cambiar_password():
             flash('La contraseña actual es incorrecta.', 'error')
         else:
             flash('Error al actualizar la contraseña.', 'error')
+    except Exception as e:
+        flash('Error de conexión con el servidor.', 'error')
+        
+    return redirect(url_for('editar_perfil'))
+
+@app.route('/eliminar-cuenta', methods=['POST'])
+@login_required
+def eliminar_cuenta():
+    try:
+        res = api_request('DELETE', f'/usuarios/{session["usuario_id"]}')
+        if res.status_code == 200:
+            session.clear()
+            flash('Tu cuenta ha sido eliminada permanentemente.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('No se pudo eliminar la cuenta.', 'error')
     except Exception as e:
         flash('Error de conexión con el servidor.', 'error')
         

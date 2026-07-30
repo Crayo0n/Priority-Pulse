@@ -20,6 +20,10 @@ class RegistroRutinaResponse(RegistroRutinaBase):
 # --- Rutina Schemas ---
 class RutinaBase(BaseModel):
     nombre: str
+    descripcion: Optional[str] = None
+    icono: Optional[str] = None
+    color: Optional[str] = None
+    es_publica: Optional[bool] = False
     esta_activa: Optional[bool] = True
 
 class RutinaCreate(RutinaBase):
@@ -27,6 +31,10 @@ class RutinaCreate(RutinaBase):
 
 class RutinaUpdate(BaseModel):
     nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    icono: Optional[str] = None
+    color: Optional[str] = None
+    es_publica: Optional[bool] = None
     esta_activa: Optional[bool] = None
 
 class RutinaResponse(RutinaBase):

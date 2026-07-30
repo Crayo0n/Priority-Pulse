@@ -864,21 +864,41 @@ def perfil():
         res_a = api_request('GET', f'/amistades/usuario/{usuario_id}')
         if res_a.status_code == 200:
             amistades_data = res_a.json()
-            # Las amistades tienen usuario_id_1 y usuario_id_2, necesitamos buscar los detalles del otro usuario
-            # Como FastAPI /amistades/usuario/{id} devuelve las relaciones, filtramos para sacar el id del amigo
             for am in amistades_data:
                 if am['estado'] == 'aceptada':
                     amigo_id = am['usuario_id_2'] if am['usuario_id_1'] == usuario_id else am['usuario_id_1']
-                    # Fetch detalles del amigo
                     res_amigo = api_request('GET', f'/usuarios/{amigo_id}')
                     if res_amigo.status_code == 200:
                         amistades.append(res_amigo.json())
-            
+
+        # Evaluar y obtener catálogo real de medallas del usuario
+        api_request('POST', f'/medallas/evaluar/{usuario_id}')
+
+        catalogo_medallas = []
+        res_m = api_request('GET', '/medallas/')
+        if res_m.status_code == 200:
+            catalogo_medallas = res_m.json()
+
+        obtenidas_ids = set()
+        res_um = api_request('GET', f'/medallas/usuario/{usuario_id}')
+        if res_um.status_code == 200:
+            obtenidas_ids = set(m['medalla_id'] for m in res_um.json())
+
     except Exception as e:
         print(f"Error conectando a FastAPI en perfil: {e}")
-        
+        catalogo_medallas = []
+        obtenidas_ids = set()
+
     import json
-    return render_template('/perfil/perfil.html', usuario=usuario, total_tareas=len(tareas), amistades=amistades, calendario=json.dumps(calendario))
+    return render_template(
+        '/perfil/perfil.html',
+        usuario=usuario,
+        total_tareas=len(tareas),
+        amistades=amistades,
+        calendario=json.dumps(calendario),
+        catalogo_medallas=catalogo_medallas,
+        obtenidas_ids=obtenidas_ids
+    )
 
 @app.route('/editar-perfil', methods=['GET', 'POST'])
 @login_required

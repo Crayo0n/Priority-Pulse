@@ -17,6 +17,7 @@ class TareaBase(BaseModel):
     recordatorio_hora: Optional[str] = None
     grupo_id: Optional[str] = None
     rutina_id: Optional[int] = None
+    xp_otorgada: Optional[bool] = False
 
 class TareaCreate(TareaBase):
     usuario_id: int

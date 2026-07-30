@@ -10,6 +10,10 @@ class Rutina(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
     nombre: Mapped[str] = mapped_column(String)
+    descripcion: Mapped[str] = mapped_column(String, nullable=True)
+    icono: Mapped[str] = mapped_column(String, nullable=True)
+    color: Mapped[str] = mapped_column(String, nullable=True)
+    es_publica: Mapped[bool] = mapped_column(Boolean, default=False)
     esta_activa: Mapped[bool] = mapped_column(Boolean, default=True)
 
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="rutinas")

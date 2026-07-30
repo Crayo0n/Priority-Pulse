@@ -213,74 +213,32 @@
                 </div>
                 <span class="px-3 py-1 bg-gray-50 text-gray-500 text-xs font-bold rounded-lg border border-gray-200">
                     Total:
-                    {% set medallas_desbloqueadas = (total_tareas >= 50)|int + (usuario.nivel >= 5)|int + (total_tareas >= 10)|int + (usuario.racha_actual >= 30)|int + (amistades|length >= 10)|int + (usuario.nivel >= 10)|int %}
-                    <span class="text-primary font-black">{{ medallas_desbloqueadas }}/6</span>
+                    <span class="text-primary font-black">{{ obtenidas_ids|length }}/{{ catalogo_medallas|length }}</span>
                 </span>
             </div>
 
+            {% if catalogo_medallas %}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                <!-- Madrugador -->
-                <div class="border {% if total_tareas >= 50 %}border-yellow-100 bg-gradient-to-b from-yellow-50/50 to-white hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all">
-                    <div class="w-16 h-16 rounded-full {% if total_tareas >= 50 %}bg-yellow-100 text-yellow-500{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center shadow-inner mb-4 relative border-4 border-white">
-                        <span class="material-symbols-outlined text-[32px]">wb_sunny</span>
-                        <span class="absolute -bottom-2 px-2 py-0.5 {% if total_tareas >= 50 %}bg-yellow-400 text-yellow-900{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white">{% if total_tareas >= 50 %}Desbloqueado{% else %}Bloqueado{% endif %}</span>
+                {% for medalla in catalogo_medallas %}
+                    {% set is_unlocked = medalla.id in obtenidas_ids %}
+                    <div class="border {% if is_unlocked %}border-purple-200 bg-gradient-to-b from-purple-50/50 to-white shadow-sm hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all group">
+                        <div class="w-16 h-16 rounded-full {% if is_unlocked %}bg-[#f3ebff] text-primary border-4 border-purple-100{% else %}bg-gray-200 text-gray-400 border-4 border-white{% endif %} flex items-center justify-center shadow-inner mb-4 relative">
+                            <span class="material-symbols-outlined text-[32px]">{{ medalla.url_icono or medalla.icono or 'workspace_premium' }}</span>
+                            <span class="absolute -bottom-2 px-2 py-0.5 {% if is_unlocked %}bg-[#6e00ff] text-white{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white shadow-sm">
+                                {% if is_unlocked %}Desbloqueado{% else %}Bloqueado{% endif %}
+                            </span>
+                        </div>
+                        <h4 class="font-black text-gray-900 text-sm mb-1">{{ medalla.nombre }}</h4>
+                        <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">{{ medalla.descripcion or 'Medalla del sistema' }}</p>
                     </div>
-                    <h4 class="font-black text-gray-900 text-sm mb-1">Madrugador</h4>
-                    <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">Completa 50 tareas</p>
-                </div>
-
-                <!-- Enfoque Profundo -->
-                <div class="border {% if usuario.nivel >= 5 %}border-slate-200 bg-gradient-to-b from-slate-50/50 to-white hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all">
-                    <div class="w-16 h-16 rounded-full {% if usuario.nivel >= 5 %}bg-slate-100 text-slate-500{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center shadow-inner mb-4 relative border-4 border-white">
-                        <span class="material-symbols-outlined text-[32px]">psychology</span>
-                        <span class="absolute -bottom-2 px-2 py-0.5 {% if usuario.nivel >= 5 %}bg-slate-300 text-slate-700{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white">{% if usuario.nivel >= 5 %}Desbloqueado{% else %}Bloqueado{% endif %}</span>
-                    </div>
-                    <h4 class="font-black text-gray-900 text-sm mb-1">Enfoque Profundo</h4>
-                    <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">Alcanza el nivel 5</p>
-                </div>
-
-                <!-- Maestro de Tareas -->
-                <div class="border {% if total_tareas >= 10 %}border-orange-100 bg-gradient-to-b from-orange-50/50 to-white hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all">
-                    <div class="w-16 h-16 rounded-full {% if total_tareas >= 10 %}bg-orange-100 text-orange-500{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center shadow-inner mb-4 relative border-4 border-white">
-                        <span class="material-symbols-outlined text-[32px]">rocket_launch</span>
-                        <span class="absolute -bottom-2 px-2 py-0.5 {% if total_tareas >= 10 %}bg-orange-400 text-orange-900{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white">{% if total_tareas >= 10 %}Desbloqueado{% else %}Bloqueado{% endif %}</span>
-                    </div>
-                    <h4 class="font-black text-gray-900 text-sm mb-1">Maestro de Tareas</h4>
-                    <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">Completa 10 tareas</p>
-                </div>
-
-                <!-- Racha Mensual -->
-                <div class="border {% if usuario.racha_actual >= 30 %}border-blue-100 bg-gradient-to-b from-blue-50/50 to-white hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all">
-                    <div class="w-16 h-16 rounded-full {% if usuario.racha_actual >= 30 %}bg-blue-100 text-blue-500{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center shadow-inner mb-4 relative border-4 border-white">
-                        <span class="material-symbols-outlined text-[32px]">calendar_month</span>
-                        <span class="absolute -bottom-2 px-2 py-0.5 {% if usuario.racha_actual >= 30 %}bg-blue-300 text-blue-700{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white">{% if usuario.racha_actual >= 30 %}Desbloqueado{% else %}Bloqueado{% endif %}</span>
-                    </div>
-                    <h4 class="font-black text-gray-900 text-sm mb-1">Racha Mensual</h4>
-                    <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">Mantén tu racha por 30 días</p>
-                </div>
-
-                <!-- Social -->
-                <div class="border {% if amistades|length >= 10 %}border-pink-100 bg-gradient-to-b from-pink-50/50 to-white hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all">
-                    <div class="w-16 h-16 rounded-full {% if amistades|length >= 10 %}bg-pink-100 text-pink-500{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center shadow-inner mb-4 relative border-4 border-white">
-                        <span class="material-symbols-outlined text-[32px]">group</span>
-                        <span class="absolute -bottom-2 px-2 py-0.5 {% if amistades|length >= 10 %}bg-pink-300 text-pink-700{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white">{% if amistades|length >= 10 %}Desbloqueado{% else %}Bloqueado{% endif %}</span>
-                    </div>
-                    <h4 class="font-black text-gray-900 text-sm mb-1">Social</h4>
-                    <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">Conecta con 10 amigos</p>
-                </div>
-
-                <!-- Velocista -->
-                <div class="border {% if usuario.nivel >= 10 %}border-green-100 bg-gradient-to-b from-green-50/50 to-white hover:shadow-md{% else %}border-gray-100 bg-gray-50/50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100{% endif %} rounded-2xl p-6 flex flex-col items-center text-center relative transition-all">
-                    <div class="w-16 h-16 rounded-full {% if usuario.nivel >= 10 %}bg-green-100 text-green-500{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center shadow-inner mb-4 relative border-4 border-white">
-                        <span class="material-symbols-outlined text-[32px]">bolt</span>
-                        <span class="absolute -bottom-2 px-2 py-0.5 {% if usuario.nivel >= 10 %}bg-green-300 text-green-700{% else %}bg-gray-300 text-gray-600{% endif %} text-[0.55rem] font-black rounded-full border-2 border-white">{% if usuario.nivel >= 10 %}Desbloqueado{% else %}Bloqueado{% endif %}</span>
-                    </div>
-                    <h4 class="font-black text-gray-900 text-sm mb-1">Velocista</h4>
-                    <p class="text-[0.65rem] font-medium text-gray-500 leading-tight">Alcanza el nivel 10</p>
-                </div>
-
+                {% endfor %}
             </div>
+            {% else %}
+            <div class="text-center py-12 text-gray-400">
+                <span class="material-symbols-outlined text-[40px] text-gray-300 mb-2">workspace_premium</span>
+                <p class="text-sm font-semibold">No hay medallas configuradas en el catálogo aún.</p>
+            </div>
+            {% endif %}
         </div>
 
         <div class="space-y-6">

@@ -428,41 +428,7 @@
                 </div>
 
                 <div class="w-full md:w-[450px] bg-[#faf8fc] p-6 md:p-8 border-l border-gray-100">
-                    <div class="flex items-center gap-2 mb-6">
-                        <span class="material-symbols-outlined text-[#6e00ff] text-[18px]">card_giftcard</span>
-                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Recompensa por Nivel</h3>
-                    </div>
 
-                    <p class="text-[0.7rem] text-gray-500 mb-4 leading-relaxed">Selecciona qué desbloquea el usuario al
-                        alcanzar este nivel.</p>
-
-                    <div class="grid grid-cols-2 gap-3 mb-8">
-                        <div
-                            class="p-4 bg-white border-2 border-[#6e00ff] rounded-xl flex flex-col items-center text-center relative cursor-pointer group">
-                            <div class="absolute top-2 right-2 text-[#6e00ff]">
-                                <span class="material-symbols-outlined text-[16px] fill-1">check_circle</span>
-                            </div>
-                            <div
-                                class="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center mb-2">
-                                <span class="material-symbols-outlined text-[20px]">workspace_premium</span>
-                            </div>
-                            <span class="text-[0.75rem] font-black text-gray-900">Insignia Especial</span>
-                            <span class="text-[0.6rem] text-gray-400 font-bold mt-1 uppercase tracking-tighter">Logro
-                                único</span>
-                        </div>
-
-                        <div
-                            class="p-4 bg-white border-2 border-transparent hover:border-gray-200 rounded-xl flex flex-col items-center text-center cursor-pointer transition-all">
-                            <div
-                                class="w-10 h-10 bg-orange-50 text-orange-500 rounded-lg flex items-center justify-center mb-2">
-                                <span class="material-symbols-outlined text-[20px]">local_fire_department</span>
-                            </div>
-                            <span class="text-[0.75rem] font-black text-gray-400 group-hover:text-gray-900">Icono de
-                                Racha</span>
-                            <span
-                                class="text-[0.6rem] text-gray-400 font-bold mt-1 uppercase tracking-tighter">Personalización</span>
-                        </div>
-                    </div>
 
                     <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
                         <div class="text-[0.7rem] font-bold text-gray-400 uppercase tracking-widest mb-2">Icono del Nivel

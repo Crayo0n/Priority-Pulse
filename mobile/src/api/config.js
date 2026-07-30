@@ -1,5 +1,5 @@
 // Conexión USB ADB: la app usa localhost redirigido mediante `adb reverse tcp:8088 tcp:8088`
-export const API_URL = 'http://localhost:8088/api/v1';
+export const API_URL = 'http://192.168.1.65:8088/api/v1';
 
 // Clave API que configuramos en tu backend
 export const API_KEY = 'ABC123';

@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_URL, API_KEY } from '../api/config';
 
 const { width } = Dimensions.get('window');
@@ -42,18 +43,112 @@ const getTodayTimeString = () => {
 export default function InicioScreen({ route, navigation }) {
   const [activeTab, setActiveTab] = useState('tareas'); // 'tareas' | 'rutinas'
   const [filterType, setFilterType] = useState('all'); // 'all' | 'pendiente' | 'completada' | 'alta' | 'media' | 'baja'
+  const [selectedDate, setSelectedDate] = useState(getTodayDateString());
+
+  const getCalendarDays = () => {
+    const days = [];
+    const today = new Date();
+    for (let i = -7; i <= 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const dateString = `${yyyy}-${mm}-${dd}`;
+      const dayName = d.toLocaleDateString('es-ES', { weekday: 'short' }).substring(0,3).toUpperCase();
+      days.push({ dateString, dayName, dayNum: dd });
+    }
+    return days;
+  };
+  const [calendarDays] = useState(getCalendarDays());
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('task'); // 'task' | 'routine'
   
   // Seleccionar tarea para rutina
   const [selectTaskModalVisible, setSelectTaskModalVisible] = useState(false);
   const [selectedRoutineForTask, setSelectedRoutineForTask] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
 
   // Form states for new task/routine
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newPriority, setNewPriority] = useState('50');
+  const [newPriority, setNewPriority] = useState('50'); // '20', '50', '80', '100'
   const [newTags, setNewTags] = useState('');
+  const [newEmoji, setNewEmoji] = useState('🚀');
+  const [newRepeticion, setNewRepeticion] = useState('no_repetir');
+  const [newStartTime, setNewStartTime] = useState('');
+  const [newEndTime, setNewEndTime] = useState('');
+  const [newReminderTime, setNewReminderTime] = useState('');
+  const [newDeadlineDate, setNewDeadlineDate] = useState(getTodayDateString());
+  
+  // Custom picker modals states
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showRepetitionPicker, setShowRepetitionPicker] = useState(false);
+  
+  const EMOJI_LIST = ['🚀', '🔥', '📚', '💪', '💻', '🧘', '💧', '🥗', '🎯', '🎨', '🧹', '🚶'];
+  const REPETITION_OPTIONS = [
+    { value: 'no_repetir', label: 'No repetir (Una sola vez)' },
+    { value: 'diario', label: 'Diariamente' },
+    { value: 'semanal', label: 'Semanalmente' },
+    { value: 'mensual', label: 'Mensualmente' },
+    { value: 'fin_semana', label: 'Fines de semana' },
+  ];
+
+  // Picker modals (datetime)
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showReminderPicker, setShowReminderPicker] = useState(false);
+
+  const [pickerDate, setPickerDate] = useState(new Date());
+  const [pickerStartTime, setPickerStartTime] = useState(new Date());
+  const [pickerEndTime, setPickerEndTime] = useState(new Date());
+  const [pickerReminder, setPickerReminder] = useState(new Date());
+
+  const formatTimeStr = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setPickerDate(selectedDate);
+      // Ajustamos a formato local para evitar desfases horarios
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      setNewDeadlineDate(`${year}-${month}-${day}`);
+    }
+  };
+
+  const onStartTimeChange = (event, selectedDate) => {
+    setShowStartTimePicker(false);
+    if (selectedDate) {
+      setPickerStartTime(selectedDate);
+      setNewStartTime(formatTimeStr(selectedDate));
+    }
+  };
+
+  const onEndTimeChange = (event, selectedDate) => {
+    setShowEndTimePicker(false);
+    if (selectedDate) {
+      setPickerEndTime(selectedDate);
+      setNewEndTime(formatTimeStr(selectedDate));
+    }
+  };
+
+  const onReminderTimeChange = (event, selectedDate) => {
+    setShowReminderPicker(false);
+    if (selectedDate) {
+      setPickerReminder(selectedDate);
+      setNewReminderTime(formatTimeStr(selectedDate));
+    }
+  };
 
   // Estados para Modal de Notificaciones
   const [notifModalVisible, setNotifModalVisible] = useState(false);
@@ -112,7 +207,6 @@ export default function InicioScreen({ route, navigation }) {
   const [editTags, setEditTags] = useState('');
 
   // Estados para Fecha y Hora Límite (Entrega)
-  const [newDeadlineDate, setNewDeadlineDate] = useState(getTodayDateString());
   const [newDeadlineTime, setNewDeadlineTime] = useState(getTodayTimeString());
 
   const [editDeadlineDate, setEditDeadlineDate] = useState('');
@@ -123,6 +217,24 @@ export default function InicioScreen({ route, navigation }) {
   const [tareas, setTareas] = useState([]);
   const [rutinas, setRutinas] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const resetModal = () => {
+    setNewTitle('');
+    setNewDesc('');
+    setNewPriority('50');
+    setNewTags('');
+    setNewEmoji('🚀');
+    setNewRepeticion('no_repetir');
+    setNewStartTime('');
+    setNewEndTime('');
+    setNewReminderTime('');
+    setNewDeadlineDate(getTodayDateString());
+    
+    setPickerDate(new Date());
+    setPickerStartTime(new Date());
+    setPickerEndTime(new Date());
+    setPickerReminder(new Date());
+  };
 
   const fetchData = async () => {
     try {
@@ -211,7 +323,21 @@ export default function InicioScreen({ route, navigation }) {
     if (!task) return;
     
     // Optimistic UI update
-    setTareas(prev => prev.map(t => t.id === id ? { ...t, estado: t.estado === 'completada' ? 'pendiente' : 'completada' } : t));
+    setTareas(prev => prev.map(t => {
+      if (t.id === id) {
+        const isCompleting = t.estado === 'pendiente';
+        if (isCompleting) {
+          if (!t.xp_otorgada) {
+            showToast('¡Tarea completada! +XP');
+          } else {
+            showToast('¡Tarea completada!');
+          }
+        }
+        // Marcar xp_otorgada localmente de manera optimista
+        return { ...t, estado: isCompleting ? 'completada' : 'pendiente', xp_otorgada: t.xp_otorgada || isCompleting };
+      }
+      return t;
+    }));
     
     try {
       const token = await AsyncStorage.getItem('userToken');
@@ -249,7 +375,20 @@ export default function InicioScreen({ route, navigation }) {
       if (r.id === routineId) {
         return {
           ...r,
-          tareas: r.tareas.map(st => st.id === subTaskId ? { ...st, estado: st.estado === 'completada' ? 'pendiente' : 'completada' } : st)
+          tareas: r.tareas.map(st => {
+            if (st.id === subTaskId) {
+              const isCompleting = st.estado === 'pendiente';
+              if (isCompleting) {
+                if (!st.xp_otorgada) {
+                  showToast('¡Hábito completado! +XP');
+                } else {
+                  showToast('¡Hábito completado!');
+                }
+              }
+              return { ...st, estado: isCompleting ? 'completada' : 'pendiente', xp_otorgada: st.xp_otorgada || isCompleting };
+            }
+            return st;
+          })
         };
       }
       return r;
@@ -314,16 +453,26 @@ export default function InicioScreen({ route, navigation }) {
     try {
       const token = await AsyncStorage.getItem('userToken');
       const userData = JSON.parse(await AsyncStorage.getItem('userData'));
-      const isCritica = parseInt(newPriority) >= 80;
-      
+      let deadlineStr = newDeadlineDate;
+      if (newDeadlineDate && newStartTime) {
+        deadlineStr = `${newDeadlineDate}T${newStartTime}:00`;
+      } else if (newDeadlineDate) {
+        deadlineStr = `${newDeadlineDate}T23:59:00`; // Por defecto al final del día
+      }
+
       const payload = {
         titulo: newTitle,
-        descripcion: newDesc || null,
-        es_critica: isCritica,
-        xp_recompensa: parseInt(newPriority) || 10,
+        descripcion: newDesc,
         estado: 'pendiente',
-        tags: newTags || 'General',
-        fecha_limite: (newDeadlineDate && newDeadlineTime) ? `${newDeadlineDate}T${newDeadlineTime}:00` : null,
+        xp_recompensa: parseInt(newPriority) || 30,
+        es_critica: parseInt(newPriority) >= 80,
+        tags: newTags,
+        emoji: newEmoji,
+        repeticion: newRepeticion,
+        tiempo_inicio: newStartTime || null,
+        tiempo_fin: newEndTime || null,
+        recordatorio_hora: newReminderTime || null,
+        fecha_limite: deadlineStr || null,
         usuario_id: userData.id
       };
       
@@ -334,11 +483,11 @@ export default function InicioScreen({ route, navigation }) {
       });
       
       if (res.ok) {
-        setNewTitle('');
-        setNewDesc('');
-        setNewPriority('50');
-        setNewTags('');
+        const newTask = await res.json();
+        setTareas([...tareas, newTask]);
         setModalVisible(false);
+        resetModal();
+        showToast('¡Nueva tarea añadida!');
         fetchData();
       } else {
         Alert.alert("Error", "No se pudo crear la tarea");
@@ -358,6 +507,11 @@ export default function InicioScreen({ route, navigation }) {
 
   const filteredTareas = tareas.filter(t => {
     if (t.rutina_id) return false;
+
+    const todayStr = getTodayDateString();
+    const taskDate = t.fecha_limite ? t.fecha_limite.split('T')[0].split(' ')[0] : todayStr;
+    if (taskDate !== selectedDate) return false;
+
     if (filterType === 'completada') return t.estado === 'completada';
     if (filterType === 'pendiente') return t.estado === 'pendiente';
     if (filterType === 'alta') {
@@ -475,38 +629,49 @@ export default function InicioScreen({ route, navigation }) {
             resizeMode="contain"
           />
         </View>
-        <TouchableOpacity style={styles.notificationBtn} onPress={() => setNotifModalVisible(true)}>
-          <Ionicons name="notifications-outline" size={24} color="#1f2937" />
-          {notificaciones.some(n => !n.leida) && <View style={styles.notificationBadge} />}
-        </TouchableOpacity>
+        <View style={styles.appBarRight}>
+          <TouchableOpacity style={styles.notificationBtn} onPress={() => setNotifModalVisible(true)}>
+            <Ionicons name="notifications-outline" size={24} color="#1f2937" />
+            {notificaciones.some(n => !n.leida) && <View style={styles.notificationBadge} />}
+          </TouchableOpacity>
+          <View style={styles.appBarStreakBadge}>
+            <Text style={styles.appBarStreakText}>{user?.racha_actual || 0} Días de Racha</Text>
+            <Text style={styles.appBarStreakEmoji}>🔥</Text>
+          </View>
+          <View style={styles.appBarAvatar}>
+            <Text style={styles.appBarAvatarText}>{user?.nombre_usuario?.[0]?.toUpperCase() || 'U'}</Text>
+          </View>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Profile / Gamification Header */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileRow}>
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>{user?.nombre_usuario?.[0]?.toUpperCase() || 'U'}</Text>
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.welcomeText}>Hola de nuevo,</Text>
-              <Text style={styles.userName}>{user?.nombre_usuario || 'Usuario'} 👋</Text>
-            </View>
-            <View style={styles.streakBadge}>
-              <Text style={styles.streakEmoji}>🔥</Text>
-              <Text style={styles.streakText}>{user?.racha_actual || 0} Días</Text>
+        {/* Conquista tu Día Header */}
+        <View style={styles.conquistaCard}>
+          <View style={styles.conquistaHeaderRow}>
+            <View>
+              <Text style={styles.conquistaTitle}>Conquista tu Día</Text>
+              <Text style={styles.conquistaSubtitle}>
+                Tienes <Text style={{fontWeight: '800', color: '#111827'}}>{tareas.filter(t => t.estado === 'pendiente' && !t.rutina_id).length} tareas</Text> esperándote.
+              </Text>
             </View>
           </View>
 
-          {/* Level Progress */}
-          <View style={styles.levelContainer}>
-            <View style={styles.levelHeader}>
-              <Text style={styles.levelText}>Nivel {user?.nivel_id || 1}</Text>
-              <Text style={styles.xpText}>{user?.xp_total || 0} XP</Text>
+          <View style={styles.conquistaPillsRow}>
+            <View style={styles.conquistaPillRacha}>
+              <Ionicons name="flame-outline" size={16} color="#ea580c" />
+              <View style={{marginLeft: 6}}>
+                <Text style={styles.pillLabel}>RACHA</Text>
+                <Text style={styles.pillValueRacha}>{user?.racha_actual || 0} Días</Text>
+              </View>
             </View>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${Math.min(100, ((user?.xp_total || 0) % 100))}%` }]} />
+
+            <View style={styles.conquistaPillNivel}>
+              <Ionicons name="star-outline" size={16} color="#eab308" />
+              <View style={{marginLeft: 6}}>
+                <Text style={styles.pillLabel}>NIVEL {user?.nivel_id || 1}</Text>
+                <Text style={styles.pillValueNivel}>{user?.xp_total || 0} / 500</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -546,11 +711,37 @@ export default function InicioScreen({ route, navigation }) {
         {activeTab === 'tareas' && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Tus tareas de hoy</Text>
+              <Text style={styles.sectionTitle}>Feed de Tareas</Text>
               <Text style={styles.sectionSubtitle}>
-                {tareas.filter(t => !t.rutina_id && t.estado === 'pendiente').length} pendientes
+                Revisa tus actividades importantes del día y complétalas.
               </Text>
             </View>
+
+            {/* Calendario Horizontal */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.calendarScroll}
+              style={styles.calendarContainer}
+            >
+              {calendarDays.map(day => (
+                <TouchableOpacity
+                  key={day.dateString}
+                  style={[
+                    styles.calendarPill,
+                    selectedDate === day.dateString && styles.calendarPillActive
+                  ]}
+                  onPress={() => setSelectedDate(day.dateString)}
+                >
+                  <Text style={[styles.calendarDayName, selectedDate === day.dateString && styles.calendarDayNameActive]}>
+                    {day.dayName}
+                  </Text>
+                  <Text style={[styles.calendarDayNum, selectedDate === day.dateString && styles.calendarDayNumActive]}>
+                    {day.dayNum}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
             {/* Filtros de tareas */}
             <ScrollView
@@ -600,57 +791,66 @@ export default function InicioScreen({ route, navigation }) {
                     key={item.id}
                     style={[styles.taskCard, isCompleted && styles.taskCardCompleted]}
                   >
-                    <TouchableOpacity
-                      style={[styles.checkboxCircle, isCompleted && styles.checkboxCircleChecked]}
-                      onPress={() => toggleTarea(item.id)}
-                      activeOpacity={0.7}
-                    >
-                      {isCompleted && <Ionicons name="checkmark" size={14} color="#ffffff" />}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.taskCardContent}
-                      onPress={() => openEditTask(item)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.taskTextContainer}>
+                    <View style={{flex: 1, width: '100%'}}>
+                      <View style={{flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between'}}>
                         <Text style={[styles.taskTitle, isCompleted && styles.taskTitleCompleted]}>
                           {item.titulo}
                         </Text>
-                        <Text style={[styles.taskDesc, isCompleted && styles.taskDescCompleted]}>
-                          {item.descripcion}
-                        </Text>
-                        
-                        {/* Badges container */}
-                        <View style={styles.badgesContainer}>
-                          {(item.tags || '').split(',').map((tag, idx) => {
-                            if (!tag.trim()) return null;
-                            return (
-                              <View key={idx} style={[styles.tagBadge, { marginRight: 6, marginBottom: 4 }]}>
-                                <Text style={styles.tagBadgeText}>{tag.trim()}</Text>
+                        <TouchableOpacity
+                          style={[styles.checkboxCircle, isCompleted && styles.checkboxCircleChecked]}
+                          onPress={() => toggleTarea(item.id)}
+                          activeOpacity={0.7}
+                        >
+                          {isCompleted && <Ionicons name="checkmark" size={14} color="#ffffff" />}
+                        </TouchableOpacity>
+                      </View>
+                      <Text style={[styles.taskDesc, isCompleted && styles.taskDescCompleted]}>
+                        {item.descripcion}
+                      </Text>
+                      
+                      <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 12}}>
+                        <View>
+                          <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 6}}>
+                            {item.es_critica ? (
+                              <View style={styles.criticalBadge}>
+                                <Text style={styles.criticalText}>CRÍTICA +{item.xp_recompensa || 30} XP</Text>
                               </View>
-                            );
-                          })}
-                          {item.fecha_limite && (
-                            <View style={styles.deadlineBadge}>
-                              <Ionicons name="time-outline" size={11} color="#f43f5e" style={{ marginRight: 3 }} />
-                              <Text style={styles.deadlineBadgeText}>{item.fecha_limite}</Text>
-                            </View>
-                          )}
+                            ) : (
+                              <View style={[styles.criticalBadge, {backgroundColor: '#f3ebff', borderColor: '#e9d5ff'}]}>
+                                <Text style={[styles.criticalText, {color: '#6e00ff'}]}>
+                                  {item.xp_recompensa > 50 ? 'ALTA' : (item.xp_recompensa > 20 ? 'MEDIA' : 'BAJA')} +{item.xp_recompensa || 30} XP
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                          <View style={styles.badgesContainer}>
+                            {(item.tags || '').split(',').map((tag, idx) => {
+                              if (!tag.trim()) return null;
+                              return (
+                                <View key={idx} style={[styles.tagBadge, { marginRight: 6, marginBottom: 4 }]}>
+                                  <Text style={styles.tagBadgeText}>{tag.trim()}</Text>
+                                </View>
+                              );
+                            })}
+                            {item.fecha_limite && (
+                              <View style={styles.deadlineBadge}>
+                                <Ionicons name="time-outline" size={11} color="#f43f5e" style={{ marginRight: 3 }} />
+                                <Text style={styles.deadlineBadgeText}>{item.fecha_limite}</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                        
+                        <View style={{flexDirection: 'row', gap: 12}}>
+                          <TouchableOpacity onPress={() => openEditTask(item)}>
+                            <Ionicons name="pencil-outline" size={20} color="#9ca3af" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => setTareas(prev => prev.filter(t => t.id !== item.id))}>
+                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                          </TouchableOpacity>
                         </View>
                       </View>
-
-                      <View style={styles.taskCardRight}>
-                        {item.es_critica && (
-                          <View style={styles.criticalBadge}>
-                            <Text style={styles.criticalText}>Crítica</Text>
-                          </View>
-                        )}
-                        <Text style={[styles.xpRewardText, isCompleted && styles.xpRewardTextCompleted]}>
-                          +{item.xp_recompensa} XP
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
+                    </View>
                   </View>
                 );
               })
@@ -680,58 +880,50 @@ export default function InicioScreen({ route, navigation }) {
               rutinas.map(routine => (
                 <View key={routine.id} style={styles.routineCard}>
                   <View style={styles.routineHeader}>
-                    <View style={styles.routineTitleRow}>
-                      <Ionicons name="calendar-sharp" size={18} color="#6e00ff" style={{ marginRight: 6 }} />
-                      <Text style={styles.routineName}>{routine.nombre}</Text>
-                    </View>
-                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                      <TouchableOpacity onPress={() => openSelectTaskModal(routine.id)} style={{ marginRight: 12 }}>
-                        <Ionicons name="add-circle" size={24} color="#6e00ff" />
-                      </TouchableOpacity>
-                      <View style={styles.routineStats}>
-                        <Text style={styles.routineStatsText}>
-                          {routine.tareas.filter(st => st.estado === 'completada').length}/{routine.tareas.length}
-                        </Text>
-                      </View>
-                    </View>
+                    <Text style={styles.routineName}>{routine.nombre}</Text>
+                    <TouchableOpacity onPress={() => setRutinas(prev => prev.filter(r => r.id !== routine.id))}>
+                      <Ionicons name="trash-outline" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
                   </View>
-
                   <View style={styles.routineDivider} />
-
-                  {/* Routine tasks list */}
+                  
                   {routine.tareas.length === 0 ? (
-                    <Text style={styles.noSubtasksText}>No hay tareas añadidas a esta rutina.</Text>
+                    <Text style={styles.noSubtasksText}>No hay tareas en esta rutina.</Text>
                   ) : (
-                    routine.tareas.map(subTask => {
-                      const isCompleted = subTask.estado === 'completada';
+                    routine.tareas.map(st => {
+                      const isStCompleted = st.estado === 'completada';
                       return (
-                        <TouchableOpacity
-                          key={subTask.id}
-                          style={styles.subtaskRow}
-                          onPress={() => toggleRoutineTarea(routine.id, subTask.id)}
-                          activeOpacity={0.7}
-                        >
+                        <View key={st.id} style={styles.subtaskRow}>
                           <View style={styles.subtaskLeft}>
-                            <View style={[styles.subCheckbox, isCompleted && styles.subCheckboxChecked]}>
-                              {isCompleted && <Ionicons name="checkmark" size={10} color="#ffffff" />}
-                            </View>
+                            <TouchableOpacity
+                              style={[styles.subCheckbox, isStCompleted && styles.subCheckboxChecked]}
+                              onPress={() => toggleRoutineTarea(routine.id, st.id)}
+                            >
+                              {isStCompleted && <Ionicons name="checkmark" size={12} color="#ffffff" />}
+                            </TouchableOpacity>
                             <View style={styles.subtaskTextGroup}>
-                              <Text style={[styles.subtaskTitle, isCompleted && styles.subtaskTitleCompleted]}>
-                                {subTask.titulo}
+                              <Text style={[styles.subtaskTitle, isStCompleted && styles.subtaskTitleCompleted]}>
+                                {st.titulo}
                               </Text>
-                              <Text style={styles.subtaskDesc}>{subTask.descripcion}</Text>
                             </View>
                           </View>
                           <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <Text style={styles.subtaskXp}>+{subTask.xp_recompensa} XP</Text>
-                            <TouchableOpacity onPress={() => handleRemoveTaskFromRoutine(subTask.id)} style={{marginLeft: 8, padding: 4}}>
+                            <Text style={[styles.subtaskXp, isStCompleted && {color: '#9ca3af'}]}>+{st.xp_recompensa || 10} XP</Text>
+                            <TouchableOpacity onPress={() => handleRemoveTaskFromRoutine(st.id)} style={{marginLeft: 8, padding: 4}}>
                               <Ionicons name="trash-outline" size={18} color="#ef4444" />
                             </TouchableOpacity>
                           </View>
-                        </TouchableOpacity>
-                      )
+                        </View>
+                      );
                     })
                   )}
+                  
+                  <TouchableOpacity 
+                    style={styles.routineAddBtn} 
+                    onPress={() => openSelectTaskModal(routine.id)}
+                  >
+                    <Text style={styles.routineAddBtnText}>+ AÑADIR TAREA</Text>
+                  </TouchableOpacity>
                 </View>
               ))
             )}
@@ -775,89 +967,143 @@ export default function InicioScreen({ route, navigation }) {
             {/* Modal Body */}
             {modalType === 'task' ? (
               <ScrollView style={styles.modalBody}>
-                {/* Title */}
-                <Text style={styles.modalLabel}>Título de la tarea</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Ej. Ir al gimnasio"
-                  value={newTitle}
-                  onChangeText={setNewTitle}
-                />
-
-                {/* Description */}
-                <Text style={styles.modalLabel}>Descripción</Text>
-                <TextInput
-                  style={[styles.modalInput, styles.modalTextArea]}
-                  placeholder="Escribe detalles aquí..."
-                  multiline={true}
-                  numberOfLines={3}
-                  value={newDesc}
-                  onChangeText={setNewDesc}
-                />
-
-                {/* Prioridad / Recompensa (XP) */}
-                <Text style={styles.modalLabel}>Prioridad / Recompensa (XP): {newPriority}</Text>
-                <View style={styles.priorityRow}>
-                  {['10', '30', '50', '80', '100'].map(val => (
-                    <TouchableOpacity
-                      key={val}
-                      style={[
-                        styles.priorityPill,
-                        newPriority === val && styles.priorityPillActive
-                      ]}
-                      onPress={() => setNewPriority(val)}
-                    >
-                      <Text
-                        style={[
-                          styles.priorityPillText,
-                          newPriority === val && styles.priorityPillTextActive
-                        ]}
-                      >
-                        {val}
-                      </Text>
+                {/* ICONO y NOMBRE */}
+                <View style={styles.inputGroup}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={[styles.modalLabelSmall, {width: 60}]}>ICONO</Text>
+                    <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
+                      <Text style={styles.modalLabelSmall}>NOMBRE</Text>
+                      <Text style={styles.modalLabelSmall}>{newTitle.length}/50</Text>
+                    </View>
+                  </View>
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <TouchableOpacity style={styles.iconPickerBtn} onPress={() => setShowEmojiPicker(true)}>
+                      <Text style={{fontSize: 24}}>{newEmoji}</Text>
                     </TouchableOpacity>
-                  ))}
-                </View>
-                {parseInt(newPriority) >= 80 && (
-                  <Text style={styles.priorityNotice}>⚠️ Esta tarea será clasificada como CRÍTICA.</Text>
-                )}
-
-                {/* Tags */}
-                <Text style={styles.modalLabel}>Etiquetas (Separadas por comas)</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Ej. Salud, Hábito"
-                  value={newTags}
-                  onChangeText={setNewTags}
-                />
-
-                {/* Fecha y Hora Límite */}
-                <Text style={styles.modalLabel}>Fecha y Hora Límite (Entrega)</Text>
-                <View style={styles.datetimeInputRow}>
-                  <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.subLabel}>Fecha (AAAA-MM-DD)</Text>
                     <TextInput
-                      style={styles.modalInput}
-                      placeholder="AAAA-MM-DD"
-                      value={newDeadlineDate}
-                      onChangeText={setNewDeadlineDate}
-                    />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 8 }}>
-                    <Text style={styles.subLabel}>Hora (HH:MM)</Text>
-                    <TextInput
-                      style={styles.modalInput}
-                      placeholder="HH:MM"
-                      value={newDeadlineTime}
-                      onChangeText={setNewDeadlineTime}
+                      style={[styles.modalInput, {flex: 1, marginLeft: 12, marginBottom: 0}]}
+                      placeholder="Nombre de la actividad o tarea"
+                      value={newTitle}
+                      onChangeText={setNewTitle}
+                      maxLength={50}
                     />
                   </View>
                 </View>
 
-                {/* Submit button */}
-                <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleCreateTask}>
-                  <Text style={styles.modalSubmitBtnText}>Guardar Tarea</Text>
-                </TouchableOpacity>
+                {/* DESCRIPCION */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabelSmall}>DESCRIPCION</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextArea]}
+                    placeholder="Añadir una descripcion"
+                    multiline={true}
+                    numberOfLines={3}
+                    value={newDesc}
+                    onChangeText={setNewDesc}
+                  />
+                </View>
+
+                {/* DIA DE INICIO & PRIORIDAD */}
+                <View style={{flexDirection: 'row', marginBottom: 16}}>
+                  {/* Left Column */}
+                  <View style={{flex: 1, paddingRight: 8}}>
+                    <Text style={styles.modalLabelSmall}>DIA DE INICIO</Text>
+                    <TouchableOpacity style={styles.inputWithIcon} onPress={() => setShowDatePicker(true)}>
+                      <Text style={[styles.modalInputNoMargin, {color: newDeadlineDate ? '#1f2937' : '#9ca3af'}]}>
+                        {newDeadlineDate || 'dd/mm/aaaa'}
+                      </Text>
+                      <Ionicons name="calendar-outline" size={20} color="#9ca3af" style={styles.inputIconRight} />
+                    </TouchableOpacity>
+
+                    <Text style={[styles.modalLabelSmall, {marginTop: 16}]}>REPETICION</Text>
+                    <TouchableOpacity 
+                      style={styles.dropdownBtn}
+                      onPress={() => setShowRepetitionPicker(true)}
+                    >
+                      <Text style={styles.dropdownBtnText}>
+                        {REPETITION_OPTIONS.find(opt => opt.value === newRepeticion)?.label}
+                      </Text>
+                      <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
+
+                    <Text style={[styles.modalLabelSmall, {marginTop: 16}]}>HORARIO</Text>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <TouchableOpacity style={[styles.inputWithIcon, {flex: 1}]} onPress={() => setShowStartTimePicker(true)}>
+                        <Text style={[styles.modalInputNoMargin, {color: newStartTime ? '#1f2937' : '#9ca3af'}]}>
+                          {newStartTime || '--:--'}
+                        </Text>
+                        <Ionicons name="time-outline" size={16} color="#9ca3af" style={styles.inputIconRight} />
+                      </TouchableOpacity>
+                      <Text style={{marginHorizontal: 8, color: '#9ca3af'}}>a</Text>
+                      <TouchableOpacity style={[styles.inputWithIcon, {flex: 1}]} onPress={() => setShowEndTimePicker(true)}>
+                        <Text style={[styles.modalInputNoMargin, {color: newEndTime ? '#1f2937' : '#9ca3af'}]}>
+                          {newEndTime || '--:--'}
+                        </Text>
+                        <Ionicons name="time-outline" size={16} color="#9ca3af" style={styles.inputIconRight} />
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={[styles.modalLabelSmall, {marginTop: 16}]}>RECORDATORIO</Text>
+                    <TouchableOpacity style={styles.inputWithIcon} onPress={() => setShowReminderPicker(true)}>
+                      <Text style={[styles.modalInputNoMargin, {color: newReminderTime ? '#1f2937' : '#9ca3af'}]}>
+                        {newReminderTime || '--:--'}
+                      </Text>
+                      <Ionicons name="time-outline" size={20} color="#9ca3af" style={styles.inputIconRight} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Right Column (PRIORIDAD / XP) */}
+                  <View style={{flex: 1, paddingLeft: 8}}>
+                    <Text style={styles.modalLabelSmall}>PRIORIDAD / XP</Text>
+                    <View style={styles.priorityGrid}>
+                      {[
+                        {val: '20', label: 'Baja', xp: '+20 XP'},
+                        {val: '50', label: 'Media', xp: '+50 XP'},
+                        {val: '80', label: 'Alta', xp: '+80 XP'},
+                        {val: '100', label: 'Crítica', xp: '+100 XP'},
+                      ].map(opt => (
+                        <TouchableOpacity
+                          key={opt.val}
+                          style={[
+                            styles.priorityGridItem,
+                            newPriority === opt.val && styles.priorityGridItemActive
+                          ]}
+                          onPress={() => setNewPriority(opt.val)}
+                        >
+                          <Text style={[styles.priorityGridLabel, newPriority === opt.val && styles.priorityGridLabelActive]}>{opt.label}</Text>
+                          <Text style={[styles.priorityGridXp, newPriority === opt.val && styles.priorityGridXpActive]}>{opt.xp}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                {/* TAGS */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabelSmall}>TAGS</Text>
+                  <View style={styles.inputWithIcon}>
+                    <TextInput
+                      style={styles.modalInputNoMargin}
+                      placeholder="Ej. #DesignSystem (Presiona Enter)"
+                      value={newTags}
+                      onChangeText={setNewTags}
+                    />
+                    <TouchableOpacity style={styles.addTagBtn}>
+                      <Text style={styles.addTagBtnText}>Añadir</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Footer Buttons */}
+                <View style={styles.modalFooterActions}>
+                  <TouchableOpacity onPress={() => setModalVisible(false)} style={{padding: 10}}>
+                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.addBtn} onPress={handleCreateTask}>
+                    <Ionicons name="add" size={20} color="#ffffff" style={{marginRight: 4}} />
+                    <Text style={styles.addBtnText}>Añadir</Text>
+                  </TouchableOpacity>
+                </View>
               </ScrollView>
             ) : (
               <View style={styles.modalBody}>
@@ -1002,6 +1248,7 @@ export default function InicioScreen({ route, navigation }) {
                       )
                     );
                     setEditModalVisible(false);
+                    showToast('¡Tarea guardada!');
                   }}
                 >
                   <Text style={styles.modalSubmitBtnText}>Guardar Cambios</Text>
@@ -1013,6 +1260,7 @@ export default function InicioScreen({ route, navigation }) {
                   onPress={() => {
                     setTareas(prev => prev.filter(t => t.id !== selectedTask.id));
                     setEditModalVisible(false);
+                    showToast('Tarea eliminada');
                   }}
                 >
                   <Text style={styles.modalSubmitBtnText}>Eliminar Tarea</Text>
@@ -1168,6 +1416,96 @@ export default function InicioScreen({ route, navigation }) {
         </View>
       </Modal>
 
+      {/* Emoji Picker Modal */}
+      <Modal visible={showEmojiPicker} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowEmojiPicker(false)}>
+          <View style={styles.emojiPickerContainer}>
+            <Text style={{fontWeight: '800', marginBottom: 12}}>Elige un ícono</Text>
+            <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center'}}>
+              {EMOJI_LIST.map(em => (
+                <TouchableOpacity 
+                  key={em} 
+                  style={styles.emojiBtn}
+                  onPress={() => {
+                    setNewEmoji(em);
+                    setShowEmojiPicker(false);
+                  }}
+                >
+                  <Text style={{fontSize: 28}}>{em}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Repetition Picker Modal */}
+      <Modal visible={showRepetitionPicker} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowRepetitionPicker(false)}>
+          <View style={styles.repetitionPickerContainer}>
+            <Text style={{fontWeight: '800', marginBottom: 12}}>Repetición</Text>
+            {REPETITION_OPTIONS.map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                style={[styles.repetitionOption, newRepeticion === opt.value && styles.repetitionOptionActive]}
+                onPress={() => {
+                  setNewRepeticion(opt.value);
+                  setShowRepetitionPicker(false);
+                }}
+              >
+                <Text style={[styles.repetitionOptionText, newRepeticion === opt.value && styles.repetitionOptionTextActive]}>
+                  {opt.label}
+                </Text>
+                {newRepeticion === opt.value && <Ionicons name="checkmark" size={20} color="#6e00ff" />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <View style={styles.toastContainer}>
+          <View style={styles.toastCard}>
+            <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* DateTime Pickers */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={pickerDate}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
+      {showStartTimePicker && (
+        <DateTimePicker
+          value={pickerStartTime}
+          mode="time"
+          display="default"
+          onChange={onStartTimeChange}
+        />
+      )}
+      {showEndTimePicker && (
+        <DateTimePicker
+          value={pickerEndTime}
+          mode="time"
+          display="default"
+          onChange={onEndTimeChange}
+        />
+      )}
+      {showReminderPicker && (
+        <DateTimePicker
+          value={pickerReminder}
+          mode="time"
+          display="default"
+          onChange={onReminderTimeChange}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -1207,6 +1545,37 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#111827',
   },
+  appBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  appBarStreakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
+  appBarStreakText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#6e00ff',
+    marginRight: 4,
+  },
+  appBarStreakEmoji: {
+    fontSize: 14,
+  },
+  appBarAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6e00ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appBarAvatarText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
   notificationBtn: {
     position: 'relative',
     padding: 2,
@@ -1227,99 +1596,90 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 80,
   },
-  profileCard: {
+  conquistaCard: {
     backgroundColor: '#ffffff',
     borderRadius: 24,
-    padding: 20,
+    padding: 24,
     shadowColor: '#6e00ff',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
     shadowRadius: 12,
-    elevation: 3,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: 'rgba(110, 0, 255, 0.04)',
+    borderColor: '#f3f4f6',
     marginBottom: 20,
   },
-  profileRow: {
+  conquistaHeaderRow: {
+    marginBottom: 20,
+  },
+  overlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
     backgroundColor: '#f3ebff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1.5,
-    borderColor: '#e9d5ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
+  conquistaOverline: {
+    fontSize: 10,
+    fontWeight: '800',
     color: '#6e00ff',
+    marginLeft: 4,
+    letterSpacing: 0.5,
   },
-  profileInfo: {
-    flex: 1,
+  conquistaTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: 4,
   },
-  welcomeText: {
-    fontSize: 12,
+  conquistaSubtitle: {
+    fontSize: 14,
     color: '#6b7280',
     fontWeight: '500',
   },
-  userName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#111827',
+  conquistaPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  streakBadge: {
+  conquistaPillRacha: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff7ed',
     borderWidth: 1,
     borderColor: '#ffedd5',
-    borderRadius: 20,
-    paddingVertical: 6,
+    borderRadius: 16,
+    paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  streakEmoji: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-  streakText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#c2410c',
-  },
-  levelContainer: {
-    marginTop: 18,
-  },
-  levelHeader: {
+  conquistaPillNivel: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
+    alignItems: 'center',
+    backgroundColor: '#fefce8',
+    borderWidth: 1,
+    borderColor: '#fef9c3',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  levelText: {
+  pillLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#9ca3af',
+    letterSpacing: 0.5,
+  },
+  pillValueRacha: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#6e00ff',
+    color: '#c2410c',
   },
-  xpText: {
-    fontSize: 11,
-    color: '#6b7280',
-    fontWeight: '600',
-  },
-  progressBarBg: {
-    height: 8,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#6e00ff',
-    borderRadius: 4,
+  pillValueNivel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#a16207',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -1410,17 +1770,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: '#6e00ff',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
+    borderWidth: 1.5,
+    borderColor: '#6e00ff',
   },
   taskCardCompleted: {
     opacity: 0.6,
     backgroundColor: '#fafbfc',
+    borderColor: '#f3f4f6',
   },
   taskCardLeft: {
     flexDirection: 'row',
@@ -1509,17 +1870,12 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   routineCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#faf5ff',
     borderRadius: 24,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 2,
     borderWidth: 1,
-    borderColor: '#f3f4f6',
+    borderColor: '#f3ebff',
   },
   routineHeader: {
     flexDirection: 'row',
@@ -1532,7 +1888,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   routineName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
     color: '#1f2937',
   },
@@ -1549,7 +1905,7 @@ const styles = StyleSheet.create({
   },
   routineDivider: {
     height: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#e9d5ff',
     marginBottom: 12,
   },
   noSubtasksText: {
@@ -1565,7 +1921,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#fafbfc',
+    borderBottomColor: '#f3ebff',
   },
   subtaskLeft: {
     flexDirection: 'row',
@@ -1573,26 +1929,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subCheckbox: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1.5,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
     borderColor: '#d1d5db',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   subCheckboxChecked: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: '#6e00ff',
+    borderColor: '#6e00ff',
   },
   subtaskTextGroup: {
     flex: 1,
     paddingRight: 8,
   },
   subtaskTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#374151',
   },
   subtaskTitleCompleted: {
@@ -1604,9 +1960,21 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   subtaskXp: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: '#6e00ff',
+  },
+  routineAddBtn: {
+    backgroundColor: 'rgba(110, 0, 255, 0.1)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  routineAddBtnText: {
+    color: '#6e00ff',
+    fontWeight: '800',
+    fontSize: 12,
   },
   templateCard: {
     backgroundColor: '#ffffff',
@@ -1814,6 +2182,49 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '500',
   },
+  calendarContainer: {
+    marginBottom: 16,
+  },
+  calendarScroll: {
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  calendarPill: {
+    width: 52,
+    height: 70,
+    borderRadius: 16,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  calendarPillActive: {
+    backgroundColor: '#6e00ff',
+    borderColor: '#6e00ff',
+    shadowColor: '#6e00ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  calendarDayName: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#9ca3af',
+    marginBottom: 4,
+  },
+  calendarDayNameActive: {
+    color: '#e9d5ff',
+  },
+  calendarDayNum: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  calendarDayNumActive: {
+    color: '#ffffff',
+  },
   filterContainer: {
     marginBottom: 16,
     maxHeight: 40,
@@ -1826,12 +2237,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   filterPillActive: {
-    backgroundColor: '#6e00ff',
+    backgroundColor: '#1f2937',
+    borderColor: '#1f2937',
   },
   filterPillText: {
     fontSize: 12,
@@ -2148,5 +2562,197 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#6b7280',
+  },
+  toastContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 20,
+    right: 20,
+    zIndex: 9999,
+    alignItems: 'center',
+  },
+  toastCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#d1fae5',
+  },
+  toastText: {
+    marginLeft: 8,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#065f46',
+  },
+  // New Styles for Task Creation
+  inputGroup: {
+    marginBottom: 16,
+  },
+  modalLabelSmall: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#9ca3af',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  iconPickerBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  modalInputNoMargin: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#1f2937',
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+  },
+  inputIconRight: {
+    paddingRight: 10,
+  },
+  dropdownBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  dropdownBtnText: {
+    fontSize: 14,
+    color: '#1f2937',
+  },
+  priorityGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  priorityGridItem: {
+    width: '47%',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  priorityGridItemActive: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#3b82f6',
+  },
+  priorityGridLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  priorityGridLabelActive: {
+    color: '#2563eb',
+  },
+  priorityGridXp: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+  priorityGridXpActive: {
+    color: '#3b82f6',
+  },
+  addTagBtn: {
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  addTagBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4b5563',
+  },
+  modalFooterActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  cancelBtnText: {
+    color: '#6b7280',
+    fontWeight: '600',
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6e00ff',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  addBtnText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  emojiPickerContainer: {
+    backgroundColor: '#ffffff',
+    margin: 40,
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  emojiBtn: {
+    padding: 10,
+  },
+  repetitionPickerContainer: {
+    backgroundColor: '#ffffff',
+    margin: 40,
+    padding: 20,
+    borderRadius: 16,
+  },
+  repetitionOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  repetitionOptionActive: {
+    backgroundColor: '#faf5ff',
+  },
+  repetitionOptionText: {
+    fontSize: 15,
+    color: '#374151',
+  },
+  repetitionOptionTextActive: {
+    color: '#6e00ff',
+    fontWeight: '700',
   },
 });

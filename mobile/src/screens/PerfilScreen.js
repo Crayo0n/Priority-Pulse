@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../navigation/AppNavigator';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export default function PerfilScreen({ navigation }) {
   const { logout } = useContext(AuthContext);
@@ -107,6 +108,15 @@ export default function PerfilScreen({ navigation }) {
     Alert.alert('Éxito', 'Perfil actualizado correctamente.');
   };
 
+  const handleLogout = async () => {
+    try {
+      await GoogleSignin.signOut();
+    } catch (error) {
+      // Ignorar error si no había sesión activa en Google
+    }
+    logout();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -149,7 +159,7 @@ export default function PerfilScreen({ navigation }) {
               <Text style={styles.editBtnText}>Editar Perfil</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={16} color="#ef4444" style={{ marginRight: 4 }} />
               <Text style={styles.logoutBtnText}>Cerrar Sesión</Text>
             </TouchableOpacity>

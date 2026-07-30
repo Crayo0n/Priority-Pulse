@@ -17,13 +17,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import { makeRedirectUri } from 'expo-auth-session';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { AuthContext } from '../navigation/AppNavigator';
 import { API_URL, API_KEY, GOOGLE_WEB_CLIENT_ID } from '../api/config';
 
 WebBrowser.maybeCompleteAuthSession();
 
+GoogleSignin.configure({
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+});
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
@@ -32,28 +34,34 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const redirectUri = makeRedirectUri();
-  console.log("GOOGLE OAUTH REDIRECT URI (LoginScreen):", redirectUri);
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: GOOGLE_WEB_CLIENT_ID,
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    responseType: 'id_token',
-    redirectUri,
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const id_token = response.params?.id_token || response.authentication?.idToken;
-      if (id_token) {
-        handleBackendGoogleLogin(id_token);
+  const handleGoogleSignInNative = async () => {
+    setGoogleLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      if (userInfo.idToken) {
+        handleBackendGoogleLogin(userInfo.idToken);
+      } else if (userInfo.data?.idToken) {
+        // v13+ uses userInfo.data.idToken
+        handleBackendGoogleLogin(userInfo.data.idToken);
       } else {
-        Alert.alert('Error', 'No se pudo extraer el id_token');
+        Alert.alert('Error', 'No se pudo obtener el token de Google');
+        setGoogleLoading(false);
       }
-    } else if (response?.type === 'error') {
-      Alert.alert('Error de autenticación', 'Ocurrió un problema con Google Login.');
+    } catch (error) {
+      setGoogleLoading(false);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // already in progress
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Google Play Services no disponible');
+      } else {
+        Alert.alert('Error', 'Hubo un problema al conectar con Google.');
+        console.error(error);
+      }
     }
-  }, [response]);
+  };
 
   const handleBackendGoogleLogin = async (idToken) => {
     setGoogleLoading(true);
@@ -223,11 +231,10 @@ export default function LoginScreen({ navigation }) {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Google Login Button */}
             <TouchableOpacity
-              style={[styles.googleButton, (googleLoading || !request) && { opacity: 0.7 }]}
-              onPress={() => promptAsync()}
-              disabled={googleLoading || !request}
+              style={[styles.googleButton, googleLoading && { opacity: 0.7 }]}
+              onPress={handleGoogleSignInNative}
+              disabled={googleLoading}
             >
               {googleLoading ? (
                 <ActivityIndicator color="#111827" />

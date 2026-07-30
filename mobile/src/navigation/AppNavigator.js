@@ -34,7 +34,7 @@ function AppTabs() {
           if (route.name === 'Inicio') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Moldes') {
-            iconName = focused ? 'library' : 'library-outline';
+            iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Clasificacion') {
             iconName = focused ? 'trophy' : 'trophy-outline';
           } else if (route.name === 'Perfil') {

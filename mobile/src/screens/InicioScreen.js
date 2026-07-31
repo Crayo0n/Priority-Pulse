@@ -63,6 +63,7 @@ export default function InicioScreen({ route, navigation }) {
   const [calendarDays] = useState(getCalendarDays());
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('task'); // 'task' | 'routine'
+  const [modalContext, setModalContext] = useState('add'); // 'add' | 'edit'
   
   // Seleccionar tarea para rutina
   const [selectTaskModalVisible, setSelectTaskModalVisible] = useState(false);
@@ -118,11 +119,12 @@ export default function InicioScreen({ route, navigation }) {
     setShowDatePicker(false);
     if (selectedDate) {
       setPickerDate(selectedDate);
-      // Ajustamos a formato local para evitar desfases horarios
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      setNewDeadlineDate(`${year}-${month}-${day}`);
+      const val = `${year}-${month}-${day}`;
+      if (modalContext === 'edit') setEditDeadlineDate(val);
+      else setNewDeadlineDate(val);
     }
   };
 
@@ -130,7 +132,9 @@ export default function InicioScreen({ route, navigation }) {
     setShowStartTimePicker(false);
     if (selectedDate) {
       setPickerStartTime(selectedDate);
-      setNewStartTime(formatTimeStr(selectedDate));
+      const val = formatTimeStr(selectedDate);
+      if (modalContext === 'edit') setEditStartTime(val);
+      else setNewStartTime(val);
     }
   };
 
@@ -138,7 +142,9 @@ export default function InicioScreen({ route, navigation }) {
     setShowEndTimePicker(false);
     if (selectedDate) {
       setPickerEndTime(selectedDate);
-      setNewEndTime(formatTimeStr(selectedDate));
+      const val = formatTimeStr(selectedDate);
+      if (modalContext === 'edit') setEditEndTime(val);
+      else setNewEndTime(val);
     }
   };
 
@@ -146,7 +152,9 @@ export default function InicioScreen({ route, navigation }) {
     setShowReminderPicker(false);
     if (selectedDate) {
       setPickerReminder(selectedDate);
-      setNewReminderTime(formatTimeStr(selectedDate));
+      const val = formatTimeStr(selectedDate);
+      if (modalContext === 'edit') setEditReminderTime(val);
+      else setNewReminderTime(val);
     }
   };
 
@@ -203,14 +211,15 @@ export default function InicioScreen({ route, navigation }) {
   const [selectedTask, setSelectedTask] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
-  const [editPriority, setEditPriority] = useState('50');
+  const [editPriority, setEditPriority] = useState('10');
   const [editTags, setEditTags] = useState('');
-
-  // Estados para Fecha y Hora Límite (Entrega)
-  const [newDeadlineTime, setNewDeadlineTime] = useState(getTodayTimeString());
-
   const [editDeadlineDate, setEditDeadlineDate] = useState('');
   const [editDeadlineTime, setEditDeadlineTime] = useState('');
+  const [editEmoji, setEditEmoji] = useState('📝');
+  const [editRepeticion, setEditRepeticion] = useState('nunca');
+  const [editStartTime, setEditStartTime] = useState('');
+  const [editEndTime, setEditEndTime] = useState('');
+  const [editReminderTime, setEditReminderTime] = useState('');
 
   // Data States
   const [user, setUser] = useState(null);
@@ -299,19 +308,28 @@ export default function InicioScreen({ route, navigation }) {
   }, [route.params]);
 
   const openEditTask = (task) => {
+    setModalContext('edit');
     setSelectedTask(task);
     setEditTitle(task.titulo);
     setEditDesc(task.descripcion || '');
     setEditPriority((task.xp_recompensa || 10).toString());
     setEditTags(task.tags || '');
+    setEditEmoji(task.emoji || '📝');
+    setEditRepeticion(task.repeticion || 'nunca');
+    
+    // Si viene la fecha límite con hora o los tiempos por separado
+    setEditStartTime(task.tiempo_inicio || '');
+    setEditEndTime(task.tiempo_fin || '');
+    setEditReminderTime(task.recordatorio_hora || '');
 
     if (task.fecha_limite) {
       const parts = task.fecha_limite.split('T');
       setEditDeadlineDate(parts[0] || getTodayDateString());
-      setEditDeadlineTime(parts[1] ? parts[1].substring(0,5) : getTodayTimeString());
+      if (parts[1] && !task.tiempo_inicio) {
+        setEditStartTime(parts[1].substring(0,5));
+      }
     } else {
-      setEditDeadlineDate(getTodayDateString());
-      setEditDeadlineTime(getTodayTimeString());
+      setEditDeadlineDate('');
     }
 
     setEditModalVisible(true);
@@ -652,7 +670,12 @@ export default function InicioScreen({ route, navigation }) {
             <View>
               <Text style={styles.conquistaTitle}>Conquista tu Día</Text>
               <Text style={styles.conquistaSubtitle}>
-                Tienes <Text style={{fontWeight: '800', color: '#111827'}}>{tareas.filter(t => t.estado === 'pendiente' && !t.rutina_id).length} tareas</Text> esperándote.
+                Tienes <Text style={{fontWeight: '800', color: '#111827'}}>{tareas.filter(t => {
+                  if (t.rutina_id || t.estado !== 'pendiente') return false;
+                  const todayStr = getTodayDateString();
+                  const taskDate = t.fecha_limite ? t.fecha_limite.split('T')[0].split(' ')[0] : todayStr;
+                  return taskDate === selectedDate;
+                }).length} tareas</Text> esperándote.
               </Text>
             </View>
           </View>
@@ -834,8 +857,8 @@ export default function InicioScreen({ route, navigation }) {
                             })}
                             {item.fecha_limite && (
                               <View style={styles.deadlineBadge}>
-                                <Ionicons name="time-outline" size={11} color="#f43f5e" style={{ marginRight: 3 }} />
-                                <Text style={styles.deadlineBadgeText}>{item.fecha_limite}</Text>
+                                <Ionicons name="calendar-outline" size={11} color="#4b5563" style={{ marginRight: 3 }} />
+                                <Text style={styles.deadlineBadgeText}>{item.fecha_limite.split('T')[0].split(' ')[0]}</Text>
                               </View>
                             )}
                           </View>
@@ -843,7 +866,7 @@ export default function InicioScreen({ route, navigation }) {
                         
                         <View style={{flexDirection: 'row', gap: 12}}>
                           <TouchableOpacity onPress={() => openEditTask(item)}>
-                            <Ionicons name="pencil-outline" size={20} color="#9ca3af" />
+                            <Ionicons name="pencil" size={20} color="#eab308" />
                           </TouchableOpacity>
                           <TouchableOpacity onPress={() => setTareas(prev => prev.filter(t => t.id !== item.id))}>
                             <Ionicons name="trash-outline" size={20} color="#ef4444" />
@@ -1147,89 +1170,139 @@ export default function InicioScreen({ route, navigation }) {
             {/* Modal Body */}
             {selectedTask && (
               <ScrollView style={styles.modalBody}>
-                {/* Title */}
-                <Text style={styles.modalLabel}>Título de la tarea</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Ej. Ir al gimnasio"
-                  value={editTitle}
-                  onChangeText={setEditTitle}
-                />
-
-                {/* Description */}
-                <Text style={styles.modalLabel}>Descripción</Text>
-                <TextInput
-                  style={[styles.modalInput, styles.modalTextArea]}
-                  placeholder="Escribe detalles aquí..."
-                  multiline={true}
-                  numberOfLines={3}
-                  value={editDesc}
-                  onChangeText={setEditDesc}
-                />
-
-                {/* Priority / XP */}
-                <Text style={styles.modalLabel}>Prioridad / Recompensa (XP): {editPriority}</Text>
-                <View style={styles.priorityRow}>
-                  {['10', '30', '50', '80', '100'].map(val => (
-                    <TouchableOpacity
-                      key={val}
-                      style={[
-                        styles.priorityPill,
-                        editPriority === val && styles.priorityPillActive
-                      ]}
-                      onPress={() => setEditPriority(val)}
-                    >
-                      <Text
-                        style={[
-                          styles.priorityPillText,
-                          editPriority === val && styles.priorityPillTextActive
-                        ]}
-                      >
-                        {val}
-                      </Text>
+                {/* ICONO y NOMBRE */}
+                <View style={styles.inputGroup}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={[styles.modalLabelSmall, {width: 60}]}>ICONO</Text>
+                    <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between'}}>
+                      <Text style={styles.modalLabelSmall}>NOMBRE</Text>
+                      <Text style={styles.modalLabelSmall}>{editTitle.length}/50</Text>
+                    </View>
+                  </View>
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <TouchableOpacity style={styles.iconPickerBtn} onPress={() => setShowEmojiPicker(true)}>
+                      <Text style={{fontSize: 24}}>{editEmoji}</Text>
                     </TouchableOpacity>
-                  ))}
-                </View>
-                {parseInt(editPriority) >= 80 && (
-                  <Text style={styles.priorityNotice}>⚠️ Esta tarea será clasificada como CRÍTICA.</Text>
-                )}
-
-                {/* Tags */}
-                <Text style={styles.modalLabel}>Etiquetas (Separadas por comas)</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Ej. Trabajo, Urgente"
-                  value={editTags}
-                  onChangeText={setEditTags}
-                />
-
-                {/* Fecha y Hora Límite */}
-                <Text style={styles.modalLabel}>Fecha y Hora Límite (Entrega)</Text>
-                <View style={styles.datetimeInputRow}>
-                  <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.subLabel}>Fecha (AAAA-MM-DD)</Text>
                     <TextInput
-                      style={styles.modalInput}
-                      placeholder="AAAA-MM-DD"
-                      value={editDeadlineDate}
-                      onChangeText={setEditDeadlineDate}
-                    />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 8 }}>
-                    <Text style={styles.subLabel}>Hora (HH:MM)</Text>
-                    <TextInput
-                      style={styles.modalInput}
-                      placeholder="HH:MM"
-                      value={editDeadlineTime}
-                      onChangeText={setEditDeadlineTime}
+                      style={[styles.modalInput, {flex: 1, marginLeft: 12, marginBottom: 0}]}
+                      placeholder="Nombre de la actividad o tarea"
+                      value={editTitle}
+                      onChangeText={setEditTitle}
+                      maxLength={50}
                     />
                   </View>
                 </View>
 
-                {/* Save changes button */}
-                <TouchableOpacity
-                  style={styles.modalSubmitBtn}
-                  onPress={() => {
+                {/* DESCRIPCION */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabelSmall}>DESCRIPCION</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextArea]}
+                    placeholder="Añadir una descripcion"
+                    multiline={true}
+                    numberOfLines={3}
+                    value={editDesc}
+                    onChangeText={setEditDesc}
+                  />
+                </View>
+
+                {/* DIA DE INICIO & PRIORIDAD */}
+                <View style={{flexDirection: 'row', marginBottom: 16}}>
+                  {/* Left Column */}
+                  <View style={{flex: 1, paddingRight: 8}}>
+                    <Text style={styles.modalLabelSmall}>DIA DE INICIO</Text>
+                    <TouchableOpacity style={styles.inputWithIcon} onPress={() => setShowDatePicker(true)}>
+                      <Text style={[styles.modalInputNoMargin, {color: editDeadlineDate ? '#1f2937' : '#9ca3af'}]}>
+                        {editDeadlineDate || 'dd/mm/aaaa'}
+                      </Text>
+                      <Ionicons name="calendar-outline" size={20} color="#9ca3af" style={styles.inputIconRight} />
+                    </TouchableOpacity>
+
+                    <Text style={[styles.modalLabelSmall, {marginTop: 16}]}>REPETICION</Text>
+                    <TouchableOpacity 
+                      style={styles.dropdownBtn}
+                      onPress={() => setShowRepetitionPicker(true)}
+                    >
+                      <Text style={styles.dropdownBtnText}>
+                        {REPETITION_OPTIONS.find(opt => opt.value === editRepeticion)?.label || 'Nunca'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
+
+                    <Text style={[styles.modalLabelSmall, {marginTop: 16}]}>HORARIO</Text>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <TouchableOpacity style={[styles.inputWithIcon, {flex: 1}]} onPress={() => setShowStartTimePicker(true)}>
+                        <Text style={[styles.modalInputNoMargin, {color: editStartTime ? '#1f2937' : '#9ca3af'}]}>
+                          {editStartTime || '--:--'}
+                        </Text>
+                        <Ionicons name="time-outline" size={16} color="#9ca3af" style={styles.inputIconRight} />
+                      </TouchableOpacity>
+                      <Text style={{marginHorizontal: 8, color: '#9ca3af'}}>a</Text>
+                      <TouchableOpacity style={[styles.inputWithIcon, {flex: 1}]} onPress={() => setShowEndTimePicker(true)}>
+                        <Text style={[styles.modalInputNoMargin, {color: editEndTime ? '#1f2937' : '#9ca3af'}]}>
+                          {editEndTime || '--:--'}
+                        </Text>
+                        <Ionicons name="time-outline" size={16} color="#9ca3af" style={styles.inputIconRight} />
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={[styles.modalLabelSmall, {marginTop: 16}]}>RECORDATORIO</Text>
+                    <TouchableOpacity style={styles.inputWithIcon} onPress={() => setShowReminderPicker(true)}>
+                      <Text style={[styles.modalInputNoMargin, {color: editReminderTime ? '#1f2937' : '#9ca3af'}]}>
+                        {editReminderTime || '--:--'}
+                      </Text>
+                      <Ionicons name="time-outline" size={20} color="#9ca3af" style={styles.inputIconRight} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Right Column (PRIORIDAD / XP) */}
+                  <View style={{flex: 1, paddingLeft: 8}}>
+                    <Text style={styles.modalLabelSmall}>PRIORIDAD / XP</Text>
+                    <View style={styles.priorityGrid}>
+                      {[
+                        {val: '20', label: 'Baja', xp: '+20 XP'},
+                        {val: '50', label: 'Media', xp: '+50 XP'},
+                        {val: '80', label: 'Alta', xp: '+80 XP'},
+                        {val: '100', label: 'Crítica', xp: '+100 XP'},
+                      ].map(opt => (
+                        <TouchableOpacity
+                          key={opt.val}
+                          style={[
+                            styles.priorityGridItem,
+                            editPriority === opt.val && styles.priorityGridItemActive
+                          ]}
+                          onPress={() => setEditPriority(opt.val)}
+                        >
+                          <Text style={[styles.priorityGridLabel, editPriority === opt.val && styles.priorityGridLabelActive]}>{opt.label}</Text>
+                          <Text style={[styles.priorityGridXp, editPriority === opt.val && styles.priorityGridXpActive]}>{opt.xp}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                {/* TAGS */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabelSmall}>TAGS</Text>
+                  <View style={styles.inputWithIcon}>
+                    <TextInput
+                      style={styles.modalInputNoMargin}
+                      placeholder="Ej. #DesignSystem (Presiona Enter)"
+                      value={editTags}
+                      onChangeText={setEditTags}
+                    />
+                    <TouchableOpacity style={styles.addTagBtn}>
+                      <Text style={styles.addTagBtnText}>Añadir</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Footer Buttons */}
+                <View style={styles.modalFooterActions}>
+                  <TouchableOpacity onPress={() => setEditModalVisible(false)} style={{padding: 10}}>
+                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.addBtn} onPress={() => {
                     if (!editTitle.trim()) return;
                     const isCritica = parseInt(editPriority) >= 80;
                     setTareas(prev =>
@@ -1242,17 +1315,23 @@ export default function InicioScreen({ route, navigation }) {
                               es_critica: isCritica,
                               xp_recompensa: parseInt(editPriority),
                               tags: editTags || 'General',
-                              fecha_limite: (editDeadlineDate && editDeadlineTime) ? `${editDeadlineDate} ${editDeadlineTime}` : null
+                              emoji: editEmoji,
+                              repeticion: editRepeticion,
+                              tiempo_inicio: editStartTime || null,
+                              tiempo_fin: editEndTime || null,
+                              recordatorio_hora: editReminderTime || null,
+                              fecha_limite: editDeadlineDate ? `${editDeadlineDate}T${editStartTime || '23:59'}:00` : null
                             }
                           : t
                       )
                     );
                     setEditModalVisible(false);
                     showToast('¡Tarea guardada!');
-                  }}
-                >
-                  <Text style={styles.modalSubmitBtnText}>Guardar Cambios</Text>
-                </TouchableOpacity>
+                  }}>
+                    <Ionicons name="save-outline" size={20} color="#ffffff" style={{marginRight: 4}} />
+                    <Text style={styles.addBtnText}>Guardar</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {/* Delete button */}
                 <TouchableOpacity
@@ -2296,9 +2375,9 @@ const styles = StyleSheet.create({
   deadlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff1f2',
+    backgroundColor: '#f3f4f6',
     borderWidth: 1,
-    borderColor: '#ffe4e6',
+    borderColor: '#e5e7eb',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -2308,7 +2387,7 @@ const styles = StyleSheet.create({
   },
   deadlineBadgeText: {
     fontSize: 10,
-    color: '#f43f5e',
+    color: '#4b5563',
     fontWeight: '700',
   },
   templateDetailName: {

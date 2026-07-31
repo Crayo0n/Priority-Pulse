@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "REACT_NATIVE_PACKAGER_HOSTNAME=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \\K\\S+') expo start",
+    "start:dev": "REACT_NATIVE_PACKAGER_HOSTNAME=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \\K\\S+') expo start --dev-client",
     "start:tunnel": "expo start --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",

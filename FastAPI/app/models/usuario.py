@@ -34,3 +34,30 @@ class Usuario(Base):
     amistades_recibidas: Mapped[List["Amistad"]] = relationship(
         "Amistad", foreign_keys="[Amistad.usuario_id_2]", back_populates="usuario_2", cascade="all, delete-orphan"
     )
+
+    @property
+    def nivel_actual(self):
+        return self.nivel
+
+    @property
+    def nivel_siguiente(self):
+        from sqlalchemy.orm import object_session
+        from app.models.nivel import Nivel
+        session = object_session(self)
+        if not session or not self.nivel:
+            return None
+        return session.query(Nivel).filter(Nivel.numero_nivel > self.nivel.numero_nivel).order_by(Nivel.numero_nivel.asc()).first()
+
+    @property
+    def progreso_pct(self):
+        if not self.nivel:
+            return 0.0
+        siguiente = self.nivel_siguiente
+        if not siguiente:
+            return 100.0
+        
+        rango = siguiente.xp_requerida - self.nivel.xp_requerida
+        xp_en_rango = self.xp_total - self.nivel.xp_requerida
+        if rango <= 0:
+            return 100.0
+        return min(round((xp_en_rango / rango) * 100, 1), 100.0)

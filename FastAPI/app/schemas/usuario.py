@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from app.schemas.nivel import NivelResponse
 
 
 class UsuarioBase(BaseModel):
@@ -34,6 +35,9 @@ class UsuarioResponse(UsuarioBase):
     xp_total: int = 0
     racha_actual: int = 0
     rol: str = "user"
+    nivel_actual: Optional[NivelResponse] = None
+    nivel_siguiente: Optional[NivelResponse] = None
+    progreso_pct: float = 0.0
 
     class Config:
         from_attributes = True
@@ -55,6 +59,9 @@ class LoginResponse(BaseModel):
     foto_perfil: Optional[str] = None
     access_token: str
     token_type: str = "bearer"
+    nivel_actual: Optional[NivelResponse] = None
+    nivel_siguiente: Optional[NivelResponse] = None
+    progreso_pct: float = 0.0
 
 class GoogleLoginRequest(BaseModel):
     id_token: str

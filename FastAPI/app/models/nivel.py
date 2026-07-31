@@ -11,5 +11,6 @@ class Nivel(Base):
     nombre: Mapped[str] = mapped_column(String)
     xp_requerida: Mapped[int] = mapped_column(Integer)
     color_hex: Mapped[str] = mapped_column(String)
+    icono: Mapped[str] = mapped_column(String, default="workspace_premium")
 
     usuarios: Mapped[List["Usuario"]] = relationship("Usuario", back_populates="nivel")

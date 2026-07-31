@@ -364,13 +364,23 @@ def inicio():
         if response_user.status_code == 200:
             u_data = response_user.json()
             xp_total = u_data.get('xp_total', 0)
-            nivel = (xp_total // 500) + 1
-            xp_siguiente = nivel * 500
+            
+            nivel_actual = u_data.get('nivel_actual')
+            nivel_siguiente = u_data.get('nivel_siguiente')
             
             usuario_info['xp'] = xp_total
-            usuario_info['nivel'] = nivel
-            usuario_info['xp_siguiente'] = xp_siguiente
+            if nivel_actual:
+                usuario_info['nivel'] = nivel_actual.get('numero_nivel', 1)
+                usuario_info['titulo'] = nivel_actual.get('nombre', 'Iniciado del Enfoque')
+                usuario_info['nivel_icono'] = nivel_actual.get('icono', 'workspace_premium')
+                usuario_info['nivel_color'] = nivel_actual.get('color_hex', '#9E9E9E')
+            else:
+                usuario_info['nivel'] = 1
+                usuario_info['titulo'] = 'Iniciado del Enfoque'
+                
+            usuario_info['xp_siguiente'] = nivel_siguiente.get('xp_requerida', 0) if nivel_siguiente else "MAX"
             usuario_info['racha'] = u_data.get('racha_actual', 0)
+            usuario_info['progreso_pct'] = u_data.get('progreso_pct', 0.0)
 
     except Exception as e:
         print(f"Error cargando desde FastAPI: {e}")
@@ -714,20 +724,17 @@ def perfil_publico(usuario_id):
             u_data = res_u.json()
             usuario.update(u_data)
             
-            xp_total = usuario.get('xp_total', 0)
-            nivel = (xp_total // 500) + 1
-            
-            usuario['nivel'] = nivel
-            
-            # Titulos dinamicos
-            if nivel <= 3:
-                usuario['titulo'] = "Iniciado del Enfoque"
-            elif nivel <= 6:
-                usuario['titulo'] = "Practicante Disciplinado"
-            elif nivel <= 10:
-                usuario['titulo'] = "Maestro de Tareas"
+            nivel_actual = u_data.get('nivel_actual')
+            if nivel_actual:
+                usuario['nivel'] = nivel_actual.get('numero_nivel', 1)
+                usuario['titulo'] = nivel_actual.get('nombre', 'Iniciado del Enfoque')
+                usuario['nivel_icono'] = nivel_actual.get('icono', 'workspace_premium')
+                usuario['nivel_color'] = nivel_actual.get('color_hex', '#9E9E9E')
             else:
-                usuario['titulo'] = "Arquitecto de Enfoque"
+                usuario['nivel'] = 1
+                usuario['titulo'] = 'Iniciado del Enfoque'
+                usuario['nivel_icono'] = 'workspace_premium'
+                usuario['nivel_color'] = '#9E9E9E'
         elif res_u.status_code == 404:
             flash('Usuario no encontrado.', 'error')
             return redirect(url_for('clasificacion'))
@@ -817,31 +824,28 @@ def perfil():
     
     try:
         usuario_id = session['usuario_id']
-        # Fetch usuario
         res_u = api_request('GET', f'/usuarios/{usuario_id}')
         if res_u.status_code == 200:
             u_data = res_u.json()
             usuario.update(u_data)
             
-            xp_total = usuario.get('xp_total', 0)
-            nivel = (xp_total // 500) + 1
-            xp_siguiente = nivel * 500
-            xp_nivel_actual = xp_total % 500
-            progreso_pct = (xp_nivel_actual / 500.0) * 100
+            # Los datos del nivel ahora vienen de la API
+            nivel_actual = u_data.get('nivel_actual')
+            nivel_siguiente = u_data.get('nivel_siguiente')
+            progreso_pct = u_data.get('progreso_pct', 0.0)
             
-            usuario['nivel'] = nivel
-            usuario['xp_siguiente'] = xp_siguiente
-            usuario['progreso_pct'] = progreso_pct
+            if nivel_actual:
+                usuario['nivel'] = nivel_actual.get('numero_nivel', 1)
+                usuario['titulo'] = nivel_actual.get('nombre', 'Iniciado del Enfoque')
+                usuario['nivel_icono'] = nivel_actual.get('icono', 'workspace_premium')
+                usuario['nivel_color'] = nivel_actual.get('color_hex', '#9E9E9E')
             
-            # Titulos dinamicos
-            if nivel <= 3:
-                usuario['titulo'] = "Iniciado del Enfoque"
-            elif nivel <= 6:
-                usuario['titulo'] = "Practicante Disciplinado"
-            elif nivel <= 10:
-                usuario['titulo'] = "Maestro de Tareas"
+            if nivel_siguiente:
+                usuario['xp_siguiente'] = nivel_siguiente.get('xp_requerida', 0)
             else:
-                usuario['titulo'] = "Arquitecto de Enfoque"
+                usuario['xp_siguiente'] = "MAX"
+                
+            usuario['progreso_pct'] = progreso_pct
         elif res_u.status_code == 401:
             flash('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.', 'error')
             return redirect(url_for('logout'))

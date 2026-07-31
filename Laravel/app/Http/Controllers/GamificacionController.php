@@ -26,6 +26,7 @@ class GamificacionController extends Controller
             'nombre'        => 'required|string|max:100',
             'xp_requerida'  => 'required|integer|min:0',
             'color_hex'     => 'nullable|string|max:7',
+            'icono'         => 'nullable|string|max:50',
         ]);
 
         $response = ApiService::post('/niveles/', $data);

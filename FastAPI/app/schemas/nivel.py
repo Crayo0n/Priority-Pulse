@@ -6,6 +6,7 @@ class NivelBase(BaseModel):
     nombre: str
     xp_requerida: int
     color_hex: Optional[str] = "#FFFFFF"
+    icono: Optional[str] = "workspace_premium"
 
 class NivelCreate(NivelBase):
     pass

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
   Platform
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../navigation/AppNavigator';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -28,6 +29,25 @@ export default function PerfilScreen({ navigation }) {
   const [tempNombre, setTempNombre] = useState('Mauricio Rodríguez');
   const [tempUsername, setTempUsername] = useState('mauricio_rod');
   const [tempCorreo, setTempCorreo] = useState('mauricio@prioritypulse.com');
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('userData');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setUserData(parsed);
+          setNombre(parsed.nombre || parsed.nombre_usuario || '');
+          setUsername(parsed.nombre_usuario || '');
+          setCorreo(parsed.correo || '');
+        }
+      } catch (e) {
+        console.error("Error loading profile data", e);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   // Password Change modal states
   const [pwdModalVisible, setPwdModalVisible] = useState(false);
@@ -136,19 +156,19 @@ export default function PerfilScreen({ navigation }) {
 
           <Text style={styles.profileName}>{nombre}</Text>
           <Text style={styles.profileUsername}>@{username}</Text>
-          <Text style={styles.profileSubtitle}>Lvl 12 Arquitecto de Enfoque • Miembro desde Ene 2026</Text>
+          <Text style={styles.profileSubtitle}>Lvl {userData?.nivel_actual?.numero_nivel || 1} {userData?.nivel_actual?.nombre || 'Iniciado'}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.statItemHeader}>
-              <Text style={styles.statNumberHeader}>1,248</Text>
-              <Text style={styles.statLabelHeader}>Tareas</Text>
+              <Text style={styles.statNumberHeader}>{userData?.xp_total || 0}</Text>
+              <Text style={styles.statLabelHeader}>XP Total</Text>
             </View>
             <View style={styles.statItemHeader}>
               <Text style={styles.statNumberHeader}>{amigos.length}</Text>
               <Text style={styles.statLabelHeader}>Amigos</Text>
             </View>
             <View style={styles.statItemHeader}>
-              <Text style={styles.statNumberHeader}>12</Text>
+              <Text style={styles.statNumberHeader}>{userData?.racha_actual || 0}</Text>
               <Text style={styles.statLabelHeader}>Racha</Text>
             </View>
           </View>
@@ -209,7 +229,7 @@ export default function PerfilScreen({ navigation }) {
                 <Ionicons name="flame" size={24} color="#f97316" />
                 <Text style={styles.streakCardTitle}>Racha Actual</Text>
               </View>
-              <Text style={styles.streakCardVal}>0 Días</Text>
+              <Text style={styles.streakCardVal}>{userData?.racha_actual || 0} Días</Text>
               <Text style={styles.streakCardSubtitle}>Actual Racha de Focus</Text>
               <View style={styles.streakProgressBg}>
                 <View style={[styles.streakProgressFill, { width: '10%' }]} />
@@ -349,10 +369,10 @@ export default function PerfilScreen({ navigation }) {
               {/* Card 1: Level */}
               <View style={styles.statCard}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#f3ebff' }]}>
-                  <Ionicons name="trophy" size={20} color="#6e00ff" />
+                  <Ionicons name="trophy" size={20} color={userData?.nivel_actual?.color_hex || "#6e00ff"} />
                 </View>
-                <Text style={styles.statVal}>Nivel 12</Text>
-                <Text style={styles.statLabel}>Arquitecto de Enfoque</Text>
+                <Text style={styles.statVal}>Nivel {userData?.nivel_actual?.numero_nivel || 1}</Text>
+                <Text style={styles.statLabel}>{userData?.nivel_actual?.nombre || 'Iniciado'}</Text>
               </View>
 
               {/* Card 2: Streak */}
@@ -360,7 +380,7 @@ export default function PerfilScreen({ navigation }) {
                 <View style={[styles.statIconContainer, { backgroundColor: '#fff7ed' }]}>
                   <Ionicons name="flame" size={20} color="#f97316" />
                 </View>
-                <Text style={styles.statVal}>12 Días</Text>
+                <Text style={styles.statVal}>{userData?.racha_actual || 0} Días</Text>
                 <Text style={styles.statLabel}>Racha de Tareas</Text>
               </View>
 
@@ -369,7 +389,7 @@ export default function PerfilScreen({ navigation }) {
                 <View style={[styles.statIconContainer, { backgroundColor: '#ecfdf5' }]}>
                   <Ionicons name="star" size={20} color="#10b981" />
                 </View>
-                <Text style={styles.statVal}>28,000 XP</Text>
+                <Text style={styles.statVal}>{userData?.xp_total || 0} XP</Text>
                 <Text style={styles.statLabel}>Experiencia Total</Text>
               </View>
 

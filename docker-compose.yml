@@ -1,17 +1,63 @@
 services:
-  laravel:
-    build: ./Laravel
-    container_name: priority_pulse_laravel
+  # ==========================================
+  # SERVIDOR PÚBLICO (CONTENEDORES PÚBLICOS)
+  # ==========================================
+  haproxy:
+    image: haproxy:2.8
+    container_name: haproxy_public
     restart: always
     ports:
-      - "8000:80"
+      - "80:80"
+      - "8404:8404"
     volumes:
-      - ./Laravel:/var/www/html
-      - /var/www/html/vendor
-      - /var/www/html/node_modules
-      - /var/www/html/public/build
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - api1
+      - api2
+      - flask
     networks:
-      - priority_pulse_net
+      - public_net
+      - private_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_public
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - public_net
+      - private_net
+
+  # ==========================================
+  # SERVIDOR PRIVADO (CONTENEDORES PRIVADOS)
+  # ==========================================
+  postgres:
+    image: postgres:15
+    container_name: ServerPostgreSql_PI
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+    networks:
+      - private_net
 
   flask:
     build: ./Flask
@@ -26,11 +72,11 @@ services:
       - FLASK_DEBUG=1
     command: flask run --host=0.0.0.0 --port=5000 
     networks:
-      - priority_pulse_net
+      - private_net
 
-  api:
+  api1:
     build: ./FastAPI
-    container_name: ServerFastAPI_PI
+    container_name: ServerFastAPI_PI_1
     restart: always
     ports:
       - "8088:8000"
@@ -41,32 +87,99 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: ${DATABASE_URL}
+      RATE_LIMIT: "5/minute"
     networks:
-      - priority_pulse_net
+      - private_net
 
-  postgres:
-    image: postgres:15
-    container_name: ServerPostgreSql_PI
+  api2:
+    build: ./FastAPI
+    container_name: ServerFastAPI_PI_2
     restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "8089:8000"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d DB_Priority_Pulse"]
-      interval: 5s
-      retries: 5
-      timeout: 5s
+      - ./FastAPI:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RATE_LIMIT: "5/minute"
     networks:
-      - priority_pulse_net
+      - private_net
+
+  # ------------------------------------------
+  # EXPORTADORES Y MONITOREO EN RED PRIVADA
+  # ------------------------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: cadvisor_private
+    restart: always
+    ports:
+      - "8085:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - private_net
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter_private
+    restart: always
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - private_net
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter_private
+    restart: always
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - private_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_private
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - private_net
 
 networks:
-  priority_pulse_net:
+  public_net:
+    driver: bridge
+  private_net:
     driver: bridge
 
 volumes:
   postgres_data:
+  grafana_data:
+  prometheus_data:

@@ -61,6 +61,7 @@ export default function InicioScreen({ route, navigation }) {
     return days;
   };
   const [calendarDays] = useState(getCalendarDays());
+  const calendarRef = React.useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('task'); // 'task' | 'routine'
   const [modalContext, setModalContext] = useState('add'); // 'add' | 'edit'
@@ -295,6 +296,15 @@ export default function InicioScreen({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       fetchData();
+      
+      // Auto-scroll the calendar to center today (index 7)
+      setTimeout(() => {
+        if (calendarRef.current) {
+          // Pill width + margin is approx 60. Center index 7:
+          const offsetX = (7 * 60) - (width / 2) + 30;
+          calendarRef.current.scrollTo({ x: offsetX, animated: true });
+        }
+      }, 500); // 500ms to ensure layout is ready
     }, [])
   );
 
@@ -508,10 +518,19 @@ export default function InicioScreen({ route, navigation }) {
         showToast('¡Nueva tarea añadida!');
         fetchData();
       } else {
-        Alert.alert("Error", "No se pudo crear la tarea");
+        const errText = await res.text();
+        console.log("Error creando tarea:", errText);
+        setModalVisible(false);
+        setTimeout(() => {
+          Alert.alert("Error", "No se pudo crear la tarea. " + errText);
+        }, 500);
       }
     } catch (e) {
-      Alert.alert("Error", "No se pudo conectar");
+      console.log("Excepción al crear tarea:", e);
+      setModalVisible(false);
+      setTimeout(() => {
+        Alert.alert("Error de red", "No se pudo conectar al servidor.");
+      }, 500);
     }
   };
 
@@ -742,6 +761,7 @@ export default function InicioScreen({ route, navigation }) {
 
             {/* Calendario Horizontal */}
             <ScrollView
+              ref={calendarRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.calendarScroll}
@@ -816,9 +836,14 @@ export default function InicioScreen({ route, navigation }) {
                   >
                     <View style={{flex: 1, width: '100%'}}>
                       <View style={{flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between'}}>
-                        <Text style={[styles.taskTitle, isCompleted && styles.taskTitleCompleted]}>
-                          {item.titulo}
-                        </Text>
+                        <View style={{flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 12}}>
+                          {item.emoji ? (
+                            <Text style={{fontSize: 18, marginRight: 8, opacity: isCompleted ? 0.5 : 1}}>{item.emoji}</Text>
+                          ) : null}
+                          <Text style={[styles.taskTitle, isCompleted && styles.taskTitleCompleted, {flex: 1}]}>
+                            {item.titulo}
+                          </Text>
+                        </View>
                         <TouchableOpacity
                           style={[styles.checkboxCircle, isCompleted && styles.checkboxCircleChecked]}
                           onPress={() => toggleTarea(item.id)}

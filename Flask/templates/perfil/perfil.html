@@ -137,25 +137,24 @@
             <!-- Columna Derecha (Racha, Medallas, Resumen) -->
             <div class="space-y-6 mt-2 lg:mt-0">
 
-                <!-- Tarjeta Racha (Modo Oscuro) -->
+                <!-- Tarjeta Racha (Clara) -->
                 <div
-                    class="bg-gradient-to-b from-[#1b1f33] to-[#121422] rounded-3xl p-8 shadow-xl border border-gray-800 text-center flex flex-col items-center relative overflow-hidden">
+                    class="bg-orange-50 rounded-3xl p-8 shadow-sm border border-orange-100 text-center flex flex-col items-center relative overflow-hidden">
                     <div
-                        class="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5 shadow-inner relative z-10">
+                        class="w-14 h-14 rounded-full bg-white border border-orange-100 flex items-center justify-center mb-5 shadow-sm relative z-10">
                         <span class="material-symbols-outlined text-[26px] text-orange-500"
                             style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
                     </div>
-                    <h2 class="text-4xl font-black text-orange-500 mb-1 relative z-10">{{ usuario.racha_actual }} Días</h2>
-                    <p class="text-[0.65rem] font-medium text-gray-400 mb-6 relative z-10">Actual Racha de Focus</p>
+                    <h2 class="text-4xl font-black text-orange-600 mb-1 relative z-10">{{ usuario.racha_actual }} Días</h2>
 
                     <div class="w-full relative z-10 mb-2">
-                        <div class="h-[6px] w-full bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-[6px] w-full bg-orange-200/50 rounded-full overflow-hidden">
                             {% set racha_pct = (((usuario.racha_actual if usuario else 0) % 7) / 7.0) * 100 %}
-                            <div class="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full transition-all duration-500"
+                            <div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
                                 style="width: {{ racha_pct }}%"></div>
                         </div>
                     </div>
-                    <p class="text-[0.6rem] font-medium text-gray-500 relative z-10 mt-1">
+                    <p class="text-[0.6rem] font-medium text-orange-500/70 relative z-10 mt-1">
                         {% if usuario.racha_actual >= 7 %}¡Imparable!{% else %}Sigue así{% endif %}
                     </p>
                 </div>

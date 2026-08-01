@@ -9,7 +9,7 @@ from flask_wtf.csrf import CSRFProtect
 
 load_dotenv()
 
-API_URL = "http://haproxy:80/api/v1"
+API_URL = os.getenv("API_URL", "https://haproxy/api/v1")
 API_KEY = os.getenv("API_KEY", "ABC123")
 
 app = Flask(__name__)
@@ -152,7 +152,7 @@ def api_request(method, path, **kwargs):
     kwargs['headers'] = headers
     
     url = f"{API_URL}{path}"
-    return requests.request(method, url, **kwargs)
+    return requests.request(method, url, verify=False, **kwargs)
 
 @app.context_processor
 def inject_global_user():
@@ -586,7 +586,12 @@ def crear_rutina():
 @login_required
 def agregar_rutina_molde():
     molde_id = request.form.get('molde')
+    tareas_incluidas = request.form.getlist('tareas_incluidas')
     
+    if not tareas_incluidas:
+        flash('Selecciona al menos una tarea para activar la rutina.', 'error')
+        return redirect(url_for('rutinas'))
+        
     if molde_id in RUTINAS_MOLDES:
         molde_data = RUTINAS_MOLDES[molde_id]
         rutina_payload = {
@@ -600,18 +605,19 @@ def agregar_rutina_molde():
             if res_rut.status_code == 201:
                 rutina_id = res_rut.json().get('id')
                 
-                for t in molde_data["tareas"]:
-                    t_payload = {
-                        "titulo": t["titulo"],
-                        "descripcion": t["descripcion"],
-                        "usuario_id": session['usuario_id'],
-                        "es_critica": False,
-                        "xp_recompensa": t["xp_recompensa"],
-                        "estado": "pendiente",
-                        "rutina_id": rutina_id,
-                        "tags": "Rutina"
-                    }
-                    api_request('POST', '/tareas/', json=t_payload)
+                for i, t in enumerate(molde_data["tareas"]):
+                    if str(i) in tareas_incluidas:
+                        t_payload = {
+                            "titulo": t["titulo"],
+                            "descripcion": t["descripcion"],
+                            "usuario_id": session['usuario_id'],
+                            "es_critica": False,
+                            "xp_recompensa": t["xp_recompensa"],
+                            "estado": "pendiente",
+                            "rutina_id": rutina_id,
+                            "tags": "Rutina"
+                        }
+                        api_request('POST', '/tareas/', json=t_payload)
                     
                 flash(f'¡Rutina "{molde_data["nombre"]}" añadida a tu día!', 'success')
             else:

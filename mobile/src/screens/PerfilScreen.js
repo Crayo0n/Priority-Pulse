@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../navigation/AppNavigator';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { API_URL, API_KEY } from '../api/config';
 
 export default function PerfilScreen({ navigation }) {
   const { logout } = useContext(AuthContext);
@@ -35,12 +36,130 @@ export default function PerfilScreen({ navigation }) {
     const fetchUserData = async () => {
       try {
         const stored = await AsyncStorage.getItem('userData');
+        const token = await AsyncStorage.getItem('userToken');
         if (stored) {
           const parsed = JSON.parse(stored);
           setUserData(parsed);
           setNombre(parsed.nombre || parsed.nombre_usuario || '');
           setUsername(parsed.nombre_usuario || '');
           setCorreo(parsed.correo || '');
+          
+          if (parsed.id) {
+            const response = await fetch(`${API_URL}/usuarios/${parsed.id}`, {
+              headers: { 
+                'x-api-key': API_KEY,
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (response.ok) {
+              const freshData = await response.json();
+              setUserData(freshData);
+              setNombre(freshData.nombre || freshData.nombre_usuario || '');
+              setUsername(freshData.nombre_usuario || '');
+              setCorreo(freshData.correo || '');
+              await AsyncStorage.setItem('userData', JSON.stringify(freshData));
+              
+              // Fetch Medallas
+              try {
+                const medallasRes = await fetch(`${API_URL}/medallas`, {
+                  headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                });
+                const misMedallasRes = await fetch(`${API_URL}/medallas/usuario/${parsed.id}`, {
+                  headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                });
+                if (medallasRes.ok && misMedallasRes.ok) {
+                  const todas = await medallasRes.json();
+                  const mias = await misMedallasRes.json();
+                  const unlockedIds = mias.map(m => m.medalla_id);
+                  
+                  const formatedMedals = todas.map(m => ({
+                    id: String(m.id),
+                    titulo: m.nombre,
+                    desc: m.descripcion,
+                    icono: m.url_icono || 'trophy',
+                    color: m.valor_requerido > 50 ? '#f97316' : (m.valor_requerido > 10 ? '#10b981' : '#a855f7'),
+                    unlocked: unlockedIds.includes(m.id)
+                  }));
+                  setLogros(formatedMedals);
+                }
+              } catch (e) { console.error("Error fetching medals", e); }
+
+              // Fetch Amigos
+              try {
+                const amigosRes = await fetch(`${API_URL}/amistades/usuario/${parsed.id}`, {
+                  headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                });
+                if (amigosRes.ok) {
+                  const listAmigos = await amigosRes.json();
+                  const aceptadas = listAmigos.filter(a => a.estado === 'aceptada');
+                  const friendIds = aceptadas.map(a => a.usuario_id_1 === parsed.id ? a.usuario_id_2 : a.usuario_id_1);
+                  
+                  const friendsData = await Promise.all(
+                    friendIds.map(fid => fetch(`${API_URL}/usuarios/${fid}`, {
+                      headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json()))
+                  );
+                  
+                  const formattedFriends = friendsData.map(f => ({
+                    id: String(f.id),
+                    nombre: f.nombre_usuario,
+                    rango: f.nivel_actual ? `Lvl ${f.nivel_actual.numero_nivel} ${f.nivel_actual.nombre}` : 'Iniciado',
+                    avatarText: f.nombre_usuario.substring(0, 2).toUpperCase(),
+                    racha: f.racha_actual,
+                    rachaTexto: f.racha_actual > 0 ? '¡Está en llamas!' : 'Sin racha activa',
+                    tareasTotales: Math.floor(f.xp_total / 50),
+                    horasFoco: Math.floor(f.xp_total / 100),
+                    meGusta: false,
+                    raw: f
+                  }));
+                  setAmigos(formattedFriends);
+                }
+              } catch (e) { console.error("Error fetching friends", e); }
+
+              // Fetch Tareas for Heatmap
+              try {
+                const tareasRes = await fetch(`${API_URL}/tareas/usuario/${parsed.id}`, {
+                  headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                });
+                if (tareasRes.ok) {
+                  const tareasData = await tareasRes.json();
+                  const cal = {};
+                  tareasData.forEach(t => {
+                    if (t.fecha_limite) {
+                      const dateStr = t.fecha_limite.substring(0, 10);
+                      cal[dateStr] = (cal[dateStr] || 0) + 1;
+                    }
+                  });
+                  const intensities = ['#f3f4f6', '#e9d5ff', '#d8b4fe', '#a855f7', '#7c3aed', '#5b21b6'];
+                  const columns = [];
+                  const today = new Date();
+                  today.setHours(0,0,0,0);
+                  const startDate = new Date(today);
+                  startDate.setDate(today.getDate() - (26 * 7) + 1);
+                  
+                  let currDate = new Date(startDate);
+                  for (let c = 0; c < 26; c++) {
+                    const days = [];
+                    for (let d = 0; d < 7; d++) {
+                      const ds = currDate.toISOString().substring(0, 10);
+                      const count = cal[ds] || 0;
+                      let intensity = 0;
+                      if (count > 0) intensity = 1;
+                      if (count > 2) intensity = 2;
+                      if (count > 4) intensity = 3;
+                      if (count > 6) intensity = 4;
+                      if (count > 8) intensity = 5;
+                      days.push(intensities[intensity]);
+                      currDate.setDate(currDate.getDate() + 1);
+                    }
+                    columns.push(days);
+                  }
+                  setHeatmapData(columns);
+                  setTotalActividades(tareasData.length);
+                }
+              } catch (e) { console.error("Error fetching tasks for heatmap", e); }
+            }
+          }
         }
       } catch (e) {
         console.error("Error loading profile data", e);
@@ -58,56 +177,12 @@ export default function PerfilScreen({ navigation }) {
   const [showNewPwd, setShowNewPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
-  // Helper generator to simulate contribution activity heatmap grid
-  const generateMockHeatmap = () => {
-    const intensities = ['#f3f4f6', '#e9d5ff', '#d8b4fe', '#a855f7', '#7c3aed', '#5b21b6'];
-    const columns = [];
-    for (let c = 0; c < 26; c++) {
-      const days = [];
-      for (let d = 0; d < 7; d++) {
-        const val = Math.floor(Math.random() * intensities.length);
-        days.push(intensities[val]);
-      }
-      columns.push(days);
-    }
-    return columns;
-  };
-  const [heatmapData] = useState(generateMockHeatmap());
-
   const [friendModalVisible, setFriendModalVisible] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [amigos, setAmigos] = useState([
-    {
-      id: '1',
-      nombre: 'Sarah Jenkins',
-      rango: 'NIVEL 8 EXPLORADORA',
-      avatarText: 'SJ',
-      racha: 8,
-      rachaTexto: '¡Está en llamas!',
-      tareasTotales: '842',
-      horasFoco: '315h',
-      meGusta: false
-    },
-    {
-      id: '2',
-      nombre: 'Carlos Diaz',
-      rango: 'NIVEL 5 INICIADO',
-      avatarText: 'CD',
-      racha: 0,
-      rachaTexto: 'Sin racha activa',
-      tareasTotales: '120',
-      horasFoco: '45h',
-      meGusta: false
-    }
-  ]);
-
-  // Achievements mockup
-  const logros = [
-    { id: '1', titulo: 'Racha de Bronce', desc: 'Mantén una racha de 7 días consecutivos.', icono: 'flame', color: '#f97316', unlocked: true },
-    { id: '2', titulo: 'Hacedor Maestro', desc: 'Completa 100 tareas en total.', icono: 'checkmark-done', color: '#10b981', unlocked: true },
-    { id: '3', titulo: 'Madrugador', desc: 'Completa 1 tarea antes de las 7:00 AM.', icono: 'sunny', color: '#eab308', unlocked: true },
-    { id: '4', titulo: 'Enfoque Absoluto', desc: 'Completa una rutina completa sin interrupciones.', icono: 'bulb', color: '#a855f7', unlocked: false },
-  ];
+  const [amigos, setAmigos] = useState([]);
+  const [logros, setLogros] = useState([]);
+  const [totalActividades, setTotalActividades] = useState(0);
+  const [heatmapData, setHeatmapData] = useState([]);
 
   const handleOpenEdit = () => {
     setTempNombre(nombre);
@@ -230,11 +305,9 @@ export default function PerfilScreen({ navigation }) {
                 <Text style={styles.streakCardTitle}>Racha Actual</Text>
               </View>
               <Text style={styles.streakCardVal}>{userData?.racha_actual || 0} Días</Text>
-              <Text style={styles.streakCardSubtitle}>Actual Racha de Focus</Text>
               <View style={styles.streakProgressBg}>
                 <View style={[styles.streakProgressFill, { width: '10%' }]} />
               </View>
-              <Text style={styles.streakProgressText}>5 días de Impasible</Text>
             </View>
 
             {/* Medallas & Resumen Widgets Row */}
@@ -277,7 +350,7 @@ export default function PerfilScreen({ navigation }) {
                   </View>
                   <View>
                     <Text style={styles.resumenLabel}>TOTAL DE ACTIVIDADES</Text>
-                    <Text style={styles.resumenVal}>1,248</Text>
+                    <Text style={styles.resumenVal}>{totalActividades}</Text>
                   </View>
                 </View>
               </View>
@@ -288,7 +361,7 @@ export default function PerfilScreen({ navigation }) {
             <View style={styles.heatmapCard}>
               <View style={styles.heatmapHeader}>
                 <Text style={styles.heatmapTitle}>Actividad</Text>
-                <Text style={styles.heatmapSubtitle}>1,248 contribuciones en el año anterior</Text>
+                <Text style={styles.heatmapSubtitle}>{totalActividades} contribuciones en el periodo</Text>
               </View>
 
               <View style={styles.heatmapLayout}>
@@ -676,107 +749,81 @@ export default function PerfilScreen({ navigation }) {
 
       {/* Friend Profile Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={friendModalVisible}
         onRequestClose={() => setFriendModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { paddingBottom: 28 }]}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setFriendModalVisible(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalContent, { padding: 24, paddingBottom: 32 }]}>
             
-            {/* Close Button */}
-            <TouchableOpacity
-              style={styles.friendModalClose}
-              onPress={() => setFriendModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.closeButton} onPress={() => setFriendModalVisible(false)}>
               <Ionicons name="close" size={24} color="#9ca3af" />
             </TouchableOpacity>
 
-            {selectedFriend && (
-              <View style={{ alignItems: 'center', width: '100%' }}>
+            {selectedFriend && selectedFriend.raw && (
+              <View style={styles.modalInner}>
                 
-                {/* Avatar */}
-                <View style={[styles.avatarLarge, { marginTop: 10 }]}>
-                  <Text style={styles.avatarLargeText}>{selectedFriend.avatarText}</Text>
-                  <View style={styles.activeIndicator} />
+                <View style={[styles.modalAvatarContainer, !selectedFriend.raw.foto_perfil && { backgroundColor: '#6e00ff', borderWidth: 0 }]}>
+                  {selectedFriend.raw.foto_perfil ? (
+                    <Image 
+                      source={{ uri: selectedFriend.raw.foto_perfil.startsWith('http') ? selectedFriend.raw.foto_perfil : `${API_URL.replace('/api/v1', '')}${selectedFriend.raw.foto_perfil}` }} 
+                      style={styles.modalAvatarImage} 
+                    />
+                  ) : (
+                    <Text style={styles.modalAvatarText}>{selectedFriend.avatarText}</Text>
+                  )}
                 </View>
 
-                {/* Name */}
-                <Text style={[styles.profileName, { marginTop: 16 }]}>{selectedFriend.nombre}</Text>
-                
-                {/* Level badge */}
-                <View style={styles.friendLvlBadge}>
-                  <Text style={styles.friendLvlBadgeText}>{selectedFriend.rango}</Text>
-                </View>
-
-                {/* Flame / Streak */}
-                <View style={styles.friendStreakContainer}>
-                  <View style={styles.friendStreakIconBox}>
-                    <Ionicons name="flame" size={20} color="#ea580c" />
+                <View style={styles.modalHeaderInfo}>
+                  <Text style={styles.modalName}>{selectedFriend.nombre}</Text>
+                  <View style={[styles.levelBadge, { backgroundColor: (selectedFriend.raw.nivel_actual?.color_hex || '#6e00ff') + '15' }]}>
+                    <Ionicons name={selectedFriend.raw.nivel_actual?.icono || "diamond"} size={12} color={selectedFriend.raw.nivel_actual?.color_hex || "#6e00ff"} />
+                    <Text style={[styles.levelBadgeText, { color: selectedFriend.raw.nivel_actual?.color_hex || "#6e00ff" }]}>
+                      Lvl {selectedFriend.raw.nivel_actual?.numero_nivel || 1} {selectedFriend.raw.nivel_actual?.nombre || 'Iniciado del Enfoque'}
+                    </Text>
                   </View>
-                  <Text style={styles.friendStreakVal}>
-                    {selectedFriend.racha > 0 ? `Racha de ${selectedFriend.racha} Días` : 'Sin Racha'}
+                </View>
+
+                <View style={styles.rachaContainer}>
+                  <View style={styles.fireIconContainer}>
+                    <Ionicons name="flame" size={24} color="#f97316" />
+                  </View>
+                  <Text style={styles.rachaTitle}>Racha de {selectedFriend.raw.racha_actual} Días</Text>
+                  <Text style={styles.rachaSubtitle}>
+                    {selectedFriend.raw.racha_actual > 0 ? "¡Está en llamas!" : "Aún sin racha."}
                   </Text>
-                  <Text style={styles.friendStreakSub}>{selectedFriend.rachaTexto}</Text>
                 </View>
 
-                {/* Perf Stats Title */}
-                <Text style={styles.perfStatsTitle}>ESTADÍSTICAS DE RENDIMIENTO</Text>
-
-                {/* Stats Cards Row */}
-                <View style={styles.perfStatsRow}>
-                  {/* Card 1: Tareas */}
-                  <View style={styles.perfStatCard}>
-                    <View style={[styles.perfStatIconBox, { backgroundColor: '#eff6ff' }]}>
-                      <Ionicons name="checkmark" size={16} color="#3b82f6" />
+                <Text style={styles.statsSectionTitle}>ESTADÍSTICAS DE RENDIMIENTO</Text>
+                <View style={styles.statsCardsRow}>
+                  <View style={styles.statCard}>
+                    <View style={[styles.statIconWrapper, { backgroundColor: '#f3ebff' }]}>
+                      <Ionicons name="star" size={16} color="#6e00ff" />
                     </View>
-                    <Text style={styles.perfStatVal}>{selectedFriend.tareasTotales}</Text>
-                    <Text style={styles.perfStatLabel}>Tareas Totales</Text>
+                    <Text style={styles.statValue}>{selectedFriend.raw.xp_total.toLocaleString()}</Text>
+                    <Text style={styles.statLabel}>XP Total</Text>
                   </View>
-
-                  {/* Card 2: Horas */}
-                  <View style={styles.perfStatCard}>
-                    <View style={[styles.perfStatIconBox, { backgroundColor: '#f5f3ff' }]}>
-                      <Ionicons name="time" size={16} color="#8b5cf6" />
+                  <View style={styles.statCard}>
+                    <View style={[styles.statIconWrapper, { backgroundColor: '#e0f2fe' }]}>
+                      <Ionicons name="checkmark-circle" size={16} color="#0ea5e9" />
                     </View>
-                    <Text style={styles.perfStatVal}>{selectedFriend.horasFoco}</Text>
-                    <Text style={styles.perfStatLabel}>Horas de Foco</Text>
+                    <Text style={styles.statValue}>{Math.floor(selectedFriend.raw.xp_total / 50)}</Text>
+                    <Text style={styles.statLabel}>Tareas (Aprox)</Text>
                   </View>
                 </View>
 
-                {/* Like Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.likeFriendBtn,
-                    selectedFriend.meGusta && styles.likeFriendBtnLiked
-                  ]}
-                  onPress={() => {
-                    const updatedAmigos = amigos.map(a => {
-                      if (a.id === selectedFriend.id) {
-                        return { ...a, meGusta: !a.meGusta };
-                      }
-                      return a;
-                    });
-                    setAmigos(updatedAmigos);
-                    setSelectedFriend(prev => ({ ...prev, meGusta: !prev.meGusta }));
-                  }}
-                >
-                  <Ionicons
-                    name={selectedFriend.meGusta ? "heart" : "heart-outline"}
-                    size={18}
-                    color="#ffffff"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.likeFriendBtnText}>
-                    {selectedFriend.meGusta ? 'Te Gusta' : 'Dar Me Gusta'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={{ marginTop: 24, width: '100%' }}>
+                  <View style={[styles.addFriendButton, { backgroundColor: '#10b981' }]}>
+                    <Ionicons name="people" size={18} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.addFriendText}>Amigos</Text>
+                  </View>
+                </View>
 
               </View>
             )}
-
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
@@ -969,11 +1016,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   darkStreakCard: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#fff7ed',
     borderRadius: 24,
     marginHorizontal: 16,
     padding: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ffedd5',
   },
   streakCardHeader: {
     flexDirection: 'row',
@@ -983,36 +1032,36 @@ const styles = StyleSheet.create({
   streakCardTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#9ca3af',
+    color: '#ea580c',
     textTransform: 'uppercase',
   },
   streakCardVal: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#ea580c',
     marginTop: 12,
   },
   streakCardSubtitle: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: '#fb923c',
     fontWeight: '600',
     marginTop: 2,
   },
   streakProgressBg: {
     height: 6,
-    backgroundColor: '#374151',
+    backgroundColor: '#ffedd5',
     borderRadius: 3,
     marginTop: 16,
     overflow: 'hidden',
   },
   streakProgressFill: {
     height: '100%',
-    backgroundColor: '#f97316',
+    backgroundColor: '#ea580c',
     borderRadius: 3,
   },
   streakProgressText: {
     fontSize: 11,
-    color: '#9ca3af',
+    color: '#ea580c',
     fontWeight: '700',
     marginTop: 10,
     textAlign: 'center',
@@ -1540,8 +1589,145 @@ const styles = StyleSheet.create({
   },
   likeFriendBtnText: {
     color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '850',
+    fontSize: 15,
+    fontWeight: '800'
+  },
+  modalInner: {
+    alignItems: 'center',
+    paddingTop: 10
+  },
+  modalAvatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 32,
+    backgroundColor: '#6e00ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 4,
+    borderColor: '#f3ebff',
+    overflow: 'hidden'
+  },
+  modalAvatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover'
+  },
+  modalAvatarText: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#ffffff'
+  },
+  modalHeaderInfo: {
+    alignItems: 'center',
+    marginBottom: 24
+  },
+  modalName: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: 6
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3ebff',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12
+  },
+  levelBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginLeft: 4
+  },
+  rachaContainer: {
+    alignItems: 'center',
+    marginBottom: 28
+  },
+  fireIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff7ed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#ffedd5'
+  },
+  rachaTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#111827'
+  },
+  rachaSubtitle: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '500',
+    marginTop: 2
+  },
+  statsSectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#9ca3af',
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+    letterSpacing: 0.5
+  },
+  statsCardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center'
+  },
+  statIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: 4
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6b7280'
+  },
+  addFriendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#a855f7',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    width: '100%',
+    shadowColor: '#a855f7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4
+  },
+  addFriendText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '800'
   },
   profileUsername: {
     fontSize: 13,

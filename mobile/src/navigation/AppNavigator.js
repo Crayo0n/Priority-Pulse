@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from '../screens/LoginScreen';
 import RegistroScreen from '../screens/RegistroScreen';
 import InicioScreen from '../screens/InicioScreen';
-import MoldesScreen from '../screens/MoldesScreen';
+import RutinasScreen from '../screens/RutinasScreen';
 import ClasificacionScreen from '../screens/ClasificacionScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import AjustesNotificacionesScreen from '../screens/AjustesNotificacionesScreen';
@@ -33,7 +33,7 @@ function AppTabs() {
 
           if (route.name === 'Inicio') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Moldes') {
+          } else if (route.name === 'Rutinas') {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Clasificacion') {
             iconName = focused ? 'trophy' : 'trophy-outline';
@@ -73,7 +73,7 @@ function AppTabs() {
       })}
     >
       <Tab.Screen name="Inicio" component={InicioScreen} />
-      <Tab.Screen name="Moldes" component={MoldesScreen} options={{ title: 'Moldes' }} />
+      <Tab.Screen name="Rutinas" component={RutinasScreen} options={{ title: 'Rutinas' }} />
       <Tab.Screen name="Clasificacion" component={ClasificacionScreen} options={{ title: 'Clasificación' }} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
     </Tab.Navigator>

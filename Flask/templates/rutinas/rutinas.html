@@ -86,7 +86,7 @@
             <label class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 hover:border-primary/40 hover:bg-primary/5 transition-all group">
                 <div class="relative flex items-center">
                     <!-- Readonly aesthetic check, the user accepts the whole routine -->
-                    <input type="checkbox" checked disabled class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/50 transition-colors accent-primary"/>
+                    <input type="checkbox" name="tareas_incluidas" value="{{ loop.index0 }}" checked class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/50 transition-colors accent-primary cursor-pointer"/>
                 </div>
                 <div class="flex-1">
                     <span class="block text-sm font-bold text-gray-800">{{ tarea.titulo }}</span>

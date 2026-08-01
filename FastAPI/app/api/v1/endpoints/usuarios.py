@@ -243,7 +243,6 @@ def get_leaderboard(
     request: Request,
     limit: int = 10,
     api_key_valida: bool = Depends(validar_api_key),
-    usuario_actual: Usuario = Depends(obtener_usuario_actual),
     db: Session = Depends(get_db)
 ):
     return crud_usuario.get_usuarios_by_xp(db, limit=limit)

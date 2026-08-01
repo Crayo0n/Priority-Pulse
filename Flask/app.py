@@ -9,7 +9,7 @@ from flask_wtf.csrf import CSRFProtect
 
 load_dotenv()
 
-API_URL = "http://api:8000/api/v1"
+API_URL = "http://haproxy:80/api/v1"
 API_KEY = os.getenv("API_KEY", "ABC123")
 
 app = Flask(__name__)
@@ -136,6 +136,14 @@ def api_request(method, path, **kwargs):
     """
     headers = kwargs.get('headers', {})
     headers['x-api-key'] = API_KEY
+    
+    # Forward client IP for rate limiting
+    from flask import request
+    if request:
+        if request.headers.get('X-Forwarded-For'):
+            headers['X-Forwarded-For'] = request.headers.get('X-Forwarded-For')
+        elif request.remote_addr:
+            headers['X-Forwarded-For'] = request.remote_addr
 
     
     if 'access_token' in session:

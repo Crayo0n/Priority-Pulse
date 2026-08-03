@@ -11,8 +11,9 @@ import {
   StatusBar,
   Alert
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { API_URL, API_KEY } from '../api/config';
 
 const templateRoutines = [
   {
@@ -138,33 +139,57 @@ export default function RutinasScreen({ navigation }) {
     }
 
     try {
-      const storedRoutinesJson = await AsyncStorage.getItem('@rutinas');
-      let currentRoutines = [];
-      if (storedRoutinesJson) {
-        currentRoutines = JSON.parse(storedRoutinesJson);
-      }
+      const token = await AsyncStorage.getItem('userToken');
+      const userData = JSON.parse(await AsyncStorage.getItem('userData'));
+      if (!userData || !userData.id) throw new Error("No userData");
 
-      const newRoutine = {
-        id: Date.now().toString(),
+      // 1. Crear Rutina
+      const rutinaPayload = {
         nombre: selectedTemplate.nombre,
+        descripcion: selectedTemplate.descripcion,
+        icono: selectedTemplate.icono,
+        color: selectedTemplate.color,
+        es_publica: false,
         esta_activa: true,
-        tareas: activeSubtasks.map(t => ({
-          id: t.id + '_' + Date.now(),
-          titulo: t.titulo,
-          descripcion: t.descripcion,
-          xp_recompensa: t.xp_recompensa,
-          estado: 'pendiente'
-        }))
+        usuario_id: userData.id
       };
 
-      const updatedRoutines = [newRoutine, ...currentRoutines];
-      await AsyncStorage.setItem('@rutinas', JSON.stringify(updatedRoutines));
+      const resRutina = await fetch(`${API_URL}/rutinas/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(rutinaPayload)
+      });
+
+      if (!resRutina.ok) {
+        throw new Error("No se pudo crear la rutina");
+      }
+
+      const newRoutine = await resRutina.json();
+
+      // 2. Crear Tareas asociadas a la rutina
+      for (const t of activeSubtasks) {
+        const tareaPayload = {
+          titulo: t.titulo,
+          descripcion: t.descripcion || '',
+          estado: 'pendiente',
+          xp_recompensa: t.xp_recompensa || 10,
+          es_critica: false,
+          tags: selectedTemplate.nombre,
+          usuario_id: userData.id,
+          rutina_id: newRoutine.id
+        };
+        await fetch(`${API_URL}/tareas/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(tareaPayload)
+        });
+      }
 
       setTemplateModalVisible(false);
-      
+      Alert.alert("Éxito", "Rutina activada exitosamente");
       navigation.navigate('Inicio', { activeTab: 'rutinas', reload: Date.now() });
     } catch (e) {
-      console.error("Failed to save template routine to AsyncStorage", e);
+      console.error("Failed to save template routine to Backend", e);
       Alert.alert("Error", "No se pudo activar la rutina.");
     }
   };

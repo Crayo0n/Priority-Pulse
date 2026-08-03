@@ -72,7 +72,7 @@ export default function ClasificacionScreen() {
         }));
 
         setTopUsers(formattedData.slice(0, 3));
-        setRestUsers(formattedData.slice(3));
+        setRestUsers(formattedData);
       }
     } catch (error) {
       console.log('Error fetching leaderboard:', error);

@@ -18,8 +18,10 @@ services:
       - api2
       - flask
     networks:
-      - public_net
-      - private_net
+      public_net:
+      private_net:
+        aliases:
+          - haproxy-internal
 
   grafana:
     image: grafana/grafana:latest
@@ -72,6 +74,7 @@ services:
     environment:
       - FLASK_APP=app.py       
       - FLASK_DEBUG=1
+      - API_URL=https://haproxy-internal/api/v1
     command: flask run --host=0.0.0.0 --port=5000 
     networks:
       - private_net

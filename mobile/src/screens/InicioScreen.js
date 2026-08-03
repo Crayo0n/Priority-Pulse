@@ -540,13 +540,104 @@ export default function InicioScreen({ route, navigation }) {
     Alert.alert("Info", "Endpoint de crear rutina en progreso");
   };
 
+  const handleEditTaskSubmit = async (applyToSeries = false) => {
+    if (!editTitle.trim()) return;
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const payload = {
+        titulo: editTitle,
+        descripcion: editDesc || 'Sin descripción',
+        es_critica: parseInt(editPriority) >= 80,
+        xp_recompensa: parseInt(editPriority),
+        tags: editTags || 'General',
+        emoji: editEmoji,
+        repeticion: editRepeticion,
+        tiempo_inicio: editStartTime || null,
+        tiempo_fin: editEndTime || null,
+        recordatorio_hora: editReminderTime || null,
+        fecha_limite: editDeadlineDate ? `${editDeadlineDate}T${editStartTime || '23:59'}:00` : null
+      };
+
+      const url = `${API_URL}/tareas/${selectedTask.id}${applyToSeries ? '?apply_to_series=true' : ''}`;
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        fetchData();
+        setEditModalVisible(false);
+        showToast('¡Tarea guardada!');
+      } else {
+        Alert.alert("Error", "No se pudo actualizar la tarea");
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Problema de red al actualizar la tarea");
+    }
+  };
+
+  const handleDeleteTaskSubmit = async (applyToSeries = false) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const url = `${API_URL}/tareas/${selectedTask.id}${applyToSeries ? '?apply_to_series=true' : ''}`;
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchData();
+        setEditModalVisible(false);
+        showToast('Tarea eliminada');
+      } else {
+        Alert.alert("Error", "No se pudo eliminar la tarea en el servidor.");
+      }
+    } catch (e) {
+      Alert.alert("Error", "Problema de red al eliminar la tarea.");
+    }
+  };
+
+  const handleDeleteRoutine = (routineId) => {
+    Alert.alert(
+      "Eliminar Rutina",
+      "¿Estás seguro que deseas eliminar esta rutina? Se borrarán todas las tareas asociadas.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Eliminar", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('userToken');
+              const res = await fetch(`${API_URL}/rutinas/${routineId}`, {
+                method: 'DELETE',
+                headers: { 'X-API-Key': API_KEY, 'Authorization': `Bearer ${token}` }
+              });
+              
+              if (res.ok) {
+                setRutinas(prev => prev.filter(r => r.id !== routineId));
+                showToast("Rutina eliminada correctamente");
+              } else {
+                Alert.alert("Error", "No se pudo eliminar la rutina del servidor.");
+              }
+            } catch (e) {
+              console.log("Error al eliminar rutina:", e);
+              Alert.alert("Error", "Ocurrió un problema de red.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
 
 
   const filteredTareas = tareas.filter(t => {
-    if (t.rutina_id) return false;
+    if (t.rutina_id !== null && t.rutina_id !== undefined && t.rutina_id !== 0) return false;
+    
+    if (!t.fecha_limite) return false;
 
-    const todayStr = getTodayDateString();
-    const taskDate = t.fecha_limite ? t.fecha_limite.split('T')[0].split(' ')[0] : todayStr;
+    const taskDate = t.fecha_limite.split('T')[0].split(' ')[0];
     if (taskDate !== selectedDate) return false;
 
     if (filterType === 'completada') return t.estado === 'completada';
@@ -829,6 +920,7 @@ export default function InicioScreen({ route, navigation }) {
             ) : (
               filteredTareas.map(item => {
                 const isCompleted = item.estado === 'completada';
+                const isToday = selectedDate === getTodayDateString();
                 return (
                   <View
                     key={item.id}
@@ -837,17 +929,23 @@ export default function InicioScreen({ route, navigation }) {
                     <View style={{flex: 1, width: '100%'}}>
                       <View style={{flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between'}}>
                         <View style={{flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 12}}>
-                          {item.emoji ? (
-                            <Text style={{fontSize: 18, marginRight: 8, opacity: isCompleted ? 0.5 : 1}}>{item.emoji}</Text>
-                          ) : null}
+                          <Text style={{fontSize: 18, marginRight: 8, opacity: isCompleted ? 0.5 : 1}}>
+                            {item.emoji || '📝'}
+                          </Text>
                           <Text style={[styles.taskTitle, isCompleted && styles.taskTitleCompleted, {flex: 1}]}>
                             {item.titulo}
                           </Text>
                         </View>
                         <TouchableOpacity
-                          style={[styles.checkboxCircle, isCompleted && styles.checkboxCircleChecked]}
-                          onPress={() => toggleTarea(item.id)}
-                          activeOpacity={0.7}
+                          style={[styles.checkboxCircle, isCompleted && styles.checkboxCircleChecked, !isToday && {opacity: 0.5}]}
+                          onPress={() => {
+                            if (!isToday) {
+                              showToast('Solo puedes marcar tareas del día actual.');
+                              return;
+                            }
+                            toggleTarea(item.id);
+                          }}
+                          activeOpacity={isToday ? 0.7 : 1}
                         >
                           {isCompleted && <Ionicons name="checkmark" size={14} color="#ffffff" />}
                         </TouchableOpacity>
@@ -890,11 +988,29 @@ export default function InicioScreen({ route, navigation }) {
                         </View>
                         
                         <View style={{flexDirection: 'row', gap: 12}}>
-                          <TouchableOpacity onPress={() => openEditTask(item)}>
-                            <Ionicons name="pencil" size={20} color="#eab308" />
+                          <TouchableOpacity 
+                            onPress={() => {
+                              if (!isToday) {
+                                showToast('Solo puedes editar tareas del día actual.');
+                                return;
+                              }
+                              openEditTask(item);
+                            }}
+                            activeOpacity={isToday ? 0.7 : 1}
+                          >
+                            <Ionicons name="pencil" size={20} color={isToday ? "#eab308" : "#d1d5db"} />
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setTareas(prev => prev.filter(t => t.id !== item.id))}>
-                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                          <TouchableOpacity 
+                            onPress={() => {
+                              if (!isToday) {
+                                showToast('Solo puedes eliminar tareas del día actual.');
+                                return;
+                              }
+                              setTareas(prev => prev.filter(t => t.id !== item.id));
+                            }}
+                            activeOpacity={isToday ? 0.7 : 1}
+                          >
+                            <Ionicons name="trash-outline" size={20} color={isToday ? "#ef4444" : "#d1d5db"} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -929,7 +1045,7 @@ export default function InicioScreen({ route, navigation }) {
                 <View key={routine.id} style={styles.routineCard}>
                   <View style={styles.routineHeader}>
                     <Text style={styles.routineName}>{routine.nombre}</Text>
-                    <TouchableOpacity onPress={() => setRutinas(prev => prev.filter(r => r.id !== routine.id))}>
+                    <TouchableOpacity onPress={() => handleDeleteRoutine(routine.id)}>
                       <Ionicons name="trash-outline" size={20} color="#9ca3af" />
                     </TouchableOpacity>
                   </View>
@@ -1328,30 +1444,19 @@ export default function InicioScreen({ route, navigation }) {
                     <Text style={styles.cancelBtnText}>Cancelar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.addBtn} onPress={() => {
-                    if (!editTitle.trim()) return;
-                    const isCritica = parseInt(editPriority) >= 80;
-                    setTareas(prev =>
-                      prev.map(t =>
-                        t.id === selectedTask.id
-                          ? {
-                              ...t,
-                              titulo: editTitle,
-                              descripcion: editDesc || 'Sin descripción',
-                              es_critica: isCritica,
-                              xp_recompensa: parseInt(editPriority),
-                              tags: editTags || 'General',
-                              emoji: editEmoji,
-                              repeticion: editRepeticion,
-                              tiempo_inicio: editStartTime || null,
-                              tiempo_fin: editEndTime || null,
-                              recordatorio_hora: editReminderTime || null,
-                              fecha_limite: editDeadlineDate ? `${editDeadlineDate}T${editStartTime || '23:59'}:00` : null
-                            }
-                          : t
-                      )
-                    );
-                    setEditModalVisible(false);
-                    showToast('¡Tarea guardada!');
+                    if (selectedTask.grupo_id) {
+                      Alert.alert(
+                        "Editar Tarea Recurrente",
+                        "¿Deseas aplicar estos cambios solo a esta tarea o a toda la serie?",
+                        [
+                          { text: "Cancelar", style: "cancel" },
+                          { text: "Solo esta tarea", onPress: () => handleEditTaskSubmit(false) },
+                          { text: "Toda la serie", onPress: () => handleEditTaskSubmit(true) }
+                        ]
+                      );
+                    } else {
+                      handleEditTaskSubmit(false);
+                    }
                   }}>
                     <Ionicons name="save-outline" size={20} color="#ffffff" style={{marginRight: 4}} />
                     <Text style={styles.addBtnText}>Guardar</Text>
@@ -1362,9 +1467,26 @@ export default function InicioScreen({ route, navigation }) {
                 <TouchableOpacity
                   style={[styles.modalSubmitBtn, { backgroundColor: '#ef4444', marginTop: 12 }]}
                   onPress={() => {
-                    setTareas(prev => prev.filter(t => t.id !== selectedTask.id));
-                    setEditModalVisible(false);
-                    showToast('Tarea eliminada');
+                    if (selectedTask.grupo_id) {
+                      Alert.alert(
+                        "Eliminar Tarea Recurrente",
+                        "¿Deseas eliminar solo esta tarea o toda la serie?",
+                        [
+                          { text: "Cancelar", style: "cancel" },
+                          { text: "Solo esta tarea", style: "destructive", onPress: () => handleDeleteTaskSubmit(false) },
+                          { text: "Toda la serie", style: "destructive", onPress: () => handleDeleteTaskSubmit(true) }
+                        ]
+                      );
+                    } else {
+                      Alert.alert(
+                        "Eliminar Tarea",
+                        "¿Estás seguro que deseas eliminar esta tarea?",
+                        [
+                          { text: "Cancelar", style: "cancel" },
+                          { text: "Eliminar", style: "destructive", onPress: () => handleDeleteTaskSubmit(false) }
+                        ]
+                      );
+                    }
                   }}
                 >
                   <Text style={styles.modalSubmitBtnText}>Eliminar Tarea</Text>
@@ -1498,10 +1620,20 @@ export default function InicioScreen({ route, navigation }) {
               </TouchableOpacity>
             </View>
             <ScrollView style={{maxHeight: 400, marginTop: 10}}>
-              {tareas.filter(t => t.rutina_id !== selectedRoutineForTask).length === 0 ? (
+              {tareas.filter(t => {
+                if (t.rutina_id === selectedRoutineForTask) return false;
+                const todayStr = getTodayDateString();
+                const taskDate = t.fecha_limite ? t.fecha_limite.split('T')[0].split(' ')[0] : todayStr;
+                return taskDate === todayStr;
+              }).length === 0 ? (
                 <Text style={{textAlign: 'center', color: '#6b7280', marginVertical: 20}}>No hay tareas disponibles para añadir.</Text>
               ) : (
-                tareas.filter(t => t.rutina_id !== selectedRoutineForTask).map(t => (
+                tareas.filter(t => {
+                  if (t.rutina_id === selectedRoutineForTask) return false;
+                  const todayStr = getTodayDateString();
+                  const taskDate = t.fecha_limite ? t.fecha_limite.split('T')[0].split(' ')[0] : todayStr;
+                  return taskDate === todayStr;
+                }).map(t => (
                   <TouchableOpacity 
                     key={t.id} 
                     style={{padding: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6'}}
@@ -1531,7 +1663,8 @@ export default function InicioScreen({ route, navigation }) {
                   key={em} 
                   style={styles.emojiBtn}
                   onPress={() => {
-                    setNewEmoji(em);
+                    if (modalContext === 'edit') setEditEmoji(em);
+                    else setNewEmoji(em);
                     setShowEmojiPicker(false);
                   }}
                 >
@@ -1548,21 +1681,24 @@ export default function InicioScreen({ route, navigation }) {
         <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowRepetitionPicker(false)}>
           <View style={styles.repetitionPickerContainer}>
             <Text style={{fontWeight: '800', marginBottom: 12}}>Repetición</Text>
-            {REPETITION_OPTIONS.map(opt => (
+            {REPETITION_OPTIONS.map(opt => {
+              const isActive = (modalContext === 'edit' ? editRepeticion : newRepeticion) === opt.value;
+              return (
               <TouchableOpacity
                 key={opt.value}
-                style={[styles.repetitionOption, newRepeticion === opt.value && styles.repetitionOptionActive]}
+                style={[styles.repetitionOption, isActive && styles.repetitionOptionActive]}
                 onPress={() => {
-                  setNewRepeticion(opt.value);
+                  if (modalContext === 'edit') setEditRepeticion(opt.value);
+                  else setNewRepeticion(opt.value);
                   setShowRepetitionPicker(false);
                 }}
               >
-                <Text style={[styles.repetitionOptionText, newRepeticion === opt.value && styles.repetitionOptionTextActive]}>
+                <Text style={[styles.repetitionOptionText, isActive && styles.repetitionOptionTextActive]}>
                   {opt.label}
                 </Text>
-                {newRepeticion === opt.value && <Ionicons name="checkmark" size={20} color="#6e00ff" />}
+                {isActive && <Ionicons name="checkmark" size={20} color="#6e00ff" />}
               </TouchableOpacity>
-            ))}
+            )})}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -1583,6 +1719,7 @@ export default function InicioScreen({ route, navigation }) {
           value={pickerDate}
           mode="date"
           display="default"
+          minimumDate={new Date()}
           onChange={onDateChange}
         />
       )}

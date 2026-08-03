@@ -5,6 +5,17 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import { API_URL } from '../api/config';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // Screens (we will create these next)
 import LoginScreen from '../screens/LoginScreen';
@@ -85,11 +96,48 @@ export default function AppNavigator() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const registerForPushNotificationsAsync = async (token) => {
+      if (!Device.isDevice) {
+        console.log('Must use physical device for Push Notifications');
+        return;
+      }
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        console.log('Failed to get push token for push notification!');
+        return;
+      }
+      
+      try {
+        const pushTokenData = await Notifications.getExpoPushTokenAsync({
+          projectId: 'ea5f6e81-b5fa-4417-af9b-75c123653199', // Can be fetched from app.json dynamically but we pass none or projectId if needed
+        });
+        const expoPushToken = pushTokenData.data;
+        
+        // Send to backend
+        await fetch(`${API_URL}/usuarios/push-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ token: expoPushToken })
+        });
+      } catch (e) {
+        console.log('Error getting push token', e);
+      }
+    };
+
     const checkToken = async () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         if (token) {
           setIsAuthenticated(true);
+          await registerForPushNotificationsAsync(token);
         }
       } catch (e) {
         console.error("Error al obtener token", e);

@@ -10,13 +10,15 @@ import {
   Modal,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../navigation/AppNavigator';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { API_URL, API_KEY } from '../api/config';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function PerfilScreen({ navigation }) {
   const { logout } = useContext(AuthContext);
@@ -92,16 +94,20 @@ export default function PerfilScreen({ navigation }) {
                 if (amigosRes.ok) {
                   const listAmigos = await amigosRes.json();
                   const aceptadas = listAmigos.filter(a => a.estado === 'aceptada');
-                  const friendIds = aceptadas.map(a => a.usuario_id_1 === parsed.id ? a.usuario_id_2 : a.usuario_id_1);
+                  const pendientes = listAmigos.filter(a => a.estado === 'pendiente' && a.usuario_id_2 === parsed.id);
                   
                   const friendsData = await Promise.all(
-                    friendIds.map(fid => fetch(`${API_URL}/usuarios/${fid}`, {
-                      headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
-                    }).then(r => r.json()))
+                    aceptadas.map(a => {
+                      const fid = a.usuario_id_1 === parsed.id ? a.usuario_id_2 : a.usuario_id_1;
+                      return fetch(`${API_URL}/usuarios/${fid}`, {
+                        headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                      }).then(r => r.json()).then(u => ({ ...u, amistad_id: a.id }));
+                    })
                   );
                   
                   const formattedFriends = friendsData.map(f => ({
                     id: String(f.id),
+                    amistad_id: f.amistad_id,
                     nombre: f.nombre_usuario,
                     rango: f.nivel_actual ? `Lvl ${f.nivel_actual.numero_nivel} ${f.nivel_actual.nombre}` : 'Iniciado',
                     avatarText: f.nombre_usuario.substring(0, 2).toUpperCase(),
@@ -113,6 +119,19 @@ export default function PerfilScreen({ navigation }) {
                     raw: f
                   }));
                   setAmigos(formattedFriends);
+
+                  const solicitudesData = await Promise.all(
+                    pendientes.map(p => fetch(`${API_URL}/usuarios/${p.usuario_id_1}`, {
+                      headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json()).then(u => ({ ...u, amistad_id: p.id })))
+                  );
+                  const formattedSolicitudes = solicitudesData.map(f => ({
+                    id: String(f.id),
+                    amistad_id: f.amistad_id,
+                    nombre: f.nombre_usuario,
+                    avatarText: f.nombre_usuario.substring(0, 2).toUpperCase()
+                  }));
+                  setSolicitudesPendientes(formattedSolicitudes);
                 }
               } catch (e) { console.error("Error fetching friends", e); }
 
@@ -180,6 +199,7 @@ export default function PerfilScreen({ navigation }) {
   const [friendModalVisible, setFriendModalVisible] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [amigos, setAmigos] = useState([]);
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState([]);
   const [logros, setLogros] = useState([]);
   const [totalActividades, setTotalActividades] = useState(0);
   const [heatmapData, setHeatmapData] = useState([]);
@@ -190,17 +210,155 @@ export default function PerfilScreen({ navigation }) {
     setTempCorreo(correo);
     setModalVisible(true);
   };
+  
+  const handleSelectImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
 
-  const handleSaveProfile = () => {
+    if (!result.canceled && userData) {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop();
+        const match = /\\.(\\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
+        const formData = new FormData();
+        formData.append('file', {
+          uri,
+          name: filename,
+          type,
+        });
+
+        const response = await fetch(`${API_URL}/usuarios/${userData.id}/avatar`, {
+          method: 'POST',
+          headers: {
+            'x-api-key': API_KEY,
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const updatedUser = await response.json();
+          setUserData(updatedUser);
+          await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+          Alert.alert('Éxito', 'Foto de perfil actualizada correctamente.');
+        } else {
+          Alert.alert('Error', 'No se pudo subir la imagen.');
+        }
+      } catch (error) {
+        console.error('Upload Error:', error);
+        Alert.alert('Error', 'Problema de conexión al subir la imagen.');
+      }
+    }
+  };
+
+  const handleAcceptRequest = async (amistad_id) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch(`${API_URL}/amistades/solicitudes/${amistad_id}/aceptar`, {
+        method: 'PUT',
+        headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        Alert.alert("Éxito", "Solicitud aceptada");
+        setSolicitudesPendientes(prev => prev.filter(p => p.amistad_id !== amistad_id));
+      } else {
+        Alert.alert("Error", "No se pudo aceptar la solicitud.");
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  const handleRejectRequest = async (amistad_id) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch(`${API_URL}/amistades/solicitudes/${amistad_id}/rechazar`, {
+        method: 'PUT',
+        headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        Alert.alert("Éxito", "Solicitud rechazada");
+        setSolicitudesPendientes(prev => prev.filter(p => p.amistad_id !== amistad_id));
+      } else {
+        Alert.alert("Error", "No se pudo rechazar la solicitud.");
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  const handleDeleteFriend = (amistad_id) => {
+    Alert.alert(
+      "Eliminar Amigo",
+      "¿Estás seguro de que quieres eliminar a esta persona de tus amigos?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Eliminar", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('userToken');
+              const response = await fetch(`${API_URL}/amistades/${amistad_id}`, {
+                method: 'DELETE',
+                headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+              });
+              if (response.ok) {
+                Alert.alert("Éxito", "Amigo eliminado");
+                setAmigos(prev => prev.filter(a => a.amistad_id !== amistad_id));
+              } else {
+                Alert.alert("Error", "No se pudo eliminar al amigo.");
+              }
+            } catch(e) { console.error(e); }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSaveProfile = async () => {
     if (!tempNombre.trim() || !tempUsername.trim() || !tempCorreo.trim()) {
       Alert.alert('Error', 'Todos los campos son obligatorios.');
       return;
     }
-    setNombre(tempNombre);
-    setUsername(tempUsername);
-    setCorreo(tempCorreo);
-    setModalVisible(false);
-    Alert.alert('Éxito', 'Perfil actualizado correctamente.');
+    
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch(`${API_URL}/usuarios/${userData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre: tempNombre.trim(),
+          nombre_usuario: tempUsername.trim(),
+          correo: tempCorreo.trim()
+        })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUserData(updatedUser);
+        setNombre(updatedUser.nombre || updatedUser.nombre_usuario || '');
+        setUsername(updatedUser.nombre_usuario || '');
+        setCorreo(updatedUser.correo || '');
+        await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+        
+        setModalVisible(false);
+        Alert.alert('Éxito', 'Perfil actualizado correctamente.');
+      } else {
+        const err = await response.json();
+        Alert.alert('Error', err.detail || 'No se pudo actualizar el perfil');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Problema de conexión.');
+    }
   };
 
   const handleLogout = async () => {
@@ -313,34 +471,6 @@ export default function PerfilScreen({ navigation }) {
             {/* Medallas & Resumen Widgets Row */}
             <View style={styles.widgetsGrid}>
               
-              {/* Medallas Widget */}
-              <View style={styles.widgetCard}>
-                <View style={styles.widgetHeader}>
-                  <Text style={styles.widgetTitle}>Medallas</Text>
-                  <Text style={styles.widgetLink}>Ver todas</Text>
-                </View>
-                <View style={styles.medalsRow}>
-                  <View style={styles.medalItem}>
-                    <View style={[styles.medalIconBox, { backgroundColor: '#fefbeb' }]}>
-                      <Ionicons name="sunny" size={20} color="#eab308" />
-                    </View>
-                    <Text style={styles.medalLabel}>Madrugador</Text>
-                  </View>
-                  <View style={styles.medalItem}>
-                    <View style={[styles.medalIconBox, { backgroundColor: '#f5f3ff' }]}>
-                      <Ionicons name="ribbon" size={20} color="#8b5cf6" />
-                    </View>
-                    <Text style={styles.medalLabel}>Trabajador</Text>
-                  </View>
-                  <View style={styles.medalItem}>
-                    <View style={[styles.medalIconBox, { backgroundColor: '#eff6ff' }]}>
-                      <Ionicons name="rocket" size={20} color="#3b82f6" />
-                    </View>
-                    <Text style={styles.medalLabel}>Organizador</Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Resumen de Actividad Widget */}
               <View style={styles.widgetCard}>
                 <Text style={styles.widgetTitle}>Resumen de Actividad</Text>
@@ -400,6 +530,35 @@ export default function PerfilScreen({ navigation }) {
               </View>
             </View>
 
+            {/* Solicitudes List */}
+            {solicitudesPendientes.length > 0 && (
+              <View style={[styles.friendsCard, { marginBottom: 16 }]}>
+                <Text style={styles.friendsCardTitle}>Solicitudes Pendientes</Text>
+                {solicitudesPendientes.map((sol, idx) => (
+                  <View key={sol.id}>
+                    {idx > 0 && <View style={styles.friendDivider} />}
+                    <View style={styles.friendRow}>
+                      <View style={styles.friendAvatar}>
+                        <Text style={styles.friendAvatarText}>{sol.avatarText}</Text>
+                      </View>
+                      <View style={[styles.friendInfo, {flex: 1}]}>
+                        <Text style={styles.friendName}>{sol.nombre}</Text>
+                        <Text style={styles.friendStreakInactive}>Te envió una solicitud</Text>
+                      </View>
+                      <View style={{flexDirection: 'row', gap: 10}}>
+                        <TouchableOpacity onPress={() => handleAcceptRequest(sol.amistad_id)}>
+                          <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleRejectRequest(sol.amistad_id)}>
+                          <Ionicons name="close-circle" size={24} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
             {/* Amigos List */}
             <View style={styles.friendsCard}>
               <Text style={styles.friendsCardTitle}>Amigos</Text>
@@ -419,14 +578,16 @@ export default function PerfilScreen({ navigation }) {
                         <Text style={styles.friendStreakInactive}>SIN RACHA</Text>
                       )}
                     </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedFriend(amigo);
-                        setFriendModalVisible(true);
-                      }}
-                    >
-                      <Text style={styles.friendLink}>Ver Perfil</Text>
-                    </TouchableOpacity>
+                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSelectedFriend(amigo);
+                          setFriendModalVisible(true);
+                        }}
+                      >
+                        <Text style={styles.friendLink}>Ver Perfil</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -436,45 +597,37 @@ export default function PerfilScreen({ navigation }) {
         ) : (
           <View style={styles.tabContent}>
             
-            {/* Stats Grid Section */}
-            <Text style={styles.sectionTitle}>Tus Estadísticas</Text>
-            <View style={styles.statsGrid}>
-              {/* Card 1: Level */}
-              <View style={styles.statCard}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#f3ebff' }]}>
-                  <Ionicons name="trophy" size={20} color={userData?.nivel_actual?.color_hex || "#6e00ff"} />
+            {/* Level Widget Section */}
+            {userData && (
+              <View style={styles.levelWidgetContainer}>
+                <View style={styles.levelCircleWrapper}>
+                  <View style={styles.levelCircle}>
+                    <Text style={styles.levelNumber}>{userData.nivel_actual?.numero_nivel || 1}</Text>
+                    <Text style={styles.levelLabel}>NIVEL</Text>
+                  </View>
                 </View>
-                <Text style={styles.statVal}>Nivel {userData?.nivel_actual?.numero_nivel || 1}</Text>
-                <Text style={styles.statLabel}>{userData?.nivel_actual?.nombre || 'Iniciado'}</Text>
-              </View>
+                
+                <Text style={styles.levelTitle}>{userData.nivel_actual?.nombre || 'Iniciado del Enfoque'}</Text>
+                
+                <Text style={styles.xpText}>
+                  <Text style={styles.xpValue}>{userData.xp_total || 0}</Text> / {userData.nivel_siguiente?.xp_requerida || 'MAX'} XP
+                </Text>
+                
+                {userData.nivel_siguiente && (
+                  <Text style={styles.motivationText}>
+                    ¡A MITAD DE CAMINO AL NIVEL {userData.nivel_siguiente.numero_nivel}!
+                  </Text>
+                )}
+                
+                <View style={styles.progressBarContainer}>
+                  <View style={[styles.progressBarFill, { width: `${(userData.progreso_pct || 0) * 100}%` }]} />
+                </View>
 
-              {/* Card 2: Streak */}
-              <View style={styles.statCard}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#fff7ed' }]}>
-                  <Ionicons name="flame" size={20} color="#f97316" />
+                <View style={styles.xpInfoBox}>
+                  <Text style={styles.xpInfoText}>Gana XP completando tareas y manteniendo tu racha de días activos. ¡Sube de nivel para desbloquear nuevos rangos!</Text>
                 </View>
-                <Text style={styles.statVal}>{userData?.racha_actual || 0} Días</Text>
-                <Text style={styles.statLabel}>Racha de Tareas</Text>
               </View>
-
-              {/* Card 3: Total XP */}
-              <View style={styles.statCard}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#ecfdf5' }]}>
-                  <Ionicons name="star" size={20} color="#10b981" />
-                </View>
-                <Text style={styles.statVal}>{userData?.xp_total || 0} XP</Text>
-                <Text style={styles.statLabel}>Experiencia Total</Text>
-              </View>
-
-              {/* Card 4: Completed Tasks */}
-              <View style={styles.statCard}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#eff6ff' }]}>
-                  <Ionicons name="checkbox" size={20} color="#3b82f6" />
-                </View>
-                <Text style={styles.statVal}>1,248</Text>
-                <Text style={styles.statLabel}>Tareas Completadas</Text>
-              </View>
-            </View>
+            )}
 
             {/* Achievements Section */}
             <View style={styles.achievementsSection}>
@@ -507,44 +660,8 @@ export default function PerfilScreen({ navigation }) {
                 </View>
               ))}
             </View>
-            {/* Ajustes y Soporte Section */}
-            <View style={styles.settingsSection}>
-              <Text style={styles.sectionTitle}>Ajustes y Legal</Text>
-              
-              <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('AjustesNotificaciones')}>
-                <View style={styles.settingRowLeft}>
-                  <View style={[styles.settingIconBox, { backgroundColor: '#f3ebff' }]}>
-                    <Ionicons name="notifications" size={18} color="#6e00ff" />
-                  </View>
-                  <Text style={styles.settingRowLabel}>Ajustes de Notificaciones</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Terminos')}>
-                <View style={styles.settingRowLeft}>
-                  <View style={[styles.settingIconBox, { backgroundColor: '#eff6ff' }]}>
-                    <Ionicons name="document-text" size={18} color="#3b82f6" />
-                  </View>
-                  <Text style={styles.settingRowLabel}>Términos de Servicio</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Privacidad')}>
-                <View style={styles.settingRowLeft}>
-                  <View style={[styles.settingIconBox, { backgroundColor: '#ecfdf5' }]}>
-                    <Ionicons name="shield-checkmark" size={18} color="#10b981" />
-                  </View>
-                  <Text style={styles.settingRowLabel}>Política de Privacidad</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
-              </TouchableOpacity>
-            </View>
-
           </View>
         )}
-
       </ScrollView>
 
       {/* Edit Profile Modal Dialog */}
@@ -568,14 +685,22 @@ export default function PerfilScreen({ navigation }) {
             {/* Modal Form */}
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
               
-              {/* Photo Selector Mock */}
+
+              {/* Photo Selector */}
               <View style={styles.photoSelectorContainer}>
-                <View style={styles.avatarLarge}>
-                  <Text style={styles.avatarLargeText}>{tempNombre.charAt(0).toUpperCase()}</Text>
-                  <TouchableOpacity style={styles.cameraBadge} onPress={() => Alert.alert('Cambiar Foto', 'Selecciona una imagen de tu galería.')}>
+                <TouchableOpacity style={styles.avatarLarge} onPress={handleSelectImage}>
+                  {userData?.foto_perfil ? (
+                    <Image 
+                      source={{ uri: userData.foto_perfil.startsWith('http') ? userData.foto_perfil : `${API_URL.replace('/api/v1', '')}${userData.foto_perfil}` }} 
+                      style={{ width: 100, height: 100, borderRadius: 50 }} 
+                    />
+                  ) : (
+                    <Text style={styles.avatarLargeText}>{tempNombre.charAt(0).toUpperCase()}</Text>
+                  )}
+                  <View style={styles.cameraBadge}>
                     <Ionicons name="camera" size={16} color="#ffffff" />
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                </TouchableOpacity>
                 <Text style={styles.photoSelectorLabel}>Tu Foto</Text>
               </View>
 
@@ -814,10 +939,18 @@ export default function PerfilScreen({ navigation }) {
                 </View>
 
                 <View style={{ marginTop: 24, width: '100%' }}>
-                  <View style={[styles.addFriendButton, { backgroundColor: '#10b981' }]}>
-                    <Ionicons name="people" size={18} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={styles.addFriendText}>Amigos</Text>
-                  </View>
+                  <TouchableOpacity 
+                    style={[styles.addFriendButton, { backgroundColor: '#ef4444' }]}
+                    onPress={() => {
+                      setFriendModalVisible(false);
+                      setTimeout(() => {
+                        handleDeleteFriend(selectedFriend.amistad_id);
+                      }, 300);
+                    }}
+                  >
+                    <Ionicons name="person-remove" size={18} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.addFriendText}>Eliminar Amigo</Text>
+                  </TouchableOpacity>
                 </View>
 
               </View>
@@ -1318,6 +1451,96 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontWeight: '500',
     marginTop: 2,
+  },
+  levelWidgetContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 30,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#6e00ff',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  levelCircleWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 6,
+    borderColor: '#6e00ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  levelCircle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelNumber: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#111827',
+    lineHeight: 52,
+  },
+  levelLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#9ca3af',
+    letterSpacing: 2,
+  },
+  levelTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  xpText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#6e00ff',
+    marginBottom: 4,
+  },
+  xpValue: {
+    fontWeight: '900',
+  },
+  motivationText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 16,
+  },
+  progressBarContainer: {
+    width: '100%',
+    height: 12,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#6e00ff',
+    borderRadius: 6,
+  },
+  xpInfoBox: {
+    backgroundColor: '#f9fafb',
+    padding: 16,
+    borderRadius: 16,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  xpInfoText: {
+    fontSize: 13,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   achievementsSection: {
     marginTop: 8,

@@ -53,7 +53,7 @@
                         </div>
                         <div>
                             <p class="text-[0.6rem] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Nivel {{ usuario.nivel }}</p>
-                            <p id="user-xp-display" class="text-sm font-black text-gray-900 leading-none transition-all duration-300">{{ usuario.xp }} <span class="text-gray-400 text-xs">/ {{"%d" % usuario.xp_siguiente}}</span></p>
+                            <p id="user-xp-display" class="text-sm font-black text-gray-900 leading-none transition-all duration-300">{{ usuario.xp }} <span class="text-gray-400 text-xs">/ {{ usuario.xp_siguiente }}</span></p>
                         </div>
                     </div>
                 </div>
@@ -108,7 +108,11 @@
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex items-center gap-3 overflow-hidden">
                                 <div class="w-10 h-10 {% if tarea.es_critica %}bg-red-50 text-red-500{% else %}bg-purple-50 text-primary{% endif %} rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="material-symbols-outlined text-[18px] font-bold">{% if tarea.es_critica %}local_fire_department{% else %}rocket_launch{% endif %}</span>
+                                    {% if tarea.emoji %}
+                                        <span class="text-xl">{{ tarea.emoji }}</span>
+                                    {% else %}
+                                        <span class="material-symbols-outlined text-[18px] font-bold">{% if tarea.es_critica %}local_fire_department{% else %}rocket_launch{% endif %}</span>
+                                    {% endif %}
                                 </div>
                                 <div class="overflow-hidden">
                                     <h4 class="text-base font-black {% if tarea.estado == 'completada' %}text-gray-400 line-through{% else %}text-gray-900{% endif %} truncate" title="{{ tarea.titulo }}">

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.rutina import Rutina, RegistroRutina
+from app.models.tarea import Tarea
 from app.schemas.rutina import RutinaCreate, RutinaUpdate, RegistroRutinaCreate
 
 # ---- RUTINA CRUD ----
@@ -27,6 +28,7 @@ def actualizar_rutina(db: Session, db_rutina: Rutina, rutina_update: RutinaUpdat
 def eliminar_rutina(db: Session, rutina_id: int):
     db_rutina = get_rutina(db, rutina_id)
     if db_rutina:
+        db.query(Tarea).filter(Tarea.rutina_id == rutina_id).delete()
         db.delete(db_rutina)
         db.commit()
     return db_rutina

@@ -360,3 +360,96 @@ def delete_usuario(
     db.commit()
     return {"msg": "Usuario eliminado correctamente"}
 
+
+from pydantic import BaseModel
+class PushTokenRequest(BaseModel):
+    token: str
+
+@router.post("/push-token", summary="Guardar token de notificaciones Expo")
+@limiter.limit("10/minute")
+def save_push_token(
+    request: Request,
+    token_req: PushTokenRequest,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
+    usuario_actual.expo_push_token = token_req.token
+    db.commit()
+    return {"msg": "Token guardado exitosamente"}
+
+
+class NotificationRequest(BaseModel):
+    title: str
+    body: str
+
+@router.post("/test-notification", summary="Enviar notificación de prueba")
+@limiter.limit("5/minute")
+def send_test_notification(
+    request: Request,
+    notif_req: NotificationRequest,
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual)
+):
+    if not usuario_actual.expo_push_token:
+        raise HTTPException(status_code=400, detail="Usuario no tiene un token de Expo configurado")
+    
+    import requests
+    response = requests.post(
+        "https://exp.host/--/api/v2/push/send",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        json={
+            "to": usuario_actual.expo_push_token,
+            "title": notif_req.title,
+            "body": notif_req.body
+        }
+    )
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Error al enviar notificación a Expo")
+        
+    return {"msg": "Notificación enviada", "expo_response": response.json()}
+
+
+import os
+import time
+from fastapi import File, UploadFile
+from werkzeug.utils import secure_filename
+
+@router.post("/{usuario_id}/avatar", response_model=UsuarioResponse, summary="Subir foto de perfil")
+@limiter.limit("10/minute")
+def upload_avatar(
+    request: Request,
+    usuario_id: int,
+    file: UploadFile = File(...),
+    api_key_valida: bool = Depends(validar_api_key),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(get_db)
+):
+    if usuario_actual.id != usuario_id and usuario_actual.rol != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permisos para modificar este usuario")
+        
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No se proporcionó un archivo")
+        
+    # Guardar archivo
+    upload_path = "static/uploads"
+    os.makedirs(upload_path, exist_ok=True)
+    filename = secure_filename(str(time.time()) + "_" + file.filename)
+    file_path = os.path.join(upload_path, filename)
+    
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+        
+    # Actualizar BD
+    foto_url = f"/static/uploads/{filename}"
+    db_usuario = crud_usuario.get_usuario(db, usuario_id=usuario_id)
+    db_usuario.foto_perfil = foto_url
+    db.commit()
+    db.refresh(db_usuario)
+    
+    return db_usuario
+
+

@@ -36,11 +36,17 @@ seed_default_user()
 
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url="/api/v1/openapi.json"
 )
+
+# Montar archivos estáticos
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 app.state.limiter = limiter
@@ -66,10 +72,19 @@ def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 
 
+from sqlalchemy import text
+
+@app.on_event("startup")
+def startup_event():
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS expo_push_token VARCHAR(255)"))
+    except Exception as e:
+        print(f"Migration error: {e}")
+
 # Incluyendo los routers
 app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 def root():
     return {"message": "Bienvenido a la API de PI-2026"}
-

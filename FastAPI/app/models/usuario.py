@@ -19,6 +19,7 @@ class Usuario(Base):
     racha_actual: Mapped[int] = mapped_column(Integer, default=0)
     ultima_tarea_completada: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     zona_horaria: Mapped[str] = mapped_column(String, default="UTC")
+    expo_push_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     nivel: Mapped[Optional["Nivel"]] = relationship("Nivel", back_populates="usuarios")
     tareas: Mapped[List["Tarea"]] = relationship("Tarea", back_populates="usuario", cascade="all, delete-orphan")

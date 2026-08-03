@@ -38,7 +38,29 @@ def enviar_solicitud(
     if amistad_existente:
         raise HTTPException(status_code=400, detail="Ya existe una amistad o solicitud entre estos usuarios")
         
-    return crud_amistad.enviar_solicitud_amistad(db=db, solicitud=solicitud)
+    amistad_creada = crud_amistad.enviar_solicitud_amistad(db=db, solicitud=solicitud)
+    
+    # Send push notification to target user
+    usuario_2 = db.query(Usuario).filter(Usuario.id == solicitud.usuario_id_2).first()
+    if usuario_2 and usuario_2.expo_push_token:
+        import requests
+        try:
+            requests.post(
+                "https://exp.host/--/api/v2/push/send",
+                headers={
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "to": usuario_2.expo_push_token,
+                    "title": "¡Nueva solicitud de amistad!",
+                    "body": f"@{usuario_actual.nombre_usuario} te ha enviado una solicitud de amistad."
+                }
+            )
+        except Exception as e:
+            print(f"Error sending push notification: {e}")
+            
+    return amistad_creada
 @router.get("/estado/{usuario_id}", status_code=status.HTTP_200_OK)
 @limiter.limit("60/minute")
 def consultar_estado_amistad(

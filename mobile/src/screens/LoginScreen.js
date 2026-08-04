@@ -34,6 +34,11 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // Estados para el registro de Google
+  const [googleRegisterModalVisible, setGoogleRegisterModalVisible] = useState(false);
+  const [pendingGoogleToken, setPendingGoogleToken] = useState(null);
+  const [nametag, setNametag] = useState('');
+
   const handleGoogleSignInNative = async () => {
     setGoogleLoading(true);
     try {
@@ -78,11 +83,51 @@ export default function LoginScreen({ navigation }) {
       const data = await res.json();
 
       if (res.ok) {
+        if (data.require_registration) {
+          setPendingGoogleToken(data.id_token);
+          setNametag(data.google_name || ''); // Sugerir el nombre de Google
+          setGoogleRegisterModalVisible(true);
+        } else {
+          await AsyncStorage.setItem('userToken', data.access_token);
+          await AsyncStorage.setItem('userData', JSON.stringify(data));
+          login();
+        }
+      } else {
+        Alert.alert('Error', data.detail || 'No se pudo iniciar sesión con Google.');
+      }
+    } catch (error) {
+      Alert.alert('Error de red', 'No se pudo conectar con el servidor.');
+      console.error(error);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleCompleteGoogleRegistration = async () => {
+    if (!nametag || nametag.trim().length < 3) {
+      Alert.alert('Error', 'El nombre de usuario (nametag) debe tener al menos 3 caracteres.');
+      return;
+    }
+    setGoogleLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/usuarios/google/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
+        body: JSON.stringify({ id_token: pendingGoogleToken, nombre_usuario: nametag.trim() })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setGoogleRegisterModalVisible(false);
         await AsyncStorage.setItem('userToken', data.access_token);
         await AsyncStorage.setItem('userData', JSON.stringify(data));
         login();
       } else {
-        Alert.alert('Error', data.detail || 'No se pudo iniciar sesión con Google.');
+        Alert.alert('Error', data.detail || 'No se pudo completar el registro.');
       }
     } catch (error) {
       Alert.alert('Error de red', 'No se pudo conectar con el servidor.');
@@ -257,6 +302,38 @@ export default function LoginScreen({ navigation }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Modal para Nombre de Usuario (Google Register) */}
+      <Modal visible={googleRegisterModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Elige tu Nametag</Text>
+            <Text style={styles.modalSubtitle}>Para terminar tu registro con Google, elige cómo quieres que los demás te vean.</Text>
+            
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre de usuario"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="none"
+                value={nametag}
+                onChangeText={setNametag}
+              />
+            </View>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setGoogleRegisterModalVisible(false)}>
+                <Text style={styles.modalBtnCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalBtnSubmit} onPress={handleCompleteGoogleRegistration} disabled={googleLoading}>
+                {googleLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalBtnSubmitText}>Continuar</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }

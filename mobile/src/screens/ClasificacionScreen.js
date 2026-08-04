@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL, API_KEY } from '../api/config';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ClasificacionScreen() {
   const [topUsers, setTopUsers] = useState([]);
@@ -32,9 +33,11 @@ export default function ClasificacionScreen() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchLeaderboard();
+    }, [])
+  );
 
   const fetchLeaderboard = async () => {
     try {

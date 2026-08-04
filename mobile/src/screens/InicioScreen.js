@@ -271,6 +271,7 @@ export default function InicioScreen({ route, navigation }) {
       if (userRes.ok) {
         const u = await userRes.json();
         setUser(u);
+        await AsyncStorage.setItem('userData', JSON.stringify(u));
       }
 
       // 2. Tareas
@@ -766,9 +767,19 @@ export default function InicioScreen({ route, navigation }) {
             <Text style={styles.appBarStreakText}>{user?.racha_actual || 0} Días de Racha</Text>
             <Text style={styles.appBarStreakEmoji}>🔥</Text>
           </View>
-          <View style={styles.appBarAvatar}>
-            <Text style={styles.appBarAvatarText}>{user?.nombre_usuario?.[0]?.toUpperCase() || 'U'}</Text>
-          </View>
+          <TouchableOpacity 
+            style={styles.appBarAvatar}
+            onPress={() => navigation.navigate('Perfil')}
+          >
+            {user?.foto_perfil ? (
+              <Image 
+                source={{ uri: user.foto_perfil.startsWith('http') ? user.foto_perfil : `${API_URL.replace('/api/v1', '')}${user.foto_perfil}` }}
+                style={{ width: '100%', height: '100%', borderRadius: 18 }}
+              />
+            ) : (
+              <Text style={styles.appBarAvatarText}>{user?.nombre_usuario?.[0]?.toUpperCase() || 'U'}</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 

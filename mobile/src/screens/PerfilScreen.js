@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,6 +19,7 @@ import { AuthContext } from '../navigation/AppNavigator';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { API_URL, API_KEY } from '../api/config';
 import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function PerfilScreen({ navigation }) {
   const { logout } = useContext(AuthContext);
@@ -34,7 +35,8 @@ export default function PerfilScreen({ navigation }) {
   const [tempCorreo, setTempCorreo] = useState('mauricio@prioritypulse.com');
   const [userData, setUserData] = useState(null);
 
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
     const fetchUserData = async () => {
       try {
         const stored = await AsyncStorage.getItem('userData');
@@ -185,7 +187,8 @@ export default function PerfilScreen({ navigation }) {
       }
     };
     fetchUserData();
-  }, []);
+    }, [])
+  );
 
   // Password Change modal states
   const [pwdModalVisible, setPwdModalVisible] = useState(false);
@@ -223,15 +226,14 @@ export default function PerfilScreen({ navigation }) {
       try {
         const token = await AsyncStorage.getItem('userToken');
         const uri = result.assets[0].uri;
-        const filename = uri.split('/').pop();
-        const match = /\\.(\\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
+        const type = result.assets[0].mimeType || 'image/jpeg';
+        const filename = result.assets[0].fileName || `avatar_${Date.now()}.jpg`;
 
         const formData = new FormData();
         formData.append('file', {
-          uri,
+          uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
           name: filename,
-          type,
+          type: type,
         });
 
         const response = await fetch(`${API_URL}/usuarios/${userData.id}/avatar`, {
@@ -383,7 +385,14 @@ export default function PerfilScreen({ navigation }) {
         {/* Profile Avatar & Info Card */}
         <View style={styles.profileHeaderCard}>
           <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLargeText}>{nombre.charAt(0).toUpperCase()}</Text>
+            {userData?.foto_perfil ? (
+              <Image 
+                source={{ uri: userData.foto_perfil.startsWith('http') ? userData.foto_perfil : `${API_URL.replace('/api/v1', '')}${userData.foto_perfil}` }}
+                style={{ width: '100%', height: '100%', borderRadius: 60 }}
+              />
+            ) : (
+              <Text style={styles.avatarLargeText}>{nombre.charAt(0).toUpperCase()}</Text>
+            )}
             <View style={styles.activeIndicator} />
           </View>
 

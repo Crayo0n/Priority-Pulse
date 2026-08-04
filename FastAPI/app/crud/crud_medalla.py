@@ -47,6 +47,7 @@ from sqlalchemy import func, cast, Date
 from datetime import date, datetime
 from app.models.usuario import Usuario
 from app.models.tarea import Tarea
+from app.models.amistad import Amistad
 from app.models.notificacion import Notificacion
 
 def evaluar_y_otorgar_medallas(db: Session, usuario_id: int):
@@ -74,6 +75,14 @@ def evaluar_y_otorgar_medallas(db: Session, usuario_id: int):
         .filter(Tarea.usuario_id == usuario_id, Tarea.estado == "completada")
         .scalar() or 0
     )
+    amigos_agregados_count = (
+        db.query(func.count(Amistad.id))
+        .filter(
+            (Amistad.usuario_id_1 == usuario_id) | (Amistad.usuario_id_2 == usuario_id),
+            Amistad.estado == "aceptada"
+        )
+        .scalar() or 0
+    )
 
     numero_nivel = usuario.nivel.numero_nivel if (hasattr(usuario, 'nivel') and usuario.nivel) else 1
 
@@ -90,10 +99,12 @@ def evaluar_y_otorgar_medallas(db: Session, usuario_id: int):
             cumple = (usuario.racha_actual >= val_req)
         elif trigger == "tareas_dia":
             cumple = (tareas_hoy_count >= val_req)
-        elif trigger == "tareas_totales":
+        elif trigger in ["tareas_totales", "tareas_completadas"]:
             cumple = (tareas_totales_count >= val_req)
         elif trigger == "nivel_alcanzado":
             cumple = (numero_nivel >= val_req)
+        elif trigger == "amigos_agregados":
+            cumple = (amigos_agregados_count >= val_req)
         elif trigger in ["logro_especial", "acciones"]:
             cumple = (tareas_totales_count >= val_req)
 

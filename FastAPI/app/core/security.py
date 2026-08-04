@@ -4,7 +4,6 @@ from jose import jwt
 from app.core.config import settings
 
 def verificar_password(password_plano: str, password_hash: str) -> bool:
-    # Handle PHP/Laravel standard bcrypt hash prefix replacement if present
     if password_hash.startswith("$2y$"):
         password_hash = password_hash.replace("$2y$", "$2b$")
     

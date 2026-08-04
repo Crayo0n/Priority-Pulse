@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app.db.database import get_db
 from app.schemas.tarea import TareaCreate, TareaResponse, TareaUpdate
-from app.crud import crud_tarea, crud_usuario
+from app.crud import crud_tarea, crud_usuario, crud_medalla
 from app.core.limiter import limiter
 from app.api.deps import validar_api_key, obtener_usuario_actual, requiere_rol
 from app.models.usuario import Usuario
@@ -182,6 +182,9 @@ def update_tarea(
             updated.xp_otorgada = True
             db.commit()
             db.refresh(updated)
+            
+            # Evaluar y otorgar medallas después de actualizar la XP y racha
+            crud_medalla.evaluar_y_otorgar_medallas(db, usuario_id=updated.usuario_id)
         
     return updated
 

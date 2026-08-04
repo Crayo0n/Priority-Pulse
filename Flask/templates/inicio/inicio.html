@@ -1025,23 +1025,37 @@
                 // Update Streak (Racha) if provided
                 if (data.racha_actual !== undefined) {
                     const rachaDisplay = document.getElementById('user-racha-display');
+                    const navRachaDisplay = document.getElementById('nav-racha-display');
+                    const navRachaBar = document.getElementById('nav-racha-bar');
+                    
                     if (rachaDisplay) {
                         rachaDisplay.innerHTML = `${data.racha_actual} Días`;
-                        if (data.racha_incrementada) {
-                            // Pequeña animación: resplandor naranja y salto
-                            rachaDisplay.classList.add('text-orange-500', 'scale-125', '-translate-y-1');
-                            
-                            // Mostrar un toastcito opcional o confeti
-                            const toastHTML = `
-                                <div id="streak-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm flex items-center gap-2 animate-[slideUp_0.3s_ease-out] z-50">
-                                    <span class="text-orange-500 material-symbols-outlined">local_fire_department</span>
-                                    ¡Racha activada! ${data.racha_actual} días
-                                </div>
-                            `;
-                            document.body.insertAdjacentHTML('beforeend', toastHTML);
-                            
+                    }
+                    if (navRachaDisplay) {
+                        navRachaDisplay.innerHTML = `${data.racha_actual} Días de Racha`;
+                    }
+                    if (navRachaBar) {
+                        const rachaPct = ((data.racha_actual % 7) / 7.0) * 100;
+                        navRachaBar.style.width = `${rachaPct}%`;
+                    }
+
+                    if (data.racha_incrementada) {
+                        // Pequeña animación: resplandor naranja y salto
+                        if (rachaDisplay) rachaDisplay.classList.add('text-orange-500', 'scale-125', '-translate-y-1');
+                        if (navRachaDisplay) navRachaDisplay.classList.add('text-orange-500', 'scale-110');
+                        
+                        // Mostrar un toastcito opcional o confeti
+                        const toastHTML = `
+                            <div id="streak-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm flex items-center gap-2 animate-[slideUp_0.3s_ease-out] z-50">
+                                <span class="text-orange-500 material-symbols-outlined">local_fire_department</span>
+                                ¡Racha activada! ${data.racha_actual} días
+                            </div>
+                        `;
+                        document.body.insertAdjacentHTML('beforeend', toastHTML);
+                        
                             setTimeout(() => {
-                                rachaDisplay.classList.remove('text-orange-500', 'scale-125', '-translate-y-1');
+                                if (rachaDisplay) rachaDisplay.classList.remove('text-orange-500', 'scale-125', '-translate-y-1');
+                                if (navRachaDisplay) navRachaDisplay.classList.remove('text-orange-500', 'scale-110');
                                 const toast = document.getElementById('streak-toast');
                                 if (toast) {
                                     toast.style.opacity = '0';
@@ -1052,7 +1066,6 @@
                             }, 3000);
                         }
                     }
-                }
 
 
             }

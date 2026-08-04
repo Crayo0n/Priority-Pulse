@@ -15,7 +15,12 @@ def seed_db():
     db = sesionLocal()
     try:
         print("Borrando datos existentes...")
-        # La tabla ya está vacía por el TRUNCATE manual
+        db.query(Amistad).delete()
+        db.query(UsuarioMedalla).delete()
+        db.query(Usuario).delete()
+        db.query(Medalla).delete()
+        db.query(Nivel).delete()
+        db.commit()
         
         print("Creando niveles...")
         niveles_data = [

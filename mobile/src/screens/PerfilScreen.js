@@ -34,6 +34,7 @@ export default function PerfilScreen({ navigation }) {
   const [tempUsername, setTempUsername] = useState('mauricio_rod');
   const [tempCorreo, setTempCorreo] = useState('mauricio@prioritypulse.com');
   const [userData, setUserData] = useState(null);
+  const [isOAuth, setIsOAuth] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +64,16 @@ export default function PerfilScreen({ navigation }) {
               setCorreo(freshData.correo || '');
               await AsyncStorage.setItem('userData', JSON.stringify(freshData));
               
+              try {
+                const oauthRes = await fetch(`${API_URL}/usuarios/${parsed.id}/is-oauth`, {
+                  headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${token}` }
+                });
+                if (oauthRes.ok) {
+                  const oauthData = await oauthRes.json();
+                  setIsOAuth(oauthData.is_oauth || false);
+                }
+              } catch (e) { console.error("Error fetching oauth status", e); }
+              
               // Fetch Medallas
               try {
                 const medallasRes = await fetch(`${API_URL}/medallas`, {
@@ -75,12 +86,19 @@ export default function PerfilScreen({ navigation }) {
                   const todas = await medallasRes.json();
                   const mias = await misMedallasRes.json();
                   const unlockedIds = mias.map(m => m.medalla_id);
+                  const iconMap = {
+                    'emoji_events': 'trophy',
+                    'local_fire_department': 'flame',
+                    'group': 'people',
+                    'task_alt': 'checkmark-done-circle',
+                    'diamond': 'diamond'
+                  };
                   
                   const formatedMedals = todas.map(m => ({
                     id: String(m.id),
                     titulo: m.nombre,
                     desc: m.descripcion,
-                    icono: m.url_icono || 'trophy',
+                    icono: iconMap[m.url_icono] || 'trophy',
                     color: m.valor_requerido > 50 ? '#f97316' : (m.valor_requerido > 10 ? '#10b981' : '#a855f7'),
                     unlocked: unlockedIds.includes(m.id)
                   }));
@@ -732,29 +750,44 @@ export default function PerfilScreen({ navigation }) {
 
               <Text style={styles.modalLabel}>Correo Electrónico</Text>
               <TextInput
-                style={styles.modalInput}
+                style={[styles.modalInput, isOAuth && { backgroundColor: '#f3f4f6', color: '#9ca3af' }]}
                 placeholder="Correo electrónico"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={tempCorreo}
                 onChangeText={setTempCorreo}
+                editable={!isOAuth}
               />
+              {isOAuth && (
+                <Text style={{ color: '#6b7280', fontSize: 12, marginTop: -12, marginBottom: 16 }}>
+                  No puedes cambiar el correo de una cuenta de Google.
+                </Text>
+              )}
 
               {/* Password Section */}
               <Text style={[styles.modalLabel, { marginTop: 10 }]}>Seguridad</Text>
-              <TouchableOpacity
-                style={styles.changePwdTriggerBtn}
-                onPress={() => {
-                  setCurrentPwd('');
-                  setNewPwd('');
-                  setConfirmNewPwd('');
-                  setPwdModalVisible(true);
-                }}
-              >
-                <Ionicons name="lock-closed-outline" size={18} color="#6e00ff" style={{ marginRight: 8 }} />
-                <Text style={styles.changePwdTriggerBtnText}>Cambiar Contraseña</Text>
-                <Ionicons name="chevron-forward" size={16} color="#6e00ff" style={{ marginLeft: 'auto' }} />
-              </TouchableOpacity>
+              {isOAuth ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 12 }}>
+                  <Ionicons name="information-circle-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+                  <Text style={{ color: '#6b7280', fontSize: 13, flex: 1 }}>
+                    Tu cuenta está vinculada a Google, por lo que no requieres cambiar tu contraseña.
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.changePwdTriggerBtn}
+                  onPress={() => {
+                    setCurrentPwd('');
+                    setNewPwd('');
+                    setConfirmNewPwd('');
+                    setPwdModalVisible(true);
+                  }}
+                >
+                  <Ionicons name="lock-closed-outline" size={18} color="#6e00ff" style={{ marginRight: 8 }} />
+                  <Text style={styles.changePwdTriggerBtnText}>Cambiar Contraseña</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#6e00ff" style={{ marginLeft: 'auto' }} />
+                </TouchableOpacity>
+              )}
 
               {/* Action Button */}
               <TouchableOpacity style={[styles.modalSubmitBtn, { marginTop: 24, marginBottom: 20 }]} onPress={handleSaveProfile}>
@@ -854,7 +887,7 @@ export default function PerfilScreen({ navigation }) {
 
                 <TouchableOpacity
                   style={styles.pwdSubmitBtn}
-                  onPress={() => {
+                  onPress={async () => {
                     if (!currentPwd) {
                       Alert.alert('Error', 'Ingresa tu contraseña actual.');
                       return;
@@ -867,8 +900,32 @@ export default function PerfilScreen({ navigation }) {
                       Alert.alert('Error', 'La nueva contraseña y su confirmación no coinciden.');
                       return;
                     }
-                    Alert.alert('Éxito', 'Contraseña actualizada correctamente.');
-                    setPwdModalVisible(false);
+                    
+                    try {
+                      const token = await AsyncStorage.getItem('userToken');
+                      const response = await fetch(`${API_URL}/usuarios/${userData.id}/password`, {
+                        method: 'PUT',
+                        headers: { 
+                          'Content-Type': 'application/json',
+                          'x-api-key': API_KEY,
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                          password_actual: currentPwd,
+                          nueva_password: newPwd
+                        })
+                      });
+                      
+                      const data = await response.json();
+                      if (response.ok) {
+                        Alert.alert('Éxito', 'Contraseña actualizada correctamente.');
+                        setPwdModalVisible(false);
+                      } else {
+                        Alert.alert('Error', data?.detail || 'No se pudo actualizar la contraseña.');
+                      }
+                    } catch (error) {
+                      Alert.alert('Error', 'Ocurrió un error al intentar cambiar la contraseña.');
+                    }
                   }}
                 >
                   <Text style={styles.pwdSubmitBtnText}>Actualizar Contraseña</Text>

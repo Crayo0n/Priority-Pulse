@@ -1,4 +1,4 @@
-export const API_URL = 'http://10.177.47.196:8088/api/v1';
+export const API_URL = 'http://100.127.235.68:8088/api/v1';
 
 export const API_KEY = 'ABC123';
 

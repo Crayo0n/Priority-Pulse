@@ -759,13 +759,9 @@ export default function InicioScreen({ route, navigation }) {
           />
         </View>
         <View style={styles.appBarRight}>
-          <TouchableOpacity style={styles.notificationBtn} onPress={() => setNotifModalVisible(true)}>
-            <Ionicons name="notifications-outline" size={24} color="#1f2937" />
-            {notificaciones.some(n => !n.leida) && <View style={styles.notificationBadge} />}
-          </TouchableOpacity>
           <View style={styles.appBarStreakBadge}>
             <Text style={styles.appBarStreakText}>{user?.racha_actual || 0} Días de Racha</Text>
-            <Text style={styles.appBarStreakEmoji}>🔥</Text>
+            <Ionicons name="flame-outline" size={16} color="#ea580c" style={{ marginLeft: 2 }} />
           </View>
           <TouchableOpacity 
             style={styles.appBarAvatar}

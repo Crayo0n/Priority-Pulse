@@ -303,6 +303,7 @@ def google_register_view():
                           google_name=session.get('temp_google_name', 'Nuevo Usuario'),
                           google_email=session.get('temp_google_email', ''))
 
+@app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if 'usuario_id' in session:
         return redirect(url_for('inicio'))

@@ -434,8 +434,16 @@ def upload_avatar(
     if not file.filename:
         raise HTTPException(status_code=400, detail="No se proporcionó un archivo")
         
-    # Guardar archivo
-    upload_path = "static/uploads"
+    # Guardar archivo en ruta compartida
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+    flask_upload_path = os.path.join(base_dir, "Flask", "static", "uploads")
+    
+    if os.path.exists(os.path.join(base_dir, "Flask")):
+        upload_path = flask_upload_path
+    else:
+        # En Docker, /app/static/uploads está montado a Flask/static/uploads
+        upload_path = "static/uploads"
+        
     os.makedirs(upload_path, exist_ok=True)
     filename = secure_filename(str(time.time()) + "_" + file.filename)
     file_path = os.path.join(upload_path, filename)

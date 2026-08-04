@@ -87,6 +87,7 @@ services:
       - "8088:8000"
     volumes:
       - ./FastAPI:/app
+      - ./Flask/static/uploads:/app/static/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,6 +105,7 @@ services:
       - "8089:8000"
     volumes:
       - ./FastAPI:/app
+      - ./Flask/static/uploads:/app/static/uploads
     depends_on:
       postgres:
         condition: service_healthy

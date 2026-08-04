@@ -39,6 +39,10 @@ def get_usuarios_by_xp(db: Session, limit: int = 100):
     return db.query(Usuario).filter(Usuario.rol != 'admin').order_by(Usuario.xp_total.desc()).limit(limit).all()
 
 def crear_usuario(db: Session, usuario: UsuarioCreate):
+    from app.models.nivel import Nivel
+    nivel_inicial = db.query(Nivel).filter(Nivel.numero_nivel == 1).first()
+    nivel_id = nivel_inicial.id if nivel_inicial else None
+
     hashed_pwd = obtener_password_hash(usuario.password)
     db_usuario = Usuario(
         correo=usuario.correo, 
@@ -46,7 +50,8 @@ def crear_usuario(db: Session, usuario: UsuarioCreate):
         nombre=usuario.nombre,
         foto_perfil=usuario.foto_perfil,
         password_hash=hashed_pwd,
-        rol=usuario.rol or "user"
+        rol=usuario.rol or "user",
+        nivel_id=nivel_id
     )
     db.add(db_usuario)
     db.commit()

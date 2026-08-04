@@ -45,8 +45,17 @@ app = FastAPI(
 )
 
 # Montar archivos estáticos
-os.makedirs("static/uploads", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+base_dir = os.path.dirname(os.path.abspath(__file__))
+grandparent_dir = os.path.dirname(os.path.dirname(base_dir))
+flask_static_path = os.path.join(grandparent_dir, "Flask", "static")
+
+if os.path.exists(flask_static_path):
+    static_dir = flask_static_path
+else:
+    static_dir = "static"
+
+os.makedirs(os.path.join(static_dir, "uploads"), exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 app.state.limiter = limiter

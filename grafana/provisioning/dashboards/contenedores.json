@@ -12,8 +12,8 @@
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "rate(container_cpu_usage_seconds_total{id=~\".*docker.*\"}[5m]) * 100",
-          "legendFormat": "{{id}}",
+          "expr": "container_cpu_usage_percent",
+          "legendFormat": "{{name}}",
           "refId": "A"
         }
       ]
@@ -28,15 +28,15 @@
       "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "container_memory_usage_bytes{id=~\".*docker.*\"}",
-          "legendFormat": "{{id}}",
+          "expr": "container_memory_usage_bytes",
+          "legendFormat": "{{name}}",
           "refId": "A"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Red Recibida (Bytes/s)",
+      "title": "Red Recibida (Bytes Totales)",
       "datasource": {
         "type": "prometheus",
         "uid": "Prometheus-DS"
@@ -44,15 +44,15 @@
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
       "targets": [
         {
-          "expr": "rate(container_network_receive_bytes_total{id=\"/\"}[5m])",
-          "legendFormat": "{{interface}}",
+          "expr": "rate(container_network_receive_bytes_total[5m])",
+          "legendFormat": "{{name}}",
           "refId": "A"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Red Enviada (Bytes/s)",
+      "title": "Red Enviada (Bytes Totales)",
       "datasource": {
         "type": "prometheus",
         "uid": "Prometheus-DS"
@@ -60,8 +60,8 @@
       "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
       "targets": [
         {
-          "expr": "rate(container_network_transmit_bytes_total{id=\"/\"}[5m])",
-          "legendFormat": "{{interface}}",
+          "expr": "rate(container_network_transmit_bytes_total[5m])",
+          "legendFormat": "{{name}}",
           "refId": "A"
         }
       ]

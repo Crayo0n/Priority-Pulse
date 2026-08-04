@@ -132,23 +132,17 @@ services:
     networks:
       - private_net
 
-  # ------------------------------------------
-  # EXPORTADORES Y MONITOREO EN RED PRIVADA
-  # ------------------------------------------
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.0
-    container_name: cadvisor_private
+  docker_exporter:
+    build: ./docker_exporter
+    container_name: docker_exporter
     restart: always
     ports:
-      - "8085:8080"
+      - "8085:8000"
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - private_net
+
 
   node_exporter:
     image: prom/node-exporter:latest

@@ -4,7 +4,7 @@ from app.core.limiter import limiter
 router = APIRouter()
 
 @router.get("/")
-@limiter.limit("60/minute")
+@limiter.limit("5/minute")
 def get_status(request: Request):
     """
     Endpoint de prueba para verificar que el API está activa.

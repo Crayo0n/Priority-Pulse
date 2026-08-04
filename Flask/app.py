@@ -6,6 +6,8 @@ import time
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 load_dotenv()
 
@@ -13,6 +15,14 @@ API_URL = os.getenv("API_URL", "https://haproxy/api/v1")
 API_KEY = os.getenv("API_KEY", "ABC123")
 
 app = Flask(__name__)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["10 per minute"],
+    storage_uri="memory://"
+)
+
 
 RUTINAS_MOLDES = {
     "manana_maestra": {

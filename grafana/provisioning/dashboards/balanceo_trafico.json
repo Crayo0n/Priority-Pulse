@@ -1,0 +1,245 @@
+{
+  "title": "Monitoreo y Balanceo de Tráfico",
+  "uid": "balanceo-trafico-dashboard",
+  "timezone": "browser",
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Peticiones por Minuto por Contenedor (Individual)",
+      "description": "Muestra la tasa de peticiones por minuto recibidas individualmente por api1, api2, flask1 y flask2",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_server_sessions_total{proxy=~\"fastapi_backend|flask_backend\"}[1m]) * 60",
+          "legendFormat": "{{server}} ({{proxy}})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Flujo Combinado - APIs (FastAPI)",
+      "description": "Muestra el tráfico acumulado de FastAPI desglosado entre respuestas exitosas (2xx) y errores (4xx/5xx)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 25
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_backend_http_responses_total{proxy=\"fastapi_backend\", code=\"2xx\"}[1m]) * 60",
+          "legendFormat": "FastAPI Exitosas (2xx)",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(haproxy_backend_http_responses_total{proxy=\"fastapi_backend\", code=~\"4xx|5xx\"}[1m]) * 60",
+          "legendFormat": "FastAPI Errores ({{code}})",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Flujo Combinado - Flasks (Flask)",
+      "description": "Muestra el tráfico acumulado de Flask desglosado entre respuestas exitosas (2xx) y errores (4xx/5xx como 429 Too Many)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 25
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_backend_http_responses_total{proxy=\"flask_backend\", code=\"2xx\"}[1m]) * 60",
+          "legendFormat": "Flask Exitosas (2xx)",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(haproxy_backend_http_responses_total{proxy=\"flask_backend\", code=~\"4xx|5xx\"}[1m]) * 60",
+          "legendFormat": "Flask Errores / Too Many Requests ({{code}})",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Errores en Flask (Too Many Requests 429 / 4xx / 5xx)",
+      "description": "Muestra específicamente la tasa de errores HTTP (como 429 Too Many Requests) por contenedor Flask",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 18 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 30
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_server_http_responses_total{proxy=\"flask_backend\", code=~\"4xx|5xx\"}[1m]) * 60",
+          "legendFormat": "{{server}} - Error {{code}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Errores en API (FastAPI - HTTP 4xx / 5xx)",
+      "description": "Muestra específicamente la tasa de errores HTTP por contenedor de FastAPI",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 18 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 30
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_server_http_responses_total{proxy=\"fastapi_backend\", code=~\"4xx|5xx\"}[1m]) * 60",
+          "legendFormat": "{{server}} - Error {{code}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Peticiones por Backend",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 27 },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "purple", "value": null }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "haproxy_backend_http_requests_total{proxy=~\"fastapi_backend|flask_backend\"}",
+          "legendFormat": "{{proxy}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Errores Acumulados (4xx / 5xx)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 27 },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "haproxy_backend_http_responses_total{proxy=~\"fastapi_backend|flask_backend\", code=~\"4xx|5xx\"}",
+          "legendFormat": "{{proxy}} - {{code}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 3
+}

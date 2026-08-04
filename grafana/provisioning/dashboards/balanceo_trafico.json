@@ -1,0 +1,171 @@
+{
+  "title": "Monitoreo y Balanceo de Tráfico",
+  "uid": "balanceo-trafico-dashboard",
+  "timezone": "browser",
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Peticiones por Minuto por Contenedor (Individual)",
+      "description": "Muestra la tasa de peticiones por minuto recibidas individualmente por api1, api2, flask1 y flask2",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_server_sessions_total{proxy=~\"fastapi_backend|flask_backend\"}[1m]) * 60",
+          "legendFormat": "{{server}} ({{proxy}})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Flujo Combinado - APIs (FastAPI)",
+      "description": "Muestra el tráfico total acumulado que entra a las dos APIs (api1 + api2)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 25
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_backend_http_requests_total{proxy=\"fastapi_backend\"}[1m]) * 60",
+          "legendFormat": "Total FastAPI Backend (api1 + api2)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Flujo Combinado - Flasks (Flask)",
+      "description": "Muestra el tráfico total acumulado que entra a los dos Flasks (flask1 + flask2)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 25
+          },
+          "unit": "reqpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(haproxy_backend_http_requests_total{proxy=\"flask_backend\"}[1m]) * 60",
+          "legendFormat": "Total Flask Backend (flask1 + flask2)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Peticiones por Servidor Individual",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 18 },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "blue", "value": 10 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "haproxy_server_sessions_total{proxy=~\"fastapi_backend|flask_backend\"}",
+          "legendFormat": "{{server}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Peticiones por Backend Combinado",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus-DS"
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 18 },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "purple", "value": null }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "haproxy_backend_http_requests_total{proxy=~\"fastapi_backend|flask_backend\"}",
+          "legendFormat": "{{proxy}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

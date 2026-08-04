@@ -16,7 +16,8 @@ services:
     depends_on:
       - api1
       - api2
-      - flask
+      - flask1
+      - flask2
     networks:
       public_net:
       private_net:
@@ -63,12 +64,28 @@ services:
     networks:
       - private_net
 
-  flask:
+  flask1:
     build: ./Flask
-    container_name: priority_pulse_flask
+    container_name: priority_pulse_flask_1
     restart: always
     ports:
       - "5000:5000"
+    volumes:
+      - ./Flask:/app
+    environment:
+      - FLASK_APP=app.py       
+      - FLASK_DEBUG=1
+      - API_URL=https://haproxy-internal/api/v1
+    command: flask run --host=0.0.0.0 --port=5000 
+    networks:
+      - private_net
+
+  flask2:
+    build: ./Flask
+    container_name: priority_pulse_flask_2
+    restart: always
+    ports:
+      - "5001:5000"
     volumes:
       - ./Flask:/app
     environment:
